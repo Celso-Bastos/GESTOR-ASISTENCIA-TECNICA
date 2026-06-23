@@ -1,0 +1,21 @@
+node_modules
+.pnpm-store
+.next
+.env
+.env.local
+.env.*.local
+dist
+build
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode

@@ -1,0 +1,26 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
+
+minimumReleaseAgeExclude:
+  - node-exports-info@1.6.1
+
+overrides:
+  "@tybys/wasm-util": "0.10.2"
+  "@typescript-eslint/eslint-plugin": "8.44.1"
+  "@typescript-eslint/parser": "8.44.1"
+  "@typescript-eslint/project-service": "8.44.1"
+  "@typescript-eslint/scope-manager": "8.44.1"
+  "@typescript-eslint/tsconfig-utils": "8.44.1"
+  "@typescript-eslint/type-utils": "8.44.1"
+  "@typescript-eslint/types": "8.44.1"
+  "@typescript-eslint/typescript-estree": "8.44.1"
+  "@typescript-eslint/utils": "8.44.1"
+  "@typescript-eslint/visitor-keys": "8.44.1"
+  "electron-to-chromium": "1.5.222"
+  "node-exports-info": "1.6.1"
+  "typescript-eslint": "8.44.1"

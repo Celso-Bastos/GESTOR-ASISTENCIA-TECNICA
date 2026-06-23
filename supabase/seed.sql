@@ -1,0 +1,1 @@
+-- Seed inicial reservado para a Fase 1.
