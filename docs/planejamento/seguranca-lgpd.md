@@ -13,7 +13,7 @@ Mensagens operacionais sao mensagens ligadas ao atendimento solicitado pelo clie
 ## Variaveis e chaves
 
 - Nunca commitar `.env`, `.env.local` ou chaves reais.
-- `SUPABASE_SERVICE_ROLE_KEY` nao deve ser usada no frontend.
+- `SUPABASE_SECRET_KEY` nao deve ser usada no frontend.
 - A service role deve ficar apenas em ambiente seguro de servidor, scripts administrativos controlados ou funcoes backend.
 - A chave anonima publica pode existir no frontend, mas deve depender de RLS e permissoes minimas.
 
