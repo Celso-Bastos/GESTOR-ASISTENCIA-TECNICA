@@ -1,6 +1,6 @@
 # Banco de Dados
 
-A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao.
+A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao. A Fase 3 adiciona `supabase/migrations/0002_customers_active_phone_unique.sql` para ajustar a unicidade de telefone de clientes ativos.
 
 ## Enums
 
@@ -38,6 +38,18 @@ A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamen
 ## Por que usar organization_id
 
 O `organization_id` e o eixo de isolamento multiempresa. Ele permite que a mesma aplicacao atenda varias assistencias tecnicas sem misturar clientes, aparelhos, ordens, templates, logs ou tokens de quiosque. Tambem simplifica as policies de RLS: quase toda tabela operacional valida se `auth.uid()` pertence a organizacao informada.
+
+## Clientes ativos e telefone unico
+
+Clientes usam soft delete com `deleted_at`. Por isso, a Fase 3 substitui a constraint unica original de `customers(organization_id, phone_normalized)` por um indice unico parcial em clientes ativos:
+
+```sql
+create unique index if not exists customers_active_phone_normalized_unique
+on public.customers (organization_id, phone_normalized)
+where deleted_at is null;
+```
+
+Isso impede dois clientes ativos com o mesmo telefone na mesma organizacao, mas permite reaproveitar o telefone de um cliente removido logicamente.
 
 ## RLS
 

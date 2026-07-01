@@ -23,6 +23,10 @@ function isProtectedRoute(pathname: string) {
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
+function isServerActionRequest(request: NextRequest) {
+  return request.method === "POST" && request.headers.has("next-action");
+}
+
 function redirectWithCookies(
   request: NextRequest,
   sourceResponse: NextResponse,
@@ -44,12 +48,17 @@ function redirectWithCookies(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { response, user } = await updateSession(request);
+  const isServerAction = isServerActionRequest(request);
 
   if (pathname === "/login" && user) {
     return redirectWithCookies(request, response, "/dashboard");
   }
 
   if (isProtectedRoute(pathname) && !user) {
+    if (isServerAction) {
+      return response;
+    }
+
     return redirectWithCookies(request, response, "/login");
   }
 

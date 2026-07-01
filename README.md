@@ -49,7 +49,7 @@ pnpm --filter web dev
 1. Fase 0: base do monorepo, documentacao, configuracoes e estrutura inicial.
 2. Fase 1: Supabase, banco de dados, RLS e seeds minimos.
 3. Fase 2: login, sessao, layout base, onboarding de organizacao e protecao de rotas.
-4. Fase 3: clientes e cadastro em tablet/quiosque.
+4. Fase 3: clientes internos, busca, consentimento WhatsApp e soft delete.
 5. Fase 4: manutencoes e historico do atendimento.
 6. Fase 5: alertas operacionais e mensagens prontas para WhatsApp manual.
 7. Fase 6: ajustes finais, auditoria de seguranca e preparacao para piloto.
@@ -89,3 +89,19 @@ NEXT_PUBLIC_APP_URL=
 4. Rode `pnpm dev`.
 5. Acesse `/login` e entre com o usuario criado.
 6. No primeiro acesso, preencha `/onboarding/organizacao` para criar a loja inicial e entrar como `owner`.
+
+## Fase 3 - Clientes
+
+O modulo interno de clientes esta disponivel em `/clientes` para usuarios autenticados com organizacao.
+
+Funcionalidades:
+
+- listagem e busca por nome ou telefone;
+- cadastro manual em `/clientes/novo`;
+- detalhes em `/clientes/[id]`;
+- edicao em `/clientes/[id]/editar`;
+- bloqueio de telefone duplicado entre clientes ativos da mesma organizacao;
+- consentimento de WhatsApp para mensagens futuras;
+- soft delete com `deleted_at`.
+
+A migration `supabase/migrations/0002_customers_active_phone_unique.sql` deve ser aplicada para que a unicidade de telefone considere apenas clientes ativos.

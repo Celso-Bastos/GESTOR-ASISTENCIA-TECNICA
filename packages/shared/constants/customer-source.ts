@@ -1,10 +1,7 @@
 export const CUSTOMER_SOURCE = {
-  COUNTER: "counter",
-  TABLET_KIOSK: "tablet_kiosk",
-  WHATSAPP: "whatsapp",
-  REFERRAL: "referral",
-  INSTAGRAM: "instagram",
-  OTHER: "other"
+  MANUAL: "manual",
+  TABLET: "tablet",
+  FUTURE_IMPORT: "future_import"
 } as const;
 
 export type CustomerSource =
