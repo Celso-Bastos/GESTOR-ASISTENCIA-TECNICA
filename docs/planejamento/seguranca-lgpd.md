@@ -21,6 +21,8 @@ Mensagens operacionais sao mensagens ligadas ao atendimento solicitado pelo clie
 
 O tablet nao deve acessar diretamente o banco com credenciais privilegiadas. O fluxo correto e passar por uma rota backend ou funcao controlada que valide o token do quiosque, normalize o telefone, aplique regras de consentimento e grave apenas os dados permitidos. Isso reduz exposicao de chaves, evita alteracoes indevidas e facilita auditoria.
 
+Na Fase 4, `/kiosk/[slug]` e publico, mas so aceita cadastro com token ativo em `kiosk_tokens`. O endpoint `/api/kiosk/customers` retorna mensagens genericas, nao expoe IDs de clientes, nao lista dados internos, limita tamanho do payload e usa honeypot simples contra spam. A chave secreta do Supabase fica apenas em server-side.
+
 ## Row Level Security
 
 RLS e obrigatorio porque o banco guarda dados de clientes e de operacao por organizacao. As policies usam `organization_id` e a funcao `is_org_member(org_id)` para garantir que um usuario autenticado veja e altere apenas dados da propria organizacao.

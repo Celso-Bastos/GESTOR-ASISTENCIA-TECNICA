@@ -50,9 +50,10 @@ pnpm --filter web dev
 2. Fase 1: Supabase, banco de dados, RLS e seeds minimos.
 3. Fase 2: login, sessao, layout base, onboarding de organizacao e protecao de rotas.
 4. Fase 3: clientes internos, busca, consentimento WhatsApp e soft delete.
-5. Fase 4: manutencoes e historico do atendimento.
-6. Fase 5: alertas operacionais e mensagens prontas para WhatsApp manual.
-7. Fase 6: ajustes finais, auditoria de seguranca e preparacao para piloto.
+5. Fase 4: quiosque/tablet publico para cadastro de clientes com token.
+6. Fase 5: manutencoes e historico do atendimento.
+7. Fase 6: alertas operacionais e mensagens prontas para WhatsApp manual.
+8. Fase 7: ajustes finais, auditoria de seguranca e preparacao para piloto.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -105,3 +106,15 @@ Funcionalidades:
 - soft delete com `deleted_at`.
 
 A migration `supabase/migrations/0002_customers_active_phone_unique.sql` deve ser aplicada para que a unicidade de telefone considere apenas clientes ativos.
+
+## Fase 4 - Quiosque / Tablet
+
+Usuarios autenticados podem criar e desativar tokens em `/configuracoes/quiosque`. Cada token gera um link publico no formato:
+
+```txt
+NEXT_PUBLIC_APP_URL/kiosk/[slug]?token=[token]
+```
+
+A tela publica coleta apenas nome, WhatsApp e consentimento. O endpoint `/api/kiosk/customers` valida slug, token ativo e telefone, salva clientes novos com `source = tablet` e atualiza duplicidades sem revelar se o telefone ja existia.
+
+Teste manual: crie um token, copie o link, abra em aba anonima, cadastre um cliente, valide em `/clientes`, desative o token e confirme que o link deixa de aceitar cadastro.

@@ -16,9 +16,13 @@
 
 ## Quiosque/tablet
 
-1. Cliente informa nome e telefone.
-2. Sistema registra origem como tablet/quiosque.
-3. Equipe usa o cadastro para iniciar atendimento.
+1. Usuario logado cria um token em `/configuracoes/quiosque`.
+2. Sistema gera link publico `/kiosk/[slug]?token=[token]`.
+3. Cliente abre o link no tablet, informa nome e telefone e aceita contato pelo WhatsApp.
+4. Sistema valida slug, token ativo e telefone.
+5. Cliente novo e registrado com origem `tablet`.
+6. Se o telefone ja existir como cliente ativo da organizacao, o cadastro e atualizado sem duplicar.
+7. Equipe usa `/clientes` para iniciar atendimento.
 
 ## Manutencao
 

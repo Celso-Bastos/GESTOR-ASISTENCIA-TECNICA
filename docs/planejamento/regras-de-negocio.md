@@ -15,6 +15,17 @@
 - `whatsapp_opt_in_at` deve ser preenchido quando houver consentimento e ficar `null` quando nao houver.
 - Mensagens promocionais futuras so devem considerar clientes com `whatsapp_opt_in = true`.
 - Cadastros vindos do tablet/quiosque devem ser marcados com origem propria.
+- O cadastro publico do tablet exige token ativo da organizacao e consentimento de WhatsApp.
+- Cliente novo vindo do tablet deve ser salvo com `source = tablet`.
+- Se o telefone do tablet ja existir como cliente ativo na mesma organizacao, atualizar nome, telefone e consentimento sem criar duplicado e sem revelar a duplicidade ao publico.
+- Em duplicidade, preservar `source` original do cliente existente para manter a primeira origem conhecida.
+
+## Quiosque / Tablet
+
+- Tokens de quiosque pertencem a uma unica organizacao.
+- Usuario autenticado so pode criar ou desativar tokens da propria organizacao atual.
+- Token desativado nao pode aceitar novos cadastros.
+- A tela publica nao pode listar clientes, manutencoes, tokens ou dados internos.
 
 ## Manutencoes
 

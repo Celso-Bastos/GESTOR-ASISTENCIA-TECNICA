@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   Settings,
   Smartphone,
+  TabletSmartphone,
   Users
 } from "lucide-react";
 import { logoutAction } from "@/lib/auth/actions";
@@ -16,7 +17,8 @@ const navItems = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/manutencoes", label: "Manutencoes", icon: Smartphone },
   { href: "/mensagens", label: "Mensagens", icon: MessageSquareText },
-  { href: "/configuracoes", label: "Configuracoes", icon: Settings }
+  { href: "/configuracoes", label: "Configuracoes", icon: Settings },
+  { href: "/configuracoes/quiosque", label: "Quiosque", icon: TabletSmartphone }
 ];
 
 export const dynamic = "force-dynamic";
@@ -79,7 +81,7 @@ export default async function DashboardLayout({
           </form>
         </header>
 
-        <nav className="grid grid-cols-2 gap-2 border-b border-slate-200 bg-white px-4 py-3 sm:grid-cols-5 lg:hidden">
+        <nav className="grid grid-cols-2 gap-2 border-b border-slate-200 bg-white px-4 py-3 sm:grid-cols-3 lg:hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
 

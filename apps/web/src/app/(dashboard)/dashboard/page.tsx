@@ -1,14 +1,35 @@
 import { requireOrganization } from "@/lib/organization/queries";
+import { createClient } from "@/lib/supabase/server";
 
-const cards = [
-  { label: "Manutencoes em aberto", value: 0 },
-  { label: "Entregas de hoje", value: 0 },
-  { label: "Aguardando peca", value: 0 },
-  { label: "Clientes cadastrados hoje", value: 0 }
-];
+async function getTabletCustomersToday(organizationId: string) {
+  const supabase = await createClient();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const { count, error } = await supabase
+    .from("customers")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId)
+    .eq("source", "tablet")
+    .is("deleted_at", null)
+    .gte("created_at", startOfToday.toISOString());
+
+  if (error) {
+    return 0;
+  }
+
+  return count ?? 0;
+}
 
 export default async function DashboardPage() {
   const organization = await requireOrganization();
+  const tabletCustomersToday = await getTabletCustomersToday(organization.id);
+  const cards = [
+    { label: "Manutencoes em aberto", value: 0 },
+    { label: "Entregas de hoje", value: 0 },
+    { label: "Aguardando peca", value: 0 },
+    { label: "Clientes do tablet hoje", value: tabletCustomersToday }
+  ];
 
   return (
     <section className="grid gap-6">

@@ -1,4 +1,5 @@
 import { requireOrganization } from "@/lib/organization/queries";
+import Link from "next/link";
 
 export default async function ConfiguracoesPage() {
   const organization = await requireOrganization();
@@ -43,6 +44,13 @@ export default async function ConfiguracoesPage() {
         Configuracoes avancadas serao adicionadas depois, junto com permissoes
         refinadas e ajustes operacionais.
       </p>
+
+      <Link
+        className="inline-flex h-10 w-fit items-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+        href="/configuracoes/quiosque"
+      >
+        Quiosque / Tablet
+      </Link>
     </section>
   );
 }
