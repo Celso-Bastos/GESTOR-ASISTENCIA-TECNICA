@@ -1,0 +1,21 @@
+# Fase 5 - Checklist
+
+- [x] `/manutencoes` abre apenas logado.
+- [x] Usuário sem organização vai para onboarding.
+- [x] Nova manutenção cria `device`.
+- [x] Nova manutenção cria `maintenance_order`.
+- [x] Nova manutenção cria `maintenance_event`.
+- [x] `order_number` é gerado automaticamente.
+- [x] Status inicial é `recebido`.
+- [x] Filtro por status funciona.
+- [x] Filtro de atrasados funciona.
+- [x] Detalhe da OS funciona.
+- [x] Mudança de status funciona.
+- [x] Histórico registra mudança.
+- [x] Marcar como entregue preenche `delivered_at`.
+- [x] Dashboard mostra cards corretos.
+- [x] Usuário não acessa dados de outra organização.
+- [x] `.env.local` continua ignorado.
+- [x] `pnpm lint` passa.
+- [x] `pnpm typecheck` passa.
+- [x] `pnpm build` passa.

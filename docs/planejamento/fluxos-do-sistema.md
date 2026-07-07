@@ -26,11 +26,15 @@
 
 ## Manutencao
 
-1. Tecnico recebe a ordem.
-2. Atualiza diagnostico e status.
-3. Equipe informa cliente manualmente quando necessario.
-4. Ordem fica pronta para retirada.
-5. Atendimento marca como entregue.
+1. Atendente acessa `/manutencoes/nova`.
+2. Seleciona um cliente ativo da organizacao atual.
+3. Informa dados do aparelho e defeito relatado.
+4. Sistema cria `device`, `maintenance_order` e evento inicial.
+5. Tecnico atualiza diagnostico e status em `/manutencoes/[id]` ou na edicao.
+6. Cada mudanca de status gera evento no historico.
+7. Equipe informa cliente manualmente quando necessario.
+8. Ordem fica pronta para retirada.
+9. Atendimento marca como entregue, preenchendo `delivered_at`.
 
 ## Mensagens prontas
 

@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import {
+  hasOrganizationMembership,
+  updateSession
+} from "@/lib/supabase/middleware";
 
 const publicRoutes = ["/", "/login", "/kiosk"];
 const publicPrefixes = ["/kiosk/", "/api/kiosk"];
@@ -47,11 +50,15 @@ function redirectWithCookies(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const { response, user } = await updateSession(request);
+  const { response, supabase, user } = await updateSession(request);
   const isServerAction = isServerActionRequest(request);
 
-  if (pathname === "/login" && user) {
-    return redirectWithCookies(request, response, "/dashboard");
+  if ((pathname === "/" || pathname === "/login") && user) {
+    const destination = (await hasOrganizationMembership(supabase, user.id))
+      ? "/dashboard"
+      : "/onboarding/organizacao";
+
+    return redirectWithCookies(request, response, destination);
   }
 
   if (isProtectedRoute(pathname) && !user) {

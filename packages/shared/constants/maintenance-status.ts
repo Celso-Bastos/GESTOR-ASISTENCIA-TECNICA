@@ -1,12 +1,11 @@
 export const MAINTENANCE_STATUS = {
-  RECEIVED: "received",
-  DIAGNOSING: "diagnosing",
-  WAITING_APPROVAL: "waiting_approval",
-  IN_PROGRESS: "in_progress",
-  WAITING_PARTS: "waiting_parts",
-  READY_FOR_PICKUP: "ready_for_pickup",
-  DELIVERED: "delivered",
-  CANCELED: "canceled"
+  RECEBIDO: "recebido",
+  EM_ANALISE: "em_analise",
+  AGUARDANDO_PECA: "aguardando_peca",
+  EM_MANUTENCAO: "em_manutencao",
+  PRONTO_PARA_ENTREGA: "pronto_para_entrega",
+  ENTREGUE: "entregue",
+  CANCELADO: "cancelado"
 } as const;
 
 export type MaintenanceStatus =

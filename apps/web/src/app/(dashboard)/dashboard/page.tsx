@@ -1,5 +1,6 @@
 import { requireOrganization } from "@/lib/organization/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getMaintenanceDashboardMetrics } from "../manutencoes/actions";
 
 async function getTabletCustomersToday(organizationId: string) {
   const supabase = await createClient();
@@ -24,10 +25,15 @@ async function getTabletCustomersToday(organizationId: string) {
 export default async function DashboardPage() {
   const organization = await requireOrganization();
   const tabletCustomersToday = await getTabletCustomersToday(organization.id);
+  const maintenanceMetrics = await getMaintenanceDashboardMetrics(
+    organization.id
+  );
   const cards = [
-    { label: "Manutencoes em aberto", value: 0 },
-    { label: "Entregas de hoje", value: 0 },
-    { label: "Aguardando peca", value: 0 },
+    { label: "Manutencoes em aberto", value: maintenanceMetrics.open },
+    { label: "Entregas de hoje", value: maintenanceMetrics.todayDeliveries },
+    { label: "Aguardando peca", value: maintenanceMetrics.waitingParts },
+    { label: "Prontos para entrega", value: maintenanceMetrics.ready },
+    { label: "Atrasadas", value: maintenanceMetrics.overdue },
     { label: "Clientes do tablet hoje", value: tabletCustomersToday }
   ];
 
@@ -41,12 +47,11 @@ export default async function DashboardPage() {
           Dashboard
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Visao inicial do atendimento. Os indicadores reais entram nas proximas
-          fases, conforme clientes e manutencoes forem implementados.
+          Visao inicial do atendimento com indicadores da organizacao atual.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <article
             className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"

@@ -1,6 +1,6 @@
 # Banco de Dados
 
-A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao. A Fase 3 adiciona `supabase/migrations/0002_customers_active_phone_unique.sql` para ajustar a unicidade de telefone de clientes ativos.
+A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao. A Fase 3 adiciona `supabase/migrations/0002_customers_active_phone_unique.sql` para ajustar a unicidade de telefone de clientes ativos. A Fase 5 adiciona `supabase/migrations/0003_maintenance_order_rpc.sql` para criar OS de forma atomica.
 
 ## Enums
 
@@ -50,6 +50,18 @@ where deleted_at is null;
 ```
 
 Isso impede dois clientes ativos com o mesmo telefone na mesma organizacao, mas permite reaproveitar o telefone de um cliente removido logicamente.
+
+## Manutencoes na Fase 5
+
+A Fase 5 usa as tabelas ja criadas na Fase 1:
+
+- `devices`: dados do aparelho vinculado ao cliente e a organizacao.
+- `maintenance_orders`: OS, numero, status, defeito relatado, diagnostico, previsao, valores e observacoes internas.
+- `maintenance_events`: historico de criacao e mudancas de status.
+
+Foi criada a migration `0003_maintenance_order_rpc.sql` com a funcao `public.create_maintenance_order`. Ela cria `devices`, `maintenance_orders` e `maintenance_events` na mesma transacao e usa lock transacional por organizacao para reduzir risco de colisao no numero da OS.
+
+A constraint `unique (organization_id, order_number)` em `maintenance_orders` garante que o numero da OS nao se repita dentro da mesma organizacao. As policies de RLS ja exigem que cliente, aparelho, ordem e evento pertencerem a mesma organizacao.
 
 ## RLS
 

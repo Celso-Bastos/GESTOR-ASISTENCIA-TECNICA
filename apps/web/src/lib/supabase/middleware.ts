@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseBrowserEnv } from "./env";
 
+type MiddlewareSupabaseClient = ReturnType<typeof createServerClient>;
+
 export async function updateSession(request: NextRequest) {
   const { supabaseUrl, supabaseKey } = getSupabaseBrowserEnv();
   let response = NextResponse.next({ request });
@@ -33,5 +35,19 @@ export async function updateSession(request: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser();
 
-  return { response, user };
+  return { response, supabase, user };
+}
+
+export async function hasOrganizationMembership(
+  supabase: MiddlewareSupabaseClient,
+  userId: string
+) {
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  return !error && !!data;
 }

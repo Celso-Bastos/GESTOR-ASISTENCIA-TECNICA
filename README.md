@@ -118,3 +118,23 @@ NEXT_PUBLIC_APP_URL/kiosk/[slug]?token=[token]
 A tela publica coleta apenas nome, WhatsApp e consentimento. O endpoint `/api/kiosk/customers` valida slug, token ativo e telefone, salva clientes novos com `source = tablet` e atualiza duplicidades sem revelar se o telefone ja existia.
 
 Teste manual: crie um token, copie o link, abra em aba anonima, cadastre um cliente, valide em `/clientes`, desative o token e confirme que o link deixa de aceitar cadastro.
+
+## Fase 5 - Manutencoes
+
+O modulo de manutencoes esta disponivel em `/manutencoes` para usuarios autenticados com organizacao.
+
+Funcionalidades:
+
+- listagem com busca por cliente, telefone, modelo e numero da OS;
+- filtros por status e atrasadas;
+- abertura de OS em `/manutencoes/nova`;
+- geracao automatica de `order_number` no formato `OS-000001`;
+- criacao de aparelho em `devices`;
+- status inicial `recebido`;
+- detalhe em `/manutencoes/[id]`;
+- edicao basica em `/manutencoes/[id]/editar`;
+- mudanca de status com historico em `maintenance_events`;
+- marcar como entregue preenchendo `delivered_at`;
+- cards reais de manutencoes no dashboard.
+
+A migration `supabase/migrations/0003_maintenance_order_rpc.sql` adiciona a RPC `create_maintenance_order` para criar aparelho, OS e evento inicial na mesma transacao do banco.

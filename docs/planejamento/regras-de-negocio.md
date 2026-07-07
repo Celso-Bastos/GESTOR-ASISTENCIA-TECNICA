@@ -32,6 +32,17 @@
 - Uma manutencao pertence a um cliente.
 - Uma manutencao deve ter status claro desde a entrada ate a entrega.
 - Mudancas importantes de status devem gerar evento no historico.
+- Toda manutencao pertence a organizacao atual do usuario autenticado.
+- `organization_id`, `created_by` e `order_number` nao podem vir do formulario.
+- O status inicial de uma OS nova e sempre `recebido`.
+- O numero da OS e gerado no servidor no formato `OS-000001` e deve ser unico por organizacao.
+- Ao criar OS, o sistema cria ou vincula um aparelho em `devices`.
+- O cliente selecionado precisa estar ativo e pertencer a mesma organizacao.
+- Alterar status cria evento `status_changed` em `maintenance_events`.
+- Ao marcar como `entregue`, `delivered_at` deve ser preenchido com a data/hora atual.
+- Se uma OS sair de `entregue`, `delivered_at` deve ser limpo para refletir o status atual.
+- OS atrasada tem `expected_delivery_date` anterior a hoje, status diferente de `entregue` e `cancelado`, e `deleted_at` vazio.
+- Listagens, detalhes e dashboard devem ignorar ordens com `deleted_at` preenchido.
 
 ## Alertas
 

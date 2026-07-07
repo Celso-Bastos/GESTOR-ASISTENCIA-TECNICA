@@ -9,6 +9,20 @@ export type LoginActionState = {
   email?: string;
 };
 
+async function getPostLoginRedirectPath(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+) {
+  const { data } = await supabase
+    .from("organization_members")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  return data ? "/dashboard" : "/onboarding/organizacao";
+}
+
 export async function loginAction(
   _prevState: LoginActionState,
   formData: FormData
@@ -26,16 +40,19 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const {
+    data: { user },
+    error
+  } = await supabase.auth.signInWithPassword(parsed.data);
 
-  if (error) {
+  if (error || !user) {
     return {
       error: "Email ou senha invalidos.",
       email: parsed.data.email
     };
   }
 
-  redirect("/dashboard");
+  redirect(await getPostLoginRedirectPath(supabase, user.id));
 }
 
 export async function logoutAction() {
