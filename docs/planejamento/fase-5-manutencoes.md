@@ -10,6 +10,7 @@ Implementar o modulo de manutencoes do MVP 1, permitindo abrir OS para clientes 
 - `/manutencoes/nova`: criacao de manutencao.
 - `/manutencoes/[id]`: detalhe da OS, dados do cliente/aparelho, status e historico.
 - `/manutencoes/[id]/editar`: edicao basica da OS e do aparelho.
+- `/manutencoes/rapida`: fluxo curto criado na Fase 6 para abrir OS no balcao.
 
 Todas as rotas ficam no grupo protegido do dashboard. Usuario sem login vai para `/login`; usuario sem organizacao vai para `/onboarding/organizacao`.
 

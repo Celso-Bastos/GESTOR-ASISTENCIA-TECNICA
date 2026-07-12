@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
 import { getMaintenanceOrders } from "./actions";
 import { MaintenanceFilters } from "./maintenance-filters";
 import { MaintenanceTable } from "./maintenance-table";
@@ -34,13 +34,22 @@ export default async function ManutencoesPage({
           </p>
         </div>
 
-        <Link
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
-          href="/manutencoes/nova"
-        >
-          <Plus className="size-4" aria-hidden="true" />
-          Nova manutenção
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-teal-700 bg-white px-4 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+            href="/manutencoes/rapida"
+          >
+            <Zap className="size-4" aria-hidden="true" />
+            Manutenção rápida
+          </Link>
+          <Link
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+            href="/manutencoes/nova"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            Nova manutenção completa
+          </Link>
+        </div>
       </div>
 
       <MaintenanceFilters query={filters.q} status={filters.status} />

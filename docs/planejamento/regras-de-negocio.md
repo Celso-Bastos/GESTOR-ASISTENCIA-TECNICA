@@ -43,6 +43,11 @@
 - Se uma OS sair de `entregue`, `delivered_at` deve ser limpo para refletir o status atual.
 - OS atrasada tem `expected_delivery_date` anterior a hoje, status diferente de `entregue` e `cancelado`, e `deleted_at` vazio.
 - Listagens, detalhes e dashboard devem ignorar ordens com `deleted_at` preenchido.
+- O fluxo de manutencao rapida nao aceita `customer_id` nem `organization_id` do formulario.
+- Manutencao rapida deve encontrar ou criar cliente por `phone_normalized` dentro da organizacao atual.
+- Se o cliente ja existir, o sistema deve reaproveitar o cadastro sem alterar `source` e sem sobrescrever nome automaticamente.
+- Cliente criado pela manutencao rapida usa `source = manual` e `whatsapp_opt_in = false`.
+- OS criada pela manutencao rapida pode ser completada depois pela edicao da ordem.
 
 ## Alertas
 

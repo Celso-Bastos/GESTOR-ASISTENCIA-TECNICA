@@ -17,6 +17,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import {
   createMaintenanceOrderSchema,
+  createQuickMaintenanceOrderSchema,
+  type CreateMaintenanceOrderInput,
   maintenanceSearchSchema,
   updateMaintenanceOrderSchema,
   updateMaintenanceStatusSchema
@@ -149,6 +151,17 @@ function createInput(values: Record<string, string>) {
   };
 }
 
+function quickFormValues(formData: FormData) {
+  return {
+    customer_name: String(formData.get("customer_name") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+    device_model: String(formData.get("device_model") ?? ""),
+    reported_issue: String(formData.get("reported_issue") ?? ""),
+    expected_delivery_date: String(formData.get("expected_delivery_date") ?? ""),
+    quick_notes: String(formData.get("quick_notes") ?? "")
+  };
+}
+
 function updateInput(values: Record<string, string>) {
   return {
     device: {
@@ -262,11 +275,13 @@ async function generateNextOrderNumber(
 async function createMaintenanceOrderWithDirectInserts({
   organization,
   userId,
-  input
+  input,
+  eventDescription
 }: {
   organization: CurrentOrganization;
   userId: string;
-  input: ReturnType<typeof createMaintenanceOrderSchema.parse>;
+  input: CreateMaintenanceOrderInput;
+  eventDescription?: string;
 }) {
   const supabase = await createClient();
   const { data: device, error: deviceError } = await supabase
@@ -351,7 +366,9 @@ async function createMaintenanceOrderWithDirectInserts({
     event_type: "created",
     old_status: null,
     new_status: "recebido",
-    description: `Ordem ${order.order_number} criada com status Recebido.`,
+    description:
+      eventDescription ||
+      `Ordem ${order.order_number} criada com status Recebido.`,
     created_by: userId
   });
 
@@ -364,6 +381,80 @@ async function createMaintenanceOrderWithDirectInserts({
   }
 
   return { order, error: null };
+}
+
+async function getExistingCustomerByPhone(
+  organizationId: string,
+  phoneNormalized: string
+) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("customers")
+    .select("id, name")
+    .eq("organization_id", organizationId)
+    .eq("phone_normalized", phoneNormalized)
+    .is("deleted_at", null)
+    .limit(1)
+    .maybeSingle<{ id: string; name: string }>();
+
+  if (error) {
+    console.error("Erro ao buscar cliente da manutenção rápida:", error);
+    return { customer: null, error: "Não foi possível verificar o cliente." };
+  }
+
+  return { customer: data ?? null, error: null };
+}
+
+async function findOrCreateQuickCustomer({
+  organizationId,
+  name,
+  phone,
+  phoneNormalized
+}: {
+  organizationId: string;
+  name: string;
+  phone: string;
+  phoneNormalized: string;
+}) {
+  const existing = await getExistingCustomerByPhone(
+    organizationId,
+    phoneNormalized
+  );
+
+  if (existing.error || existing.customer) {
+    return existing;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("customers")
+    .insert({
+      organization_id: organizationId,
+      name,
+      phone,
+      phone_normalized: phoneNormalized,
+      whatsapp_opt_in: false,
+      whatsapp_opt_in_at: null,
+      source: "manual",
+      notes: null
+    })
+    .select("id, name")
+    .maybeSingle<{ id: string; name: string }>();
+
+  if (data) {
+    return { customer: data, error: null };
+  }
+
+  console.error("Erro ao criar cliente da manutenção rápida:", error);
+
+  if (error?.code === "23505") {
+    return getExistingCustomerByPhone(organizationId, phoneNormalized);
+  }
+
+  return {
+    customer: null,
+    error: "Não foi possível criar o cliente para a manutenção rápida."
+  };
 }
 
 async function findSearchRelationIds(organizationId: string, search: string) {
@@ -609,6 +700,79 @@ export async function createMaintenanceOrderAction(
   revalidatePath("/manutencoes");
   revalidatePath("/dashboard");
   redirect(`/manutencoes/${order.order_id}`);
+}
+
+export async function createQuickMaintenanceOrderAction(
+  _prevState: MaintenanceActionState,
+  formData: FormData
+): Promise<MaintenanceActionState> {
+  const context = await getMaintenanceActionContext();
+  const values = quickFormValues(formData);
+
+  if (!context.ok) {
+    return { error: context.error, values };
+  }
+
+  const parsed = createQuickMaintenanceOrderSchema.safeParse(values);
+
+  if (!parsed.success) {
+    return {
+      error:
+        parsed.error.issues[0]?.message ??
+        "Revise os dados da manutenção rápida.",
+      values
+    };
+  }
+
+  const { organization, userId } = context;
+  const phoneNormalized = normalizePhoneBR(parsed.data.phone);
+  const customerResult = await findOrCreateQuickCustomer({
+    organizationId: organization.id,
+    name: parsed.data.customer_name,
+    phone: parsed.data.phone,
+    phoneNormalized
+  });
+
+  if (customerResult.error || !customerResult.customer) {
+    return {
+      error: customerResult.error ?? "Cliente não encontrado ou inválido.",
+      values
+    };
+  }
+
+  const orderInput: CreateMaintenanceOrderInput = {
+    customer_id: customerResult.customer.id,
+    device: {
+      brand: undefined,
+      model: parsed.data.device_model,
+      color: undefined,
+      storage: undefined,
+      imei: undefined,
+      notes: "Criado pelo fluxo de manutenção rápida."
+    },
+    reported_issue: parsed.data.reported_issue,
+    expected_delivery_date: parsed.data.expected_delivery_date,
+    estimated_price: undefined,
+    internal_notes: parsed.data.quick_notes
+  };
+  const result = await createMaintenanceOrderWithDirectInserts({
+    organization,
+    userId,
+    input: orderInput,
+    eventDescription: "Ordem criada pelo fluxo de manutenção rápida."
+  });
+
+  if (!result.order) {
+    return {
+      error: result.error ?? friendlyMaintenanceError(),
+      values
+    };
+  }
+
+  revalidatePath("/clientes");
+  revalidatePath("/manutencoes");
+  revalidatePath("/dashboard");
+  redirect(`/manutencoes/${result.order.id}`);
 }
 
 export async function updateMaintenanceOrderAction(

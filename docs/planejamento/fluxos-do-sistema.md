@@ -36,6 +36,17 @@
 8. Ordem fica pronta para retirada.
 9. Atendimento marca como entregue, preenchendo `delivered_at`.
 
+## Manutencao Rapida
+
+1. Atendente acessa `/manutencoes/rapida`.
+2. Informa nome, telefone, modelo do aparelho e defeito.
+3. Sistema normaliza o telefone.
+4. Sistema procura cliente ativo da organizacao atual pelo telefone normalizado.
+5. Se o cliente existir, reaproveita o cadastro sem alterar `source`.
+6. Se o cliente nao existir, cria cliente manual com opt-in de WhatsApp desativado.
+7. Sistema cria aparelho, OS com status `recebido` e evento inicial.
+8. Sistema redireciona para o detalhe da OS.
+
 ## Mensagens prontas
 
 1. Sistema monta mensagem com dados da manutencao.

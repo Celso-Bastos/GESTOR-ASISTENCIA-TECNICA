@@ -1,0 +1,21 @@
+# Fase 6 - Checklist
+
+- [x] `/manutencoes/rapida` abre apenas logado.
+- [x] Usuário sem organização vai para onboarding.
+- [x] Formulário exige nome, telefone, modelo e defeito.
+- [x] Telefone é normalizado.
+- [x] Cliente existente é reaproveitado.
+- [x] Cliente novo é criado quando telefone não existe.
+- [x] Não duplica cliente por telefone.
+- [x] `device` é criado.
+- [x] `maintenance_order` é criada.
+- [x] `order_number` é gerado.
+- [x] Status inicial é `recebido`.
+- [x] `maintenance_event` é criado.
+- [x] Redireciona para detalhe da OS.
+- [x] OS aparece na listagem.
+- [x] OS pode ser editada depois.
+- [x] `.env.local` continua ignorado.
+- [x] `pnpm lint` passa.
+- [x] `pnpm typecheck` passa.
+- [x] `pnpm build` passa.

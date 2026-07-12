@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhoneBR } from "@/lib/phone";
 import {
   maintenanceStatuses,
   type MaintenanceStatusFilter
@@ -71,6 +72,39 @@ export const createMaintenanceOrderSchema = z.object({
   )
 });
 
+export const createQuickMaintenanceOrderSchema = z.object({
+  customer_name: z
+    .string()
+    .trim()
+    .min(2, "Informe o nome do cliente.")
+    .max(120, "Use no máximo 120 caracteres no nome."),
+  phone: z
+    .string()
+    .trim()
+    .min(8, "Informe o telefone do cliente.")
+    .max(30, "Use no máximo 30 caracteres no telefone.")
+    .refine((value) => {
+      const normalized = normalizePhoneBR(value);
+
+      return normalized.length >= 10 && normalized.length <= 11;
+    }, "Informe um telefone válido com DDD."),
+  device_model: z
+    .string()
+    .trim()
+    .min(1, "Informe o modelo do aparelho.")
+    .max(120, "Use no máximo 120 caracteres no modelo."),
+  reported_issue: z
+    .string()
+    .trim()
+    .min(3, "Informe o defeito relatado.")
+    .max(2000, "Use no máximo 2000 caracteres no defeito relatado."),
+  expected_delivery_date: optionalDate,
+  quick_notes: optionalText(
+    2000,
+    "Use no máximo 2000 caracteres na observação rápida."
+  )
+});
+
 export const updateMaintenanceOrderSchema = z.object({
   device: deviceSchema,
   reported_issue: z
@@ -113,6 +147,9 @@ export const maintenanceSearchSchema = z.object({
 
 export type CreateMaintenanceOrderInput = z.infer<
   typeof createMaintenanceOrderSchema
+>;
+export type CreateQuickMaintenanceOrderInput = z.infer<
+  typeof createQuickMaintenanceOrderSchema
 >;
 export type UpdateMaintenanceOrderInput = z.infer<
   typeof updateMaintenanceOrderSchema

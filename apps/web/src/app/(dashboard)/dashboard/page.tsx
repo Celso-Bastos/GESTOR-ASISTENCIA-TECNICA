@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOrganization } from "@/lib/organization/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getMaintenanceDashboardMetrics } from "../manutencoes/actions";
@@ -29,9 +30,9 @@ export default async function DashboardPage() {
     organization.id
   );
   const cards = [
-    { label: "Manutencoes em aberto", value: maintenanceMetrics.open },
+    { label: "Manutenções em aberto", value: maintenanceMetrics.open },
     { label: "Entregas de hoje", value: maintenanceMetrics.todayDeliveries },
-    { label: "Aguardando peca", value: maintenanceMetrics.waitingParts },
+    { label: "Aguardando peça", value: maintenanceMetrics.waitingParts },
     { label: "Prontos para entrega", value: maintenanceMetrics.ready },
     { label: "Atrasadas", value: maintenanceMetrics.overdue },
     { label: "Clientes do tablet hoje", value: tabletCustomersToday }
@@ -47,8 +48,16 @@ export default async function DashboardPage() {
           Dashboard
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Visao inicial do atendimento com indicadores da organizacao atual.
+          Visão inicial do atendimento com indicadores da organização atual.
         </p>
+        <div className="mt-4">
+          <Link
+            className="inline-flex h-10 items-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+            href="/manutencoes/rapida"
+          >
+            Nova manutenção rápida
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

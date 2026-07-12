@@ -52,8 +52,8 @@ pnpm --filter web dev
 4. Fase 3: clientes internos, busca, consentimento WhatsApp e soft delete.
 5. Fase 4: quiosque/tablet publico para cadastro de clientes com token.
 6. Fase 5: manutencoes e historico do atendimento.
-7. Fase 6: alertas operacionais e mensagens prontas para WhatsApp manual.
-8. Fase 7: ajustes finais, auditoria de seguranca e preparacao para piloto.
+7. Fase 6: manutencao rapida para atendimento no balcao.
+8. Fase 7: alertas operacionais, mensagens prontas e ajustes finais.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -138,3 +138,19 @@ Funcionalidades:
 - cards reais de manutencoes no dashboard.
 
 A migration `supabase/migrations/0003_maintenance_order_rpc.sql` adiciona a RPC `create_maintenance_order` para criar aparelho, OS e evento inicial na mesma transacao do banco.
+
+## Fase 6 - Manutencao Rapida
+
+O fluxo rapido esta disponivel em `/manutencoes/rapida`.
+
+Funcionalidades:
+
+- formulario curto com nome, telefone, modelo e defeito;
+- busca de cliente ativo pelo telefone normalizado;
+- reaproveitamento de cliente existente sem alterar `source`;
+- criacao de cliente novo com `source = manual` quando o telefone nao existe;
+- criacao de aparelho, OS e evento inicial;
+- redirecionamento para o detalhe da OS criada;
+- atalho na listagem de manutencoes e no dashboard.
+
+Nao houve migration na Fase 6. O fluxo usa as tabelas e policies ja existentes.
