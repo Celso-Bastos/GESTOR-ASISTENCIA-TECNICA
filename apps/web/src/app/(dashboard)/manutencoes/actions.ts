@@ -1054,3 +1054,34 @@ export async function getMaintenanceDashboardMetrics(organizationId: string) {
     overdue: overdue.count ?? 0
   };
 }
+
+export async function getMaintenanceDashboardAlerts(organizationId: string) {
+  const supabase = await createClient();
+  const today = todayISO();
+
+  const todayDeliveries = await supabase
+    .from("maintenance_orders")
+    .select(MAINTENANCE_ORDER_LIST_SELECT)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
+    .eq("expected_delivery_date", today)
+    .not("status", "in", "(entregue,cancelado)")
+    .order("created_at", { ascending: false })
+    .limit(5)
+    .returns<MaintenanceOrderListItem[]>();
+
+  const ready = await supabase
+    .from("maintenance_orders")
+    .select(MAINTENANCE_ORDER_LIST_SELECT)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
+    .eq("status", "pronto_para_entrega")
+    .order("created_at", { ascending: false })
+    .limit(5)
+    .returns<MaintenanceOrderListItem[]>();
+
+  return {
+    todayDeliveries: todayDeliveries.data ?? [],
+    ready: ready.data ?? []
+  };
+}

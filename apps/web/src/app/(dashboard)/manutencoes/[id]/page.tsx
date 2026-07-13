@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { MESSAGE_TYPES } from "@assistencia/shared/constants/message-types";
 import { formatPhoneBR } from "@/lib/phone";
+import { isOpenMaintenanceStatus } from "@/lib/maintenance/status";
 import { getMaintenanceOrderById } from "../actions";
 import {
   getMaintenanceCustomer,
@@ -10,6 +12,7 @@ import {
 import { MaintenanceStatusBadge } from "../maintenance-status-badge";
 import { MaintenanceStatusControls } from "../maintenance-status-controls";
 import { MaintenanceTimeline } from "../maintenance-timeline";
+import { WhatsAppButton } from "../../mensagens/whatsapp-button";
 
 type ManutencaoDetalhePageProps = {
   params: Promise<{
@@ -49,6 +52,18 @@ function formatCurrency(value: number | string | null) {
   }).format(Number(value));
 }
 
+function todayISO() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function Field({
   label,
   value
@@ -78,6 +93,9 @@ export default async function ManutencaoDetalhePage({
 
   const customer = getMaintenanceCustomer(order);
   const device = getMaintenanceDevice(order);
+  const canUseWhatsApp = Boolean(customer?.phone) && isOpenMaintenanceStatus(order.status);
+  const shouldShowDeliveryToday =
+    canUseWhatsApp && order.expected_delivery_date === todayISO();
 
   return (
     <section className="grid gap-6">
@@ -118,6 +136,46 @@ export default async function ManutencaoDetalhePage({
         currentStatus={order.status}
         orderId={order.id}
       />
+
+      <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-950">
+            WhatsApp manual
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Gere a mensagem pelo modelo da organizacao, registre o clique e abra
+            o WhatsApp em nova aba para envio manual.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <WhatsAppButton
+            disabled={!canUseWhatsApp}
+            label="Avisar recebimento"
+            messageType={MESSAGE_TYPES.MAINTENANCE_RECEIVED}
+            orderId={order.id}
+            variant="primary"
+          />
+          <WhatsAppButton
+            disabled={!canUseWhatsApp}
+            label="Avisar que esta pronto"
+            messageType={MESSAGE_TYPES.MAINTENANCE_READY}
+            orderId={order.id}
+          />
+          <WhatsAppButton
+            disabled={!canUseWhatsApp}
+            label="Lembrete de retirada"
+            messageType={MESSAGE_TYPES.MAINTENANCE_REMINDER}
+            orderId={order.id}
+          />
+          {shouldShowDeliveryToday ? (
+            <WhatsAppButton
+              label="Entrega hoje"
+              messageType={MESSAGE_TYPES.DELIVERY_TODAY}
+              orderId={order.id}
+            />
+          ) : null}
+        </div>
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <dl className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">

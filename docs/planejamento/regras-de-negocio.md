@@ -53,7 +53,17 @@
 
 - Alertas servem para lembrar a equipe de acoes manuais.
 - O MVP nao envia mensagens automaticamente.
-- Mensagens prontas devem ser copiadas e enviadas manualmente pelo WhatsApp.
+- Cards do dashboard devem sempre filtrar pela organizacao atual.
+- Manutencoes em aberto sao ordens com status diferente de `entregue` e `cancelado`, com `deleted_at` vazio.
+- Entregas de hoje usam `expected_delivery_date` igual a hoje, status diferente de `entregue` e `cancelado`, com `deleted_at` vazio.
+- Atrasadas usam `expected_delivery_date` anterior a hoje, status diferente de `entregue` e `cancelado`, com `deleted_at` vazio.
+- Aguardando peca usa status `aguardando_peca`.
+- Prontas para entrega usa status `pronto_para_entrega`.
+- Mensagens prontas devem ser enviadas manualmente pelo WhatsApp.
+- Cada clique de WhatsApp deve registrar `message_logs`.
+- O client nao pode informar `organization_id`, `customer_id` ou `maintenance_order_id` como fonte de verdade para o log; a action deve validar a OS no servidor.
+- `delivery_today` so deve ser usado quando a previsao de entrega for hoje.
+- Variaveis ausentes em modelos de mensagem devem ser substituidas por texto vazio ou seguro.
 
 ## Usuarios
 

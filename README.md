@@ -154,3 +154,13 @@ Funcionalidades:
 - atalho na listagem de manutencoes e no dashboard.
 
 Nao houve migration na Fase 6. O fluxo usa as tabelas e policies ja existentes.
+
+## Fase 7 - Alertas e WhatsApp Manual
+
+O dashboard mostra cards reais de manutencoes em aberto, entregas de hoje, atrasadas, aguardando peca, prontas para entrega e clientes vindos do tablet no dia. Tambem exibe listas curtas de entregas de hoje e ordens prontas para retirada.
+
+A rota `/mensagens` permite editar modelos operacionais da organizacao, restaurar modelos padrao e visualizar variaveis disponiveis. Os tipos implementados sao `maintenance_received`, `maintenance_ready`, `maintenance_reminder` e `delivery_today`.
+
+No detalhe da OS, os botoes de WhatsApp geram a mensagem, registram o clique em `message_logs` e abrem uma URL do WhatsApp em nova aba. O envio e sempre manual; nao ha API oficial, automacao de disparo nem mensagens promocionais em massa nesta fase.
+
+Nao houve migration na Fase 7. As tabelas `message_templates` e `message_logs` ja existem no schema inicial.

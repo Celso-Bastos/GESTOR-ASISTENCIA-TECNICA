@@ -37,3 +37,7 @@ Antes do piloto, validar manualmente:
 ## Operacao
 
 No MVP 1, WhatsApp e manual: o sistema apenas prepara o texto e registra a abertura/envio manual quando aplicavel. Nao armazenar conversas completas sem necessidade. Permissoes por papel podem ser refinadas nas proximas fases, mas a primeira protecao deve ser isolamento por organizacao e RLS ativo.
+
+Na Fase 7, o log de WhatsApp e criado por server action autenticada. A action valida a organizacao atual, busca a OS com `organization_id`, deriva cliente e manutencao no servidor, grava `channel = whatsapp_manual` e nao usa `SUPABASE_SECRET_KEY` em componente client-side.
+
+Mensagens operacionais de manutencao e entrega podem ser tratadas como comunicacao do servico. Mensagens promocionais futuras devem depender de `whatsapp_opt_in = true`, finalidade especifica e controles de descadastro quando forem implementadas.

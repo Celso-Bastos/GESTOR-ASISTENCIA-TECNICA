@@ -49,6 +49,17 @@
 
 ## Mensagens prontas
 
-1. Sistema monta mensagem com dados da manutencao.
-2. Usuario copia o texto.
-3. Usuario envia manualmente pelo WhatsApp.
+1. Usuario configura modelos operacionais em `/mensagens`.
+2. Ao abrir uma OS, usuario escolhe o tipo de mensagem: recebimento, pronto, lembrete ou entrega hoje.
+3. Sistema reconsulta a manutencao dentro da organizacao atual.
+4. Sistema interpola variaveis seguras no modelo.
+5. Sistema registra `message_logs` com `channel = whatsapp_manual`.
+6. Sistema abre o WhatsApp em nova aba com texto codificado.
+7. Usuario revisa e envia manualmente pelo WhatsApp.
+
+## Alertas operacionais
+
+1. Usuario acessa `/dashboard`.
+2. Sistema calcula cards reais da organizacao atual.
+3. Equipe acompanha entregas de hoje, atrasadas, aguardando peca e prontas para entrega.
+4. Em entregas de hoje e prontas para entrega, usuario pode abrir a OS ou iniciar WhatsApp manual.

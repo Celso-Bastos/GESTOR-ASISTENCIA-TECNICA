@@ -1,0 +1,24 @@
+# Fase 7 - Checklist
+
+- [x] Dashboard mostra manutencoes em aberto.
+- [x] Dashboard mostra entregas de hoje.
+- [x] Dashboard mostra atrasadas.
+- [x] Dashboard mostra aguardando peca.
+- [x] Dashboard mostra prontas para entrega.
+- [x] Dashboard mostra clientes cadastrados hoje pelo tablet.
+- [x] `/mensagens` lista templates.
+- [x] Templates podem ser editados.
+- [x] Templates podem ser restaurados para o padrao.
+- [x] Variaveis disponiveis aparecem na tela.
+- [x] Mensagem e interpolada corretamente.
+- [x] Link do WhatsApp e gerado corretamente.
+- [x] Clique registra `message_logs`.
+- [x] WhatsApp abre em nova aba.
+- [x] Botoes de WhatsApp aparecem no detalhe da OS.
+- [x] Listas de alerta do dashboard possuem acao de WhatsApp quando ha telefone.
+- [x] Usuario nao acessa dados de outra organizacao pelas queries da action.
+- [x] Mensagens promocionais futuras ficam documentadas como dependentes de opt-in.
+- [x] `.env.local` continua ignorado.
+- [x] `pnpm lint` passa.
+- [x] `pnpm typecheck` passa.
+- [x] `pnpm build` passa.

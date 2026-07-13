@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { MESSAGE_TYPES } from "@assistencia/shared/constants/message-types";
 import { requireOrganization } from "@/lib/organization/queries";
 import { createClient } from "@/lib/supabase/server";
-import { getMaintenanceDashboardMetrics } from "../manutencoes/actions";
+import {
+  getMaintenanceDashboardAlerts,
+  getMaintenanceDashboardMetrics
+} from "../manutencoes/actions";
+import { AlertMaintenanceList } from "./alert-maintenance-list";
 
 async function getTabletCustomersToday(organizationId: string) {
   const supabase = await createClient();
@@ -29,6 +34,7 @@ export default async function DashboardPage() {
   const maintenanceMetrics = await getMaintenanceDashboardMetrics(
     organization.id
   );
+  const alerts = await getMaintenanceDashboardAlerts(organization.id);
   const cards = [
     { label: "Manutenções em aberto", value: maintenanceMetrics.open },
     { label: "Entregas de hoje", value: maintenanceMetrics.todayDeliveries },
@@ -72,6 +78,21 @@ export default async function DashboardPage() {
             </p>
           </article>
         ))}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <AlertMaintenanceList
+          emptyMessage="Nenhuma entrega prevista para hoje."
+          orders={alerts.todayDeliveries}
+          title="Entregas de hoje"
+          whatsappType={MESSAGE_TYPES.DELIVERY_TODAY}
+        />
+        <AlertMaintenanceList
+          emptyMessage="Nenhuma ordem pronta para entrega."
+          orders={alerts.ready}
+          title="Prontas para entrega"
+          whatsappType={MESSAGE_TYPES.MAINTENANCE_READY}
+        />
       </div>
     </section>
   );
