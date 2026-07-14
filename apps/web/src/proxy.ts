@@ -48,7 +48,7 @@ function redirectWithCookies(
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { response, supabase, user } = await updateSession(request);
   const isServerAction = isServerActionRequest(request);

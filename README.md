@@ -55,6 +55,7 @@ pnpm --filter web dev
 7. Fase 6: manutencao rapida para atendimento no balcao.
 8. Fase 7: alertas operacionais, mensagens prontas e ajustes finais.
 9. Fase 8: responsividade/mobile para dashboard, listagens, formularios, mensagens e quiosque.
+10. Fase 9: auditoria final, preparacao de deploy e checklist do piloto MVP 1.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -82,6 +83,107 @@ SUPABASE_SECRET_KEY=
 SUPABASE_JWKS_URL=
 NEXT_PUBLIC_APP_URL=
 ```
+
+## Como rodar localmente
+
+```bash
+pnpm install
+pnpm dev
+```
+
+O app web abre em `http://localhost:3000`.
+
+Para rodar somente o app web:
+
+```bash
+pnpm --dir apps/web dev
+```
+
+Para testar em celular na mesma rede:
+
+```bash
+pnpm --dir apps/web dev --hostname 0.0.0.0
+```
+
+Use a URL de rede exibida pelo Next.js no celular conectado ao mesmo Wi-Fi.
+
+## Como testar antes do deploy
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+Fluxos minimos para validar:
+
+- login e logout;
+- onboarding de organizacao;
+- dashboard;
+- clientes;
+- quiosque/tablet;
+- manutencao completa;
+- manutencao rapida;
+- detalhe da OS e mudanca de status;
+- mensagens e WhatsApp manual;
+- navegacao mobile basica.
+
+## Como configurar variaveis
+
+Use os nomes abaixo no `.env.local` e na Vercel:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+SUPABASE_JWKS_URL=
+NEXT_PUBLIC_APP_URL=
+```
+
+Cuidados:
+
+- nunca commitar `.env.local`;
+- nunca usar `SUPABASE_SECRET_KEY` em componente client-side;
+- atualizar `NEXT_PUBLIC_APP_URL` para a URL final apos o deploy.
+
+## Como fazer deploy na Vercel
+
+1. Crie um projeto na Vercel apontando para este repositorio.
+2. Configure Root Directory como `apps/web`.
+3. Confirme o framework Next.js.
+4. Configure as variaveis de ambiente em Production.
+5. Rode o primeiro deploy.
+6. Atualize `NEXT_PUBLIC_APP_URL` com a URL final da Vercel.
+7. No Supabase Auth, configure Site URL e Redirect URLs com a URL final.
+8. Rode um novo deploy apos ajustar `NEXT_PUBLIC_APP_URL`.
+
+Detalhes completos: `docs/planejamento/fase-9-deploy.md`.
+
+## Status do MVP 1
+
+Pronto para piloto tecnico com cliente apos configuracao de Vercel, URLs do Supabase e validacao manual com usuario de teste.
+
+Funcionalidades incluidas:
+
+- autenticacao;
+- organizacao inicial;
+- clientes;
+- quiosque/tablet publico com token;
+- manutencoes e ordens de servico;
+- manutencao rapida;
+- alertas operacionais;
+- mensagens e WhatsApp manual;
+- responsividade mobile basica.
+
+Fora do escopo:
+
+- estoque;
+- vendas;
+- WhatsApp API oficial;
+- envio automatico de mensagens;
+- promocoes em massa;
+- financeiro;
+- multi-loja avancado visual.
 
 ## Testando autenticacao
 
