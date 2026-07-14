@@ -46,7 +46,7 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
   const preview = interpolateMessageTemplate(template.body, previewVariables);
 
   return (
-    <article className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div>
         <p className="text-xs font-medium uppercase text-teal-700">
           {template.type}
@@ -60,7 +60,7 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Titulo
           <input
-            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={template.title}
             name="title"
             required
@@ -70,7 +70,7 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Mensagem
           <textarea
-            className="min-h-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="min-h-40 rounded-md border border-slate-300 bg-white px-3 py-3 text-base leading-6 text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={template.body}
             maxLength={1200}
             name="body"
@@ -101,7 +101,7 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
 
         <div className="flex flex-wrap gap-2">
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
             disabled={isSaving}
             type="submit"
           >
@@ -113,7 +113,7 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
 
       <form action={restoreAction}>
         <button
-          className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:w-auto"
           disabled={isRestoring}
           type="submit"
         >
@@ -124,4 +124,3 @@ export function MessageTemplateForm({ template }: MessageTemplateFormProps) {
     </article>
   );
 }
-

@@ -41,11 +41,11 @@ export function WhatsAppButton({
 
   const className =
     variant === "primary"
-      ? "inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-      : "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400";
+      ? "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+      : "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-10 sm:w-auto";
 
   return (
-    <form action={action} className="grid gap-2">
+    <form action={action} className="grid w-full gap-2 sm:w-auto">
       <button className={className} disabled={disabled || isPending} type="submit">
         <MessageCircle className="size-4" aria-hidden="true" />
         {isPending ? "Abrindo..." : label}
@@ -59,4 +59,3 @@ export function WhatsAppButton({
     </form>
   );
 }
-

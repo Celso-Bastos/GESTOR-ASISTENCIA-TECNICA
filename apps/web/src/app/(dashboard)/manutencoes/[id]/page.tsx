@@ -116,15 +116,15 @@ export default async function ManutencaoDetalhePage({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap">
           <Link
-            className="inline-flex h-9 items-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-9"
             href="/manutencoes"
           >
             Voltar para listagem
           </Link>
           <Link
-            className="inline-flex h-9 items-center rounded-md bg-teal-700 px-3 text-sm font-medium text-white transition hover:bg-teal-800"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-teal-700 px-3 text-sm font-medium text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-9"
             href={`/manutencoes/${order.id}/editar`}
           >
             Editar dados básicos
@@ -137,7 +137,7 @@ export default async function ManutencaoDetalhePage({
         orderId={order.id}
       />
 
-      <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
           <h2 className="text-lg font-semibold text-slate-950">
             WhatsApp manual
@@ -147,7 +147,7 @@ export default async function ManutencaoDetalhePage({
             o WhatsApp em nova aba para envio manual.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap">
           <WhatsAppButton
             disabled={!canUseWhatsApp}
             label="Avisar recebimento"
@@ -178,7 +178,7 @@ export default async function ManutencaoDetalhePage({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <dl className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">
+        <dl className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5">
           <Field label="Cliente" value={customer?.name} />
           <Field
             label="Telefone"

@@ -3,11 +3,11 @@ type DeviceFormFieldsProps = {
 };
 
 const inputClass =
-  "h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
 
 export function DeviceFormFields({ values }: DeviceFormFieldsProps) {
   return (
-    <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <legend className="px-1 text-sm font-semibold text-slate-950">
         Aparelho
       </legend>
@@ -52,7 +52,7 @@ export function DeviceFormFields({ values }: DeviceFormFieldsProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Observações do aparelho
         <textarea
-          className="min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           defaultValue={values.device_notes}
           name="device_notes"
         />

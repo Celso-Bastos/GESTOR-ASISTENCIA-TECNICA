@@ -30,7 +30,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
         </div>
 
         <Link
-          className="inline-flex h-10 items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
           href="/clientes/novo"
         >
           Novo cliente

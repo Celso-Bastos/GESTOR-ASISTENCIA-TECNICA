@@ -32,7 +32,7 @@ export function MaintenanceFilters({ query, status }: MaintenanceFiltersProps) {
             aria-hidden="true"
           />
           <input
-            className="h-10 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-11 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 md:text-sm"
             defaultValue={query}
             name="q"
             placeholder="Cliente, telefone, modelo ou OS"
@@ -43,7 +43,7 @@ export function MaintenanceFilters({ query, status }: MaintenanceFiltersProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Status
         <select
-          className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 md:text-sm"
           defaultValue={status}
           name="status"
         >
@@ -56,7 +56,7 @@ export function MaintenanceFilters({ query, status }: MaintenanceFiltersProps) {
       </label>
 
       <button
-        className="inline-flex h-10 items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+        className="inline-flex h-11 items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
         type="submit"
       >
         Filtrar

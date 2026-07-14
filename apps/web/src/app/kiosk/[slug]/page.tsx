@@ -47,16 +47,16 @@ export default async function KioskPage({
   const validAccess = await isValidKioskAccess(slug, token);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-8 text-slate-950 sm:px-8">
-      <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-3xl content-center gap-8">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-6 text-slate-950 sm:px-8 sm:py-8">
+      <section className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-3xl content-center gap-6 sm:min-h-[calc(100vh-4rem)] sm:gap-8">
         <div className="grid gap-3">
           <p className="text-sm font-bold uppercase tracking-wide text-teal-700">
             Quiosque / Tablet
           </p>
-          <h1 className="text-4xl font-bold text-slate-950 sm:text-5xl">
+          <h1 className="text-3xl font-bold text-slate-950 sm:text-5xl">
             Cadastro para contato
           </h1>
-          <p className="max-w-2xl text-xl leading-8 text-slate-600">
+          <p className="max-w-2xl text-lg leading-7 text-slate-600 sm:text-xl sm:leading-8">
             Informe seu nome e WhatsApp para a loja entrar em contato sobre
             manutencao, entrega, produtos e promocoes.
           </p>

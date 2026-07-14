@@ -31,7 +31,7 @@ export function CustomerSelect({
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Buscar cliente
         <input
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Nome ou telefone"
           type="search"
@@ -42,7 +42,7 @@ export function CustomerSelect({
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Cliente
         <select
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           defaultValue={defaultCustomerId ?? ""}
           name="customer_id"
           required

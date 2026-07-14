@@ -32,11 +32,11 @@ export function AlertMaintenanceList({
   whatsappType
 }: AlertMaintenanceListProps) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
         <Link
-          className="text-sm font-semibold text-teal-700 transition hover:text-teal-800"
+          className="inline-flex min-h-10 items-center text-sm font-semibold text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
           href="/manutencoes"
         >
           Ver todas
@@ -89,4 +89,3 @@ export function AlertMaintenanceList({
     </section>
   );
 }
-

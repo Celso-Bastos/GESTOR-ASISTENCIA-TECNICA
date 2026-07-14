@@ -34,16 +34,16 @@ export default async function ManutencoesPage({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap">
           <Link
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-teal-700 bg-white px-4 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-teal-700 bg-white px-4 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-200"
             href="/manutencoes/rapida"
           >
             <Zap className="size-4" aria-hidden="true" />
             Manutenção rápida
           </Link>
           <Link
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
             href="/manutencoes/nova"
           >
             <Plus className="size-4" aria-hidden="true" />

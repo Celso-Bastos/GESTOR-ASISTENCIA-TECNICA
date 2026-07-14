@@ -54,6 +54,7 @@ pnpm --filter web dev
 6. Fase 5: manutencoes e historico do atendimento.
 7. Fase 6: manutencao rapida para atendimento no balcao.
 8. Fase 7: alertas operacionais, mensagens prontas e ajustes finais.
+9. Fase 8: responsividade/mobile para dashboard, listagens, formularios, mensagens e quiosque.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -164,3 +165,14 @@ A rota `/mensagens` permite editar modelos operacionais da organizacao, restaura
 No detalhe da OS, os botoes de WhatsApp geram a mensagem, registram o clique em `message_logs` e abrem uma URL do WhatsApp em nova aba. O envio e sempre manual; nao ha API oficial, automacao de disparo nem mensagens promocionais em massa nesta fase.
 
 Nao houve migration na Fase 7. As tabelas `message_templates` e `message_logs` ja existem no schema inicial.
+
+## Fase 8 - Responsividade Mobile
+
+O layout protegido mantem sidebar no desktop e usa menu recolhivel no topo em telas pequenas. As listagens de clientes e manutencoes continuam em tabela no desktop e viram cards no mobile.
+
+Formularios de cliente, manutencao completa, manutencao rapida, mensagens e quiosque receberam campos e botoes maiores para uso em celular/tablet. Nao houve alteracao de banco, RLS, Supabase ou regras de negocio.
+
+Documentacao da fase:
+
+- `docs/planejamento/fase-8-responsividade-mobile.md`
+- `docs/planejamento/fase-8-checklist.md`

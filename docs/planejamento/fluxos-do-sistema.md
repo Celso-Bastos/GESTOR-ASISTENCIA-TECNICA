@@ -63,3 +63,12 @@
 2. Sistema calcula cards reais da organizacao atual.
 3. Equipe acompanha entregas de hoje, atrasadas, aguardando peca e prontas para entrega.
 4. Em entregas de hoje e prontas para entrega, usuario pode abrir a OS ou iniciar WhatsApp manual.
+
+## Uso mobile
+
+1. Usuario acessa o painel em celular ou tablet.
+2. Sistema mostra menu recolhivel no topo em vez da sidebar lateral.
+3. Usuario navega por dashboard, clientes, manutencoes, manutencao rapida, mensagens e configuracoes.
+4. Listagens grandes aparecem em cards no mobile para evitar tabela espremida.
+5. Formularios mostram campos e botoes maiores para toque.
+6. Quiosque continua sem elementos administrativos e funciona em celular/tablet.

@@ -59,7 +59,7 @@ export function KioskForm({ slug, token }: KioskFormProps) {
   }
 
   return (
-    <form className="grid gap-6" onSubmit={handleSubmit}>
+    <form className="grid gap-5 sm:gap-6" onSubmit={handleSubmit}>
       <input
         autoComplete="off"
         className="hidden"
@@ -69,11 +69,11 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         value={website}
       />
 
-      <label className="grid gap-3 text-xl font-semibold text-slate-800">
+      <label className="grid gap-3 text-lg font-semibold text-slate-800 sm:text-xl">
         Nome
         <input
           autoComplete="name"
-          className="h-16 rounded-md border border-slate-300 bg-white px-5 text-2xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100"
+          className="h-14 rounded-md border border-slate-300 bg-white px-4 text-xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100 sm:h-16 sm:px-5 sm:text-2xl"
           maxLength={120}
           minLength={2}
           onChange={(event) => setName(event.target.value)}
@@ -83,11 +83,11 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         />
       </label>
 
-      <label className="grid gap-3 text-xl font-semibold text-slate-800">
+      <label className="grid gap-3 text-lg font-semibold text-slate-800 sm:text-xl">
         WhatsApp
         <input
           autoComplete="tel"
-          className="h-16 rounded-md border border-slate-300 bg-white px-5 text-2xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100"
+          className="h-14 rounded-md border border-slate-300 bg-white px-4 text-xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100 sm:h-16 sm:px-5 sm:text-2xl"
           inputMode="tel"
           maxLength={30}
           onChange={(event) => setPhone(event.target.value)}
@@ -98,7 +98,7 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         />
       </label>
 
-      <label className="flex gap-4 rounded-md border border-slate-200 bg-white p-5 text-lg font-medium leading-7 text-slate-700 shadow-sm">
+      <label className="flex gap-4 rounded-md border border-slate-200 bg-white p-4 text-base font-medium leading-7 text-slate-700 shadow-sm sm:p-5 sm:text-lg">
         <input
           checked={consent}
           className="mt-1 size-6 shrink-0 rounded border-slate-300 text-teal-700"
@@ -125,7 +125,7 @@ export function KioskForm({ slug, token }: KioskFormProps) {
       ) : null}
 
       <button
-        className="h-16 rounded-md bg-teal-700 px-8 text-xl font-bold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+        className="h-14 rounded-md bg-teal-700 px-8 text-lg font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-400 sm:h-16 sm:text-xl"
         disabled={isPending}
         type="submit"
       >
