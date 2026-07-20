@@ -129,6 +129,10 @@ export const updateMaintenanceStatusSchema = z.object({
   description: optionalText(1000, "Use no máximo 1000 caracteres na descrição.")
 });
 
+export const deleteMaintenanceOrderSchema = z.object({
+  maintenance_order_id: z.string().uuid("Manutenção inválida.")
+});
+
 export const maintenanceSearchSchema = z.object({
   q: z
     .string()
@@ -156,5 +160,8 @@ export type UpdateMaintenanceOrderInput = z.infer<
 >;
 export type UpdateMaintenanceStatusInput = z.infer<
   typeof updateMaintenanceStatusSchema
+>;
+export type DeleteMaintenanceOrderInput = z.infer<
+  typeof deleteMaintenanceOrderSchema
 >;
 export type MaintenanceSearchInput = z.infer<typeof maintenanceSearchSchema>;

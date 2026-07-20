@@ -43,6 +43,11 @@
 - Se uma OS sair de `entregue`, `delivered_at` deve ser limpo para refletir o status atual.
 - OS atrasada tem `expected_delivery_date` anterior a hoje, status diferente de `entregue` e `cancelado`, e `deleted_at` vazio.
 - Listagens, detalhes e dashboard devem ignorar ordens com `deleted_at` preenchido.
+- Excluir manutencao deve ser sempre soft delete, preenchendo `maintenance_orders.deleted_at` e sem usar `.delete()` no Supabase.
+- Excluir manutencao deve preservar cliente, aparelho, eventos e logs de mensagem.
+- Excluir manutencao deve registrar evento `maintenance_deleted` em `maintenance_events` com o status anterior em `old_status`.
+- Manutencao excluida nao deve aparecer em filtros, buscas, alertas, entregas de hoje, atrasadas, prontas para entrega, aguardando peca ou contagens do dashboard.
+- Acesso direto a uma OS excluida em `/manutencoes/[id]` deve retornar `notFound()`.
 - O fluxo de manutencao rapida nao aceita `customer_id` nem `organization_id` do formulario.
 - Manutencao rapida deve encontrar ou criar cliente por `phone_normalized` dentro da organizacao atual.
 - Se o cliente ja existir, o sistema deve reaproveitar o cadastro sem alterar `source` e sem sobrescrever nome automaticamente.

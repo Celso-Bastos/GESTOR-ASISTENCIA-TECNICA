@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import { MESSAGE_TYPES } from "@assistencia/shared/constants/message-types";
 import { formatPhoneBR } from "@/lib/phone";
 import { isOpenMaintenanceStatus } from "@/lib/maintenance/status";
-import { getMaintenanceOrderById } from "../actions";
+import {
+  deleteMaintenanceOrderAction,
+  getMaintenanceOrderById
+} from "../actions";
+import { DeleteMaintenanceButton } from "../delete-maintenance-button";
 import {
   getMaintenanceCustomer,
   getMaintenanceDevice
@@ -129,6 +133,9 @@ export default async function ManutencaoDetalhePage({
           >
             Editar dados básicos
           </Link>
+          <DeleteMaintenanceButton
+            action={deleteMaintenanceOrderAction.bind(null, order.id)}
+          />
         </div>
       </div>
 

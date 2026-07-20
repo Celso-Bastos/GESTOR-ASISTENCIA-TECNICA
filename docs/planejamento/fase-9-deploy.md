@@ -119,6 +119,8 @@ Validacao recomendada:
 8. Confirmar cliente em `/clientes`.
 9. Criar manutencao rapida e verificar detalhe da OS.
 10. Clicar em WhatsApp manual e confirmar abertura da URL do WhatsApp.
+11. Excluir uma OS de teste e confirmar que ela sai da listagem, dos alertas e dos cards do dashboard.
+12. Confirmar no Supabase que a OS excluida manteve o registro com `deleted_at` preenchido e evento `maintenance_deleted`.
 
 ## Usuario de teste para cliente
 

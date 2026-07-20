@@ -13,6 +13,11 @@
 - [x] Mudança de status funciona.
 - [x] Histórico registra mudança.
 - [x] Marcar como entregue preenche `delivered_at`.
+- [x] Detalhe da OS permite excluir manutenção por soft delete.
+- [x] Exclusão de OS preenche `maintenance_orders.deleted_at`.
+- [x] Exclusão de OS registra evento `maintenance_deleted`.
+- [x] OS excluída não aparece em listagens, filtros, alertas ou dashboard.
+- [x] Acesso direto a OS excluída retorna not found.
 - [x] Dashboard mostra cards corretos.
 - [x] Usuário não acessa dados de outra organização.
 - [x] `.env.local` continua ignorado.

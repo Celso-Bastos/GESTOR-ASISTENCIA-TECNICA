@@ -58,6 +58,16 @@ Ao alterar status:
 
 A pagina de detalhe exibe os eventos de `maintenance_events`, incluindo criacao da ordem e mudancas de status. O historico e sempre filtrado por `organization_id` e `maintenance_order_id`.
 
+## Exclusao de OS
+
+A exclusao de manutencao e sempre soft delete. A action `deleteMaintenanceOrderAction` valida o UUID da OS, exige usuario autenticado e organizacao atual, busca a ordem por `id` e `organization_id` e atualiza `maintenance_orders.deleted_at` com a data/hora atual. O campo `updated_at` tambem e atualizado.
+
+Nao e usado hard delete nem `.delete()` no Supabase para manutencoes. O registro da OS permanece no banco, assim como cliente, aparelho, `maintenance_events` e `message_logs`.
+
+Ao excluir, a action cria um evento em `maintenance_events` com `event_type = maintenance_deleted`, `old_status` com o status anterior, `new_status = null`, descricao `Ordem de servico excluida por soft delete.` e `created_by` com o usuario atual.
+
+Consultas operacionais de listagem, busca, filtros, detalhe, dashboard, alertas e WhatsApp manual devem manter `deleted_at is null`. Como o detalhe tambem filtra `deleted_at is null`, acessar diretamente `/manutencoes/[id]` de uma OS excluida retorna `notFound()`.
+
 ## Regra de atrasado
 
 Uma OS esta atrasada quando:
@@ -73,11 +83,11 @@ O filtro `/manutencoes?status=atrasados` aplica essa regra.
 
 O dashboard passou a mostrar cards baseados em `maintenance_orders`:
 
-- Manutencoes em aberto: status diferente de `entregue` e `cancelado`.
-- Entregas de hoje: previsao igual a hoje e status aberto.
-- Aguardando peca: status `aguardando_peca`.
-- Prontos para entrega: status `pronto_para_entrega`.
-- Atrasadas: previsao anterior a hoje e status aberto.
+- Manutencoes em aberto: status em aberto e `deleted_at is null`.
+- Entregas de hoje: previsao igual a hoje, status aberto e `deleted_at is null`.
+- Aguardando peca: status `aguardando_peca` e `deleted_at is null`.
+- Prontos para entrega: status `pronto_para_entrega` e `deleted_at is null`.
+- Atrasadas: previsao anterior a hoje, status aberto e `deleted_at is null`.
 
 O card de clientes do tablet hoje foi mantido.
 
@@ -87,7 +97,8 @@ O card de clientes do tablet hoje foi mantido.
 - Todas as actions exigem organizacao atual.
 - Consultas, inserts e updates usam `organization_id` da sessao.
 - A action valida se o cliente pertence a organizacao atual antes de abrir OS.
-- Detalhe e edicao retornam `notFound()` quando a OS nao existe ou nao pertence a organizacao atual.
+- Detalhe e edicao retornam `notFound()` quando a OS nao existe, nao pertence a organizacao atual ou foi excluida por soft delete.
+- Exclusao de OS nao aceita `organization_id` vindo do client; a organizacao vem da sessao.
 - `SUPABASE_SECRET_KEY` nao e usada em componentes client-side.
 - Erros internos do banco nao sao expostos diretamente ao usuario.
 - RLS continua sendo a barreira final de isolamento multiempresa.
@@ -109,6 +120,8 @@ O card de clientes do tablet hoje foi mantido.
 13. Editar dados basicos e confirmar persistencia.
 14. Abrir `/dashboard` e conferir os cards.
 15. Tentar acessar uma OS de outra organizacao e confirmar bloqueio/not found.
+16. Excluir uma OS pelo detalhe e confirmar que ela some da listagem e do dashboard.
+17. Consultar o banco e confirmar `maintenance_orders.deleted_at` preenchido e evento `maintenance_deleted`.
 
 ## Migration
 

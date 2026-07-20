@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createMaintenanceOrderSchema,
   createQuickMaintenanceOrderSchema,
+  deleteMaintenanceOrderSchema,
   type CreateMaintenanceOrderInput,
   maintenanceSearchSchema,
   updateMaintenanceOrderSchema,
@@ -1003,6 +1004,97 @@ export async function cancelMaintenanceOrderAction(
     "cancelado",
     "Ordem cancelada pela equipe."
   );
+}
+
+export async function deleteMaintenanceOrderAction(
+  orderId: string,
+  prevState: MaintenanceActionState,
+  formData: FormData
+): Promise<MaintenanceActionState> {
+  void prevState;
+  void formData;
+
+  const parsed = deleteMaintenanceOrderSchema.safeParse({
+    maintenance_order_id: orderId
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Manutenção inválida."
+    };
+  }
+
+  const user = await requireAuth();
+  const organization = await requireOrganization();
+  const supabase = await createClient();
+  const { data: order, error: orderError } = await supabase
+    .from("maintenance_orders")
+    .select("id, order_number, status, deleted_at")
+    .eq("id", parsed.data.maintenance_order_id)
+    .eq("organization_id", organization.id)
+    .maybeSingle<{
+      id: string;
+      order_number: string;
+      status: MaintenanceStatus;
+      deleted_at: string | null;
+    }>();
+
+  if (orderError) {
+    console.error("Erro ao buscar manutenção para exclusão:", orderError);
+    return { error: "Não foi possível localizar a manutenção." };
+  }
+
+  if (!order) {
+    return { error: "Manutenção não encontrada para esta organização." };
+  }
+
+  if (order.deleted_at) {
+    revalidatePath("/manutencoes");
+    revalidatePath("/dashboard");
+    redirect("/manutencoes");
+  }
+
+  const now = new Date().toISOString();
+  const { data: updated, error: updateError } = await supabase
+    .from("maintenance_orders")
+    .update({
+      deleted_at: now,
+      updated_at: now
+    })
+    .eq("id", order.id)
+    .eq("organization_id", organization.id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (updateError || !updated) {
+    console.error("Erro ao excluir manutenção por soft delete:", updateError);
+    return { error: "Não foi possível excluir a manutenção." };
+  }
+
+  const { error: eventError } = await supabase.from("maintenance_events").insert({
+    organization_id: organization.id,
+    maintenance_order_id: order.id,
+    event_type: "maintenance_deleted",
+    old_status: order.status,
+    new_status: null,
+    description: "Ordem de serviço excluída por soft delete.",
+    created_by: user.id,
+    created_at: now
+  });
+
+  if (eventError) {
+    console.error("Erro ao registrar evento de exclusão da manutenção:", eventError);
+    return {
+      error:
+        "A manutenção foi removida das listas, mas não foi possível registrar o histórico."
+    };
+  }
+
+  revalidatePath("/manutencoes");
+  revalidatePath(`/manutencoes/${order.id}`);
+  revalidatePath("/dashboard");
+  redirect("/manutencoes");
 }
 
 export async function getMaintenanceDashboardMetrics(organizationId: string) {
