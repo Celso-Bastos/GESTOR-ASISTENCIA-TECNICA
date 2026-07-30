@@ -29,7 +29,9 @@ export const AVAILABLE_MESSAGE_VARIABLES = [
   "numero_ordem",
   "status",
   "data_entrega",
-  "loja_nome"
+  "loja_nome",
+  "garantia_periodo",
+  "garantia_validade"
 ] as const;
 
 export const DEFAULT_MESSAGE_TEMPLATES: Record<
@@ -55,6 +57,11 @@ export const DEFAULT_MESSAGE_TEMPLATES: Record<
     type: MESSAGE_TYPES.DELIVERY_TODAY,
     title: "Entrega hoje",
     body: "Ola, {{cliente_nome}}! A previsao de entrega do seu aparelho {{aparelho_modelo}} e hoje. Ordem: {{numero_ordem}}. Qualquer novidade avisaremos por aqui."
+  },
+  [MESSAGE_TYPES.WARRANTY_NOTICE]: {
+    type: MESSAGE_TYPES.WARRANTY_NOTICE,
+    title: "Aviso de garantia",
+    body: "Ola, {{cliente_nome}}! Sua manutencao do aparelho {{aparelho_modelo}} possui garantia de {{garantia_periodo}}, valida ate {{garantia_validade}}. Ordem: {{numero_ordem}}."
   }
 };
 
@@ -76,4 +83,3 @@ export function isOperationalMessageType(
 ): type is OperationalMessageType {
   return OPERATIONAL_MESSAGE_TYPES.includes(type as OperationalMessageType);
 }
-

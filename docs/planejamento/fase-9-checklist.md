@@ -1,46 +1,28 @@
-# Fase 9 - Checklist Final
+# Fase 9 - Checklist Garantia
 
-- [x] `git status` revisado.
-- [x] `.env.local` ignorado.
-- [x] Nomes de variaveis revisados em `.env.example`, README e docs.
-- [x] Rotas publicas revisadas.
-- [x] Rotas protegidas revisadas.
-- [x] Proxy do Next 16 atualizado.
-- [x] `SUPABASE_SECRET_KEY` restrita a helper server-only.
-- [x] Clientes revisado.
-- [x] Quiosque revisado.
-- [x] Manutencoes revisado.
-- [x] Manutencao rapida revisada.
-- [x] WhatsApp manual revisado.
-- [x] Dashboard e alertas revisados.
-- [x] Mobile basico revisado.
+- [x] Migration criada.
+- [x] Campos de garantia adicionados.
+- [x] Formulario completo permite garantia.
+- [x] Edicao permite alterar garantia.
+- [x] Detalhe mostra garantia.
+- [x] Calculo de validade funciona com dias.
+- [x] Calculo de validade funciona com meses.
+- [x] Botao de garantia bloqueia se nao assinou.
+- [x] Botao de garantia bloqueia se nao ha garantia ativa.
+- [x] WhatsApp abre com mensagem correta.
+- [x] `message_logs` registra `warranty_notice`.
+- [x] `maintenance_events` registra evento.
+- [x] `warranty_message_sent_at` e preenchido.
+- [x] Manutencao excluida nao permite enviar garantia.
+- [x] `.env.local` continua ignorado.
 - [x] `pnpm lint` passa.
 - [x] `pnpm typecheck` passa.
 - [x] `pnpm build` passa.
-- [ ] Vercel configurada.
-- [ ] Variaveis na Vercel configuradas.
-- [ ] Supabase URLs atualizadas.
-- [ ] Usuario de teste criado.
-- [ ] Cliente recebeu link de piloto.
 
-## Rotas para validacao manual
+## Validacao manual
 
-- `/`
-- `/login`
-- `/dashboard`
-- `/clientes`
-- `/clientes/novo`
-- `/manutencoes`
-- `/manutencoes/nova`
-- `/manutencoes/rapida`
-- `/mensagens`
-- `/configuracoes`
-- `/configuracoes/quiosque`
-- `/onboarding/organizacao`
-- `/kiosk/[slug]?token=[token]`
-
-## Resultado da auditoria
-
-- Bugs criticos corrigidos: nomes antigos em `.env.example` e convencao `middleware` depreciada no Next 16.
-- Bugs criticos nao confirmados na revisao estatica: soft delete apagando fisicamente, redirect para rota inexistente, exposicao de dados entre organizacoes.
-- Pendencias manuais: validar login, criacao de dados e WhatsApp manual com Supabase real antes de entregar ao cliente.
+- Criar garantia de 90 dias com aceite e conferir validade.
+- Criar garantia ativa sem aceite e conferir bloqueio do botao.
+- Enviar garantia pelo WhatsApp e conferir log, evento e `warranty_message_sent_at`.
+- Criar garantia de 3 meses e conferir periodo e validade.
+- Excluir uma manutencao e confirmar que detalhe/envio nao ficam acessiveis.

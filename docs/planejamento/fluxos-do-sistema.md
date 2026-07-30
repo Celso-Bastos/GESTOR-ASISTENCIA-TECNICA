@@ -32,9 +32,22 @@
 4. Sistema cria `device`, `maintenance_order` e evento inicial.
 5. Tecnico atualiza diagnostico e status em `/manutencoes/[id]` ou na edicao.
 6. Cada mudanca de status gera evento no historico.
-7. Equipe informa cliente manualmente quando necessario.
-8. Ordem fica pronta para retirada.
-9. Atendimento marca como entregue, preenchendo `delivered_at`.
+7. Se houver garantia, equipe ativa a garantia, informa periodo, data de inicio e se o cliente assinou/aceitou.
+8. Sistema calcula a validade da garantia no servidor.
+9. Equipe informa cliente manualmente quando necessario.
+10. Ordem fica pronta para retirada.
+11. Atendimento marca como entregue, preenchendo `delivered_at`.
+
+## Garantia por WhatsApp
+
+1. Usuario abre o detalhe da OS.
+2. Sistema mostra status visual da garantia: sem garantia, valida, vencida ou nao assinada.
+3. Usuario clica em `Enviar garantia no WhatsApp`.
+4. Sistema reconsulta a OS na organizacao atual e exige `deleted_at is null`.
+5. Sistema bloqueia se a garantia nao estiver ativa, se nao houver aceite ou se os campos obrigatorios estiverem incompletos.
+6. Sistema interpola `{{garantia_periodo}}` e `{{garantia_validade}}`.
+7. Sistema registra `message_logs`, atualiza `warranty_message_sent_at` e cria evento `warranty_message_opened`.
+8. Sistema abre o WhatsApp em nova aba para envio manual.
 
 ## Manutencao Rapida
 

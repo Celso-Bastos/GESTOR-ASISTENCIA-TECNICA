@@ -7,7 +7,7 @@ A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamen
 - `user_role`: `owner`, `admin`, `employee`.
 - `customer_source`: `manual`, `tablet`, `future_import`.
 - `maintenance_status`: `recebido`, `em_analise`, `aguardando_peca`, `em_manutencao`, `pronto_para_entrega`, `entregue`, `cancelado`.
-- `message_type`: `maintenance_received`, `maintenance_ready`, `maintenance_reminder`, `delivery_today`, `promotion_future`, `sales_future`.
+- `message_type`: `maintenance_received`, `maintenance_ready`, `maintenance_reminder`, `delivery_today`, `warranty_notice`, `promotion_future`, `sales_future`.
 - `message_channel`: `whatsapp_manual`, `whatsapp_api_future`, `sms_future`, `email_future`.
 
 ## Tabelas
@@ -17,7 +17,7 @@ A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamen
 - `organization_members`: liga usuarios a organizacoes e define o papel operacional (`owner`, `admin` ou `employee`).
 - `customers`: clientes da organizacao, com nome, telefone, telefone normalizado, consentimento para WhatsApp e origem do cadastro.
 - `devices`: aparelhos vinculados a clientes, incluindo marca, modelo, cor, armazenamento, IMEI e observacoes.
-- `maintenance_orders`: ordens de manutencao, status, diagnostico, previsao de entrega, valores estimados/finais e observacoes internas.
+- `maintenance_orders`: ordens de manutencao, status, diagnostico, previsao de entrega, valores estimados/finais, observacoes internas e garantia opcional.
 - `maintenance_events`: historico de eventos de cada ordem, incluindo mudancas de status e usuario que registrou o evento.
 - `message_templates`: modelos de mensagens prontas para WhatsApp manual e canais futuros.
 - `message_logs`: historico minimo das mensagens preparadas/abertas para envio manual, sem armazenar conversa completa.

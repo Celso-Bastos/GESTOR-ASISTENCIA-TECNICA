@@ -8,6 +8,7 @@ import {
 } from "@assistencia/shared/constants/message-types";
 import { getCurrentUser } from "@/lib/auth/queries";
 import { maintenanceStatusLabels } from "@/lib/maintenance/status";
+import { formatWarrantyPeriod } from "@/lib/maintenance/warranty";
 import {
   DEFAULT_MESSAGE_TEMPLATES,
   isOperationalMessageType,
@@ -38,6 +39,11 @@ type MessageOrder = {
   order_number: string;
   status: keyof typeof maintenanceStatusLabels;
   expected_delivery_date: string | null;
+  warranty_enabled: boolean;
+  warranty_signed: boolean;
+  warranty_amount: number | null;
+  warranty_unit: "days" | "months" | null;
+  warranty_expires_at: string | null;
   customers:
     | {
         id: string;
@@ -295,7 +301,7 @@ export async function logWhatsAppMessageAction(
   const { data: order, error: orderError } = await supabase
     .from("maintenance_orders")
     .select(
-      "id, customer_id, order_number, status, expected_delivery_date, customers(id, name, phone), devices(id, model)"
+      "id, customer_id, order_number, status, expected_delivery_date, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_expires_at, customers(id, name, phone), devices(id, model)"
     )
     .eq("id", orderId)
     .eq("organization_id", context.organization.id)
@@ -312,6 +318,25 @@ export async function logWhatsAppMessageAction(
     }
   }
 
+  if (type === MESSAGE_TYPES.WARRANTY_NOTICE) {
+    if (!order.warranty_enabled) {
+      return { error: "Esta OS nao possui garantia ativa." };
+    }
+
+    if (!order.warranty_signed) {
+      return {
+        error: "A garantia so pode ser enviada apos o cliente assinar/aceitar."
+      };
+    }
+
+    if (!order.warranty_amount || !order.warranty_unit || !order.warranty_expires_at) {
+      return {
+        error:
+          "Complete a quantidade, unidade e validade da garantia antes de enviar."
+      };
+    }
+  }
+
   const customer = singleRelation(order.customers);
   const device = singleRelation(order.devices);
 
@@ -320,6 +345,10 @@ export async function logWhatsAppMessageAction(
   }
 
   const templateBody = await getTemplateBody(context.organization.id, type);
+  const warrantyPeriod = formatWarrantyPeriod(
+    order.warranty_amount,
+    order.warranty_unit
+  );
   const messageBody = interpolateMessageTemplate(templateBody, {
     cliente_nome: customer.name,
     cliente_telefone: customer.phone,
@@ -327,8 +356,11 @@ export async function logWhatsAppMessageAction(
     numero_ordem: order.order_number,
     status: maintenanceStatusLabels[order.status],
     data_entrega: formatDate(order.expected_delivery_date),
-    loja_nome: context.organization.name
+    loja_nome: context.organization.name,
+    garantia_periodo: warrantyPeriod,
+    garantia_validade: formatDate(order.warranty_expires_at)
   });
+  const openedAt = new Date().toISOString();
   const { error: logError } = await supabase.from("message_logs").insert({
     organization_id: context.organization.id,
     customer_id: customer.id,
@@ -336,13 +368,51 @@ export async function logWhatsAppMessageAction(
     message_type: type as MessageType,
     channel: "whatsapp_manual",
     message_body: messageBody,
-    opened_whatsapp_at: new Date().toISOString(),
+    opened_whatsapp_at: openedAt,
     created_by: context.user.id
   });
 
   if (logError) {
     console.error("Erro ao registrar message_log:", logError);
     return { error: "Nao foi possivel registrar o clique no WhatsApp." };
+  }
+
+  if (type === MESSAGE_TYPES.WARRANTY_NOTICE) {
+    const { error: updateError } = await supabase
+      .from("maintenance_orders")
+      .update({ warranty_message_sent_at: openedAt })
+      .eq("id", order.id)
+      .eq("organization_id", context.organization.id)
+      .is("deleted_at", null);
+
+    if (updateError) {
+      console.error("Erro ao atualizar warranty_message_sent_at:", updateError);
+      return {
+        error:
+          "O clique foi registrado, mas nao foi possivel atualizar a OS."
+      };
+    }
+
+    const { error: eventError } = await supabase
+      .from("maintenance_events")
+      .insert({
+        organization_id: context.organization.id,
+        maintenance_order_id: order.id,
+        event_type: "warranty_message_opened",
+        old_status: null,
+        new_status: order.status,
+        description: "Mensagem de garantia aberta no WhatsApp.",
+        created_by: context.user.id,
+        created_at: openedAt
+      });
+
+    if (eventError) {
+      console.error("Erro ao registrar evento de garantia:", eventError);
+      return {
+        error:
+          "O clique foi registrado, mas nao foi possivel registrar o historico."
+      };
+    }
   }
 
   revalidatePath(`/manutencoes/${orderId}`);

@@ -5,6 +5,10 @@ import { MESSAGE_TYPES } from "@assistencia/shared/constants/message-types";
 import { formatPhoneBR } from "@/lib/phone";
 import { isOpenMaintenanceStatus } from "@/lib/maintenance/status";
 import {
+  formatWarrantyPeriod,
+  isWarrantyExpired
+} from "@/lib/maintenance/warranty";
+import {
   deleteMaintenanceOrderAction,
   getMaintenanceOrderById
 } from "../actions";
@@ -68,6 +72,64 @@ function todayISO() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function formatBoolean(value: boolean) {
+  return value ? "Sim" : "Nao";
+}
+
+function getWarrantyStatus(order: {
+  warranty_enabled: boolean;
+  warranty_signed: boolean;
+  warranty_expires_at: string | null;
+}) {
+  if (!order.warranty_enabled) {
+    return {
+      label: "Sem garantia",
+      className: "border-slate-200 bg-slate-50 text-slate-600"
+    };
+  }
+
+  if (!order.warranty_signed) {
+    return {
+      label: "Garantia nao assinada",
+      className: "border-amber-200 bg-amber-50 text-amber-800"
+    };
+  }
+
+  if (isWarrantyExpired(order.warranty_expires_at)) {
+    return {
+      label: "Garantia vencida",
+      className: "border-red-200 bg-red-50 text-red-700"
+    };
+  }
+
+  return {
+    label: "Garantia valida",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700"
+  };
+}
+
+function getWarrantyBlockReason(order: {
+  warranty_enabled: boolean;
+  warranty_signed: boolean;
+  warranty_amount: number | null;
+  warranty_unit: string | null;
+  warranty_expires_at: string | null;
+}) {
+  if (!order.warranty_enabled) {
+    return "Esta OS nao possui garantia ativa.";
+  }
+
+  if (!order.warranty_signed) {
+    return "A garantia so pode ser enviada apos o cliente assinar/aceitar.";
+  }
+
+  if (!order.warranty_amount || !order.warranty_unit || !order.warranty_expires_at) {
+    return "Complete quantidade, unidade e validade da garantia antes de enviar.";
+  }
+
+  return null;
+}
+
 function Field({
   label,
   value
@@ -100,6 +162,13 @@ export default async function ManutencaoDetalhePage({
   const canUseWhatsApp = Boolean(customer?.phone) && isOpenMaintenanceStatus(order.status);
   const shouldShowDeliveryToday =
     canUseWhatsApp && order.expected_delivery_date === todayISO();
+  const warrantyStatus = getWarrantyStatus(order);
+  const warrantyBlockReason = getWarrantyBlockReason(order);
+  const canUseWarrantyWhatsApp = Boolean(customer?.phone) && !warrantyBlockReason;
+  const warrantyPeriod = formatWarrantyPeriod(
+    order.warranty_amount,
+    order.warranty_unit
+  );
 
   return (
     <section className="grid gap-6">
@@ -181,7 +250,22 @@ export default async function ManutencaoDetalhePage({
               orderId={order.id}
             />
           ) : null}
+          <WhatsAppButton
+            disabled={!canUseWarrantyWhatsApp}
+            label="Enviar garantia no WhatsApp"
+            messageType={MESSAGE_TYPES.WARRANTY_NOTICE}
+            orderId={order.id}
+          />
         </div>
+        {!customer?.phone ? (
+          <p className="text-xs leading-5 text-slate-500">
+            Cliente sem telefone para WhatsApp.
+          </p>
+        ) : warrantyBlockReason ? (
+          <p className="text-xs leading-5 text-amber-700">
+            {warrantyBlockReason}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
@@ -217,6 +301,36 @@ export default async function ManutencaoDetalhePage({
           <Field label="Valor final" value={formatCurrency(order.final_price)} />
           <Field label="Entregue em" value={formatDateTime(order.delivered_at)} />
           <Field label="Criado em" value={formatDateTime(order.created_at)} />
+          <Field
+            label="Status da garantia"
+            value={
+              <span
+                className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${warrantyStatus.className}`}
+              >
+                {warrantyStatus.label}
+              </span>
+            }
+          />
+          <Field
+            label="Cliente assinou garantia"
+            value={formatBoolean(order.warranty_signed)}
+          />
+          <Field
+            label="Periodo da garantia"
+            value={warrantyPeriod || "Nao informado"}
+          />
+          <Field
+            label="Inicio da garantia"
+            value={formatDate(order.warranty_started_at)}
+          />
+          <Field
+            label="Fim da garantia"
+            value={formatDate(order.warranty_expires_at)}
+          />
+          <Field
+            label="Mensagem de garantia"
+            value={formatDateTime(order.warranty_message_sent_at)}
+          />
           <div className="sm:col-span-2">
             <Field label="Defeito informado" value={order.reported_issue} />
           </div>
@@ -228,6 +342,9 @@ export default async function ManutencaoDetalhePage({
           </div>
           <div className="sm:col-span-2">
             <Field label="Observações internas" value={order.internal_notes} />
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Observacoes da garantia" value={order.warranty_notes} />
           </div>
         </dl>
 

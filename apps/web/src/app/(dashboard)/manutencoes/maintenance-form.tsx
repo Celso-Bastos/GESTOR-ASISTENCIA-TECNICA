@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import {
+  maintenanceStatusLabels,
+  maintenanceStatuses
+} from "@/lib/maintenance/status";
 import type { CustomerOption, MaintenanceActionState } from "./actions";
 import { CustomerSelect } from "./customer-select";
 import { DeviceFormFields } from "./device-form-fields";
@@ -50,14 +54,22 @@ export function MaintenanceForm({
     device_notes: valueFrom(state, initialValues, "device_notes"),
     reported_issue: valueFrom(state, initialValues, "reported_issue"),
     diagnosis: valueFrom(state, initialValues, "diagnosis"),
+    status: valueFrom(state, initialValues, "status"),
     expected_delivery_date: valueFrom(
       state,
       initialValues,
       "expected_delivery_date"
     ),
+    delivered_at: valueFrom(state, initialValues, "delivered_at"),
     estimated_price: valueFrom(state, initialValues, "estimated_price"),
     final_price: valueFrom(state, initialValues, "final_price"),
-    internal_notes: valueFrom(state, initialValues, "internal_notes")
+    internal_notes: valueFrom(state, initialValues, "internal_notes"),
+    warranty_enabled: valueFrom(state, initialValues, "warranty_enabled"),
+    warranty_signed: valueFrom(state, initialValues, "warranty_signed"),
+    warranty_amount: valueFrom(state, initialValues, "warranty_amount"),
+    warranty_unit: valueFrom(state, initialValues, "warranty_unit"),
+    warranty_started_at: valueFrom(state, initialValues, "warranty_started_at"),
+    warranty_notes: valueFrom(state, initialValues, "warranty_notes")
   };
 
   return (
@@ -100,6 +112,36 @@ export function MaintenanceForm({
               name="diagnosis"
             />
           </label>
+        ) : null}
+
+        {mode === "edit" ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Status
+              <select
+                className={inputClass}
+                defaultValue={values.status}
+                name="status"
+                required
+              >
+                {maintenanceStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {maintenanceStatusLabels[status]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Entregue em
+              <input
+                className={inputClass}
+                defaultValue={values.delivered_at}
+                name="delivered_at"
+                type="datetime-local"
+              />
+            </label>
+          </div>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -148,6 +190,81 @@ export function MaintenanceForm({
             className={textareaClass}
             defaultValue={values.internal_notes}
             name="internal_notes"
+          />
+        </label>
+      </fieldset>
+
+      <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <legend className="px-1 text-sm font-semibold text-slate-950">
+          Garantia
+        </legend>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+            <input
+              className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+              defaultChecked={values.warranty_enabled === "on"}
+              name="warranty_enabled"
+              type="checkbox"
+            />
+            Ativar garantia
+          </label>
+
+          <label className="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+            <input
+              className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+              defaultChecked={values.warranty_signed === "on"}
+              name="warranty_signed"
+              type="checkbox"
+            />
+            Cliente assinou/aceitou garantia
+          </label>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Quantidade
+            <input
+              className={inputClass}
+              defaultValue={values.warranty_amount}
+              inputMode="numeric"
+              min="1"
+              name="warranty_amount"
+              step="1"
+              type="number"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Unidade
+            <select
+              className={inputClass}
+              defaultValue={values.warranty_unit}
+              name="warranty_unit"
+            >
+              <option value="">Selecione</option>
+              <option value="days">Dias</option>
+              <option value="months">Meses</option>
+            </select>
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Data de inicio
+            <input
+              className={inputClass}
+              defaultValue={values.warranty_started_at}
+              name="warranty_started_at"
+              type="date"
+            />
+          </label>
+        </div>
+
+        <label className="grid gap-2 text-sm font-medium text-slate-700">
+          Observacao da garantia
+          <textarea
+            className={textareaClass}
+            defaultValue={values.warranty_notes}
+            name="warranty_notes"
           />
         </label>
       </fieldset>

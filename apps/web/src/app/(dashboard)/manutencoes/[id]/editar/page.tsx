@@ -20,6 +20,22 @@ function priceToInput(value: number | string | null) {
   return String(value);
 }
 
+function dateTimeToInput(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+
+  return local.toISOString().slice(0, 16);
+}
+
 export default async function EditarManutencaoPage({
   params
 }: EditarManutencaoPageProps) {
@@ -58,10 +74,20 @@ export default async function EditarManutencaoPage({
           device_notes: device?.notes ?? "",
           reported_issue: order.reported_issue,
           diagnosis: order.diagnosis ?? "",
+          status: order.status,
           expected_delivery_date: order.expected_delivery_date ?? "",
+          delivered_at: dateTimeToInput(order.delivered_at),
           estimated_price: priceToInput(order.estimated_price),
           final_price: priceToInput(order.final_price),
-          internal_notes: order.internal_notes ?? ""
+          internal_notes: order.internal_notes ?? "",
+          warranty_enabled: order.warranty_enabled ? "on" : "",
+          warranty_signed: order.warranty_signed ? "on" : "",
+          warranty_amount: order.warranty_amount
+            ? String(order.warranty_amount)
+            : "",
+          warranty_unit: order.warranty_unit ?? "",
+          warranty_started_at: order.warranty_started_at ?? "",
+          warranty_notes: order.warranty_notes ?? ""
         }}
         mode="edit"
         submitLabel="Salvar alterações"

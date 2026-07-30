@@ -26,6 +26,11 @@ with default_templates (type, title, body) as (
       'Ola, {{customer_name}}! A previsao de entrega da ordem {{order_number}} e hoje. Avisaremos se houver qualquer mudanca.'
     ),
     (
+      'warranty_notice'::public.message_type,
+      'Aviso de garantia',
+      'Ola, {{cliente_nome}}! Sua manutencao do aparelho {{aparelho_modelo}} possui garantia de {{garantia_periodo}}, valida ate {{garantia_validade}}. Ordem: {{numero_ordem}}.'
+    ),
+    (
       'promotion_future'::public.message_type,
       'Promocao futura',
       'Template reservado para campanhas promocionais futuras. Use somente com consentimento adequado.'

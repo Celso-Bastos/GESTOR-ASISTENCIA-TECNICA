@@ -101,6 +101,11 @@ export function QuickMaintenanceForm() {
         </div>
       </fieldset>
 
+      <p className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+        A garantia pode ser preenchida depois no detalhe da OS pelo cadastro
+        completo.
+      </p>
+
       {state.error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}

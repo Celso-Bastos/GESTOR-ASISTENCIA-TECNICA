@@ -55,7 +55,7 @@ pnpm --filter web dev
 7. Fase 6: manutencao rapida para atendimento no balcao.
 8. Fase 7: alertas operacionais, mensagens prontas e ajustes finais.
 9. Fase 8: responsividade/mobile para dashboard, listagens, formularios, mensagens e quiosque.
-10. Fase 9: auditoria final, preparacao de deploy e checklist do piloto MVP 1.
+10. Fase 9: garantia em ordens de servico, mensagem manual de garantia no WhatsApp e checklist do piloto.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -126,6 +126,7 @@ Fluxos minimos para validar:
 - manutencao rapida;
 - detalhe da OS e mudanca de status;
 - mensagens e WhatsApp manual;
+- garantia em manutencoes com aceite do cliente;
 - navegacao mobile basica.
 
 ## Como configurar variaveis

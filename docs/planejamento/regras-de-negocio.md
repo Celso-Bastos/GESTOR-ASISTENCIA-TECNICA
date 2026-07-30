@@ -48,6 +48,11 @@
 - Excluir manutencao deve registrar evento `maintenance_deleted` em `maintenance_events` com o status anterior em `old_status`.
 - Manutencao excluida nao deve aparecer em filtros, buscas, alertas, entregas de hoje, atrasadas, prontas para entrega, aguardando peca ou contagens do dashboard.
 - Acesso direto a uma OS excluida em `/manutencoes/[id]` deve retornar `notFound()`.
+- Garantia e opcional na OS completa e pode ser preenchida depois.
+- Se `warranty_enabled = true`, a OS deve ter quantidade, unidade e data de inicio para o servidor calcular `warranty_expires_at`.
+- `warranty_expires_at` nao deve ser aceito do formulario como fonte de verdade.
+- A mensagem de garantia so pode ser aberta no WhatsApp se a garantia estiver ativa e o cliente tiver assinado/aceitado (`warranty_signed = true`).
+- Ao abrir mensagem de garantia, registrar `message_logs.message_type = warranty_notice`, preencher `warranty_message_sent_at` e criar evento `warranty_message_opened`.
 - O fluxo de manutencao rapida nao aceita `customer_id` nem `organization_id` do formulario.
 - Manutencao rapida deve encontrar ou criar cliente por `phone_normalized` dentro da organizacao atual.
 - Se o cliente ja existir, o sistema deve reaproveitar o cadastro sem alterar `source` e sem sobrescrever nome automaticamente.

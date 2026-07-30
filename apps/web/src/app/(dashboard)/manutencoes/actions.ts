@@ -14,6 +14,7 @@ import {
   type MaintenanceStatus,
   type MaintenanceStatusFilter
 } from "@/lib/maintenance/status";
+import { calculateWarrantyExpiration } from "@/lib/maintenance/warranty";
 import { createClient } from "@/lib/supabase/server";
 import {
   createMaintenanceOrderSchema,
@@ -77,6 +78,14 @@ export type MaintenanceOrderDetail = {
   estimated_price: number | string | null;
   final_price: number | string | null;
   internal_notes: string | null;
+  warranty_enabled: boolean;
+  warranty_signed: boolean;
+  warranty_amount: number | null;
+  warranty_unit: "days" | "months" | null;
+  warranty_started_at: string | null;
+  warranty_expires_at: string | null;
+  warranty_notes: string | null;
+  warranty_message_sent_at: string | null;
   created_at: string;
   updated_at: string | null;
   customers: MaintenanceCustomer | MaintenanceCustomer[] | null;
@@ -90,6 +99,28 @@ export type MaintenanceActionState = {
   error?: string;
   success?: string;
   values?: Record<string, string>;
+};
+
+type EditableMaintenanceOrderSnapshot = {
+  id: string;
+  customer_id: string;
+  device_id: string;
+  order_number: string;
+  reported_issue: string;
+  diagnosis: string | null;
+  status: MaintenanceStatus;
+  expected_delivery_date: string | null;
+  delivered_at: string | null;
+  estimated_price: number | string | null;
+  final_price: number | string | null;
+  internal_notes: string | null;
+  warranty_enabled: boolean;
+  warranty_signed: boolean;
+  warranty_amount: number | null;
+  warranty_unit: "days" | "months" | null;
+  warranty_started_at: string | null;
+  warranty_expires_at: string | null;
+  warranty_notes: string | null;
 };
 
 const MAINTENANCE_ORDER_LIST_SELECT =
@@ -127,10 +158,18 @@ function formValues(formData: FormData) {
     device_notes: String(formData.get("device_notes") ?? ""),
     reported_issue: String(formData.get("reported_issue") ?? ""),
     diagnosis: String(formData.get("diagnosis") ?? ""),
+    status: String(formData.get("status") ?? ""),
     expected_delivery_date: String(formData.get("expected_delivery_date") ?? ""),
+    delivered_at: String(formData.get("delivered_at") ?? ""),
     estimated_price: String(formData.get("estimated_price") ?? ""),
     final_price: String(formData.get("final_price") ?? ""),
-    internal_notes: String(formData.get("internal_notes") ?? "")
+    internal_notes: String(formData.get("internal_notes") ?? ""),
+    warranty_enabled: formData.get("warranty_enabled") ? "on" : "",
+    warranty_signed: formData.get("warranty_signed") ? "on" : "",
+    warranty_amount: String(formData.get("warranty_amount") ?? ""),
+    warranty_unit: String(formData.get("warranty_unit") ?? ""),
+    warranty_started_at: String(formData.get("warranty_started_at") ?? ""),
+    warranty_notes: String(formData.get("warranty_notes") ?? "")
   };
 }
 
@@ -148,7 +187,13 @@ function createInput(values: Record<string, string>) {
     reported_issue: values.reported_issue,
     expected_delivery_date: values.expected_delivery_date,
     estimated_price: values.estimated_price,
-    internal_notes: values.internal_notes
+    internal_notes: values.internal_notes,
+    warranty_enabled: values.warranty_enabled === "on",
+    warranty_signed: values.warranty_signed === "on",
+    warranty_amount: values.warranty_amount,
+    warranty_unit: values.warranty_unit || undefined,
+    warranty_started_at: values.warranty_started_at,
+    warranty_notes: values.warranty_notes
   };
 }
 
@@ -175,10 +220,18 @@ function updateInput(values: Record<string, string>) {
     },
     reported_issue: values.reported_issue,
     diagnosis: values.diagnosis,
+    status: values.status,
     expected_delivery_date: values.expected_delivery_date,
+    delivered_at: values.delivered_at,
     estimated_price: values.estimated_price,
     final_price: values.final_price,
-    internal_notes: values.internal_notes
+    internal_notes: values.internal_notes,
+    warranty_enabled: values.warranty_enabled === "on",
+    warranty_signed: values.warranty_signed === "on",
+    warranty_amount: values.warranty_amount,
+    warranty_unit: values.warranty_unit || undefined,
+    warranty_started_at: values.warranty_started_at,
+    warranty_notes: values.warranty_notes
   };
 }
 
@@ -220,6 +273,63 @@ function friendlyMaintenanceError(code?: string) {
   }
 
   return "Não foi possível salvar a manutenção. Tente novamente.";
+}
+
+function buildWarrantyPayload(
+  input: Pick<
+    CreateMaintenanceOrderInput,
+    | "warranty_enabled"
+    | "warranty_signed"
+    | "warranty_amount"
+    | "warranty_unit"
+    | "warranty_started_at"
+    | "warranty_notes"
+  >
+) {
+  if (!input.warranty_enabled) {
+    return {
+      warranty_enabled: false,
+      warranty_signed: false,
+      warranty_amount: null,
+      warranty_unit: null,
+      warranty_started_at: null,
+      warranty_expires_at: null,
+      warranty_notes: null
+    };
+  }
+
+  return {
+    warranty_enabled: true,
+    warranty_signed: input.warranty_signed,
+    warranty_amount: input.warranty_amount ?? null,
+    warranty_unit: input.warranty_unit ?? null,
+    warranty_started_at: input.warranty_started_at ?? null,
+    warranty_expires_at: calculateWarrantyExpiration(
+      input.warranty_started_at ?? "",
+      input.warranty_amount ?? 0,
+      input.warranty_unit ?? "days"
+    ),
+    warranty_notes: input.warranty_notes ?? null
+  };
+}
+
+function sameValue(a: unknown, b: unknown) {
+  return String(a ?? "") === String(b ?? "");
+}
+
+function didWarrantyChange(
+  order: EditableMaintenanceOrderSnapshot,
+  warrantyPayload: ReturnType<typeof buildWarrantyPayload>
+) {
+  return (
+    order.warranty_enabled !== warrantyPayload.warranty_enabled ||
+    order.warranty_signed !== warrantyPayload.warranty_signed ||
+    !sameValue(order.warranty_amount, warrantyPayload.warranty_amount) ||
+    !sameValue(order.warranty_unit, warrantyPayload.warranty_unit) ||
+    !sameValue(order.warranty_started_at, warrantyPayload.warranty_started_at) ||
+    !sameValue(order.warranty_expires_at, warrantyPayload.warranty_expires_at) ||
+    !sameValue(order.warranty_notes, warrantyPayload.warranty_notes)
+  );
 }
 
 function isMissingRpcError(code?: string) {
@@ -285,6 +395,20 @@ async function createMaintenanceOrderWithDirectInserts({
   eventDescription?: string;
 }) {
   const supabase = await createClient();
+  let warrantyPayload: ReturnType<typeof buildWarrantyPayload>;
+
+  try {
+    warrantyPayload = buildWarrantyPayload(input);
+  } catch (error) {
+    return {
+      order: null,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel calcular a validade da garantia."
+    };
+  }
+
   const { data: device, error: deviceError } = await supabase
     .from("devices")
     .insert({
@@ -337,7 +461,8 @@ async function createMaintenanceOrderWithDirectInserts({
         status: "recebido",
         expected_delivery_date: input.expected_delivery_date ?? null,
         estimated_price: input.estimated_price ?? null,
-        internal_notes: input.internal_notes ?? null
+        internal_notes: input.internal_notes ?? null,
+        ...warrantyPayload
       })
       .select("id, order_number")
       .maybeSingle<{ id: string; order_number: string }>();
@@ -590,7 +715,7 @@ export async function getMaintenanceOrderById(orderId: string) {
   const { data, error } = await supabase
     .from("maintenance_orders")
     .select(
-      "id, organization_id, customer_id, device_id, order_number, reported_issue, diagnosis, status, expected_delivery_date, delivered_at, estimated_price, final_price, internal_notes, created_at, updated_at, customers(id, name, phone, phone_normalized), devices(id, brand, model, color, storage, imei, notes)"
+      "id, organization_id, customer_id, device_id, order_number, reported_issue, diagnosis, status, expected_delivery_date, delivered_at, estimated_price, final_price, internal_notes, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_started_at, warranty_expires_at, warranty_notes, warranty_message_sent_at, created_at, updated_at, customers(id, name, phone, phone_normalized), devices(id, brand, model, color, storage, imei, notes)"
     )
     .eq("id", orderId)
     .eq("organization_id", organization.id)
@@ -651,6 +776,20 @@ export async function createMaintenanceOrderAction(
     };
   }
 
+  let warrantyPayload: ReturnType<typeof buildWarrantyPayload>;
+
+  try {
+    warrantyPayload = buildWarrantyPayload(parsed.data);
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel calcular a validade da garantia.",
+      values
+    };
+  }
+
   const supabase = await createClient();
   const { data: order, error } = await supabase
     .rpc("create_maintenance_order", {
@@ -666,7 +805,14 @@ export async function createMaintenanceOrderAction(
       p_reported_issue: parsed.data.reported_issue,
       p_expected_delivery_date: parsed.data.expected_delivery_date ?? null,
       p_estimated_price: parsed.data.estimated_price ?? null,
-      p_internal_notes: parsed.data.internal_notes ?? null
+      p_internal_notes: parsed.data.internal_notes ?? null,
+      p_warranty_enabled: warrantyPayload.warranty_enabled,
+      p_warranty_signed: warrantyPayload.warranty_signed,
+      p_warranty_amount: warrantyPayload.warranty_amount,
+      p_warranty_unit: warrantyPayload.warranty_unit,
+      p_warranty_started_at: warrantyPayload.warranty_started_at,
+      p_warranty_expires_at: warrantyPayload.warranty_expires_at,
+      p_warranty_notes: warrantyPayload.warranty_notes
     })
     .maybeSingle<{ order_id: string; order_number: string }>();
 
@@ -754,7 +900,13 @@ export async function createQuickMaintenanceOrderAction(
     reported_issue: parsed.data.reported_issue,
     expected_delivery_date: parsed.data.expected_delivery_date,
     estimated_price: undefined,
-    internal_notes: parsed.data.quick_notes
+    internal_notes: parsed.data.quick_notes,
+    warranty_enabled: false,
+    warranty_signed: false,
+    warranty_amount: undefined,
+    warranty_unit: undefined,
+    warranty_started_at: undefined,
+    warranty_notes: undefined
   };
   const result = await createMaintenanceOrderWithDirectInserts({
     organization,
@@ -798,22 +950,47 @@ export async function updateMaintenanceOrderAction(
     };
   }
 
-  const { organization } = context;
+  const { organization, userId } = context;
   const supabase = await createClient();
   const { data: order, error: orderError } = await supabase
     .from("maintenance_orders")
-    .select("id, customer_id, device_id")
+    .select(
+      "id, customer_id, device_id, order_number, reported_issue, diagnosis, status, expected_delivery_date, delivered_at, estimated_price, final_price, internal_notes, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_started_at, warranty_expires_at, warranty_notes"
+    )
     .eq("id", orderId)
     .eq("organization_id", organization.id)
     .is("deleted_at", null)
-    .maybeSingle<{ id: string; customer_id: string; device_id: string }>();
+    .maybeSingle<EditableMaintenanceOrderSnapshot>();
 
   if (orderError || !order) {
+    if (orderError) {
+      console.error("Erro ao buscar maintenance_order para edicao:", orderError);
+    }
+
     return {
       error: "Manutenção não encontrada para esta organização.",
       values
     };
   }
+
+  let warrantyPayload: ReturnType<typeof buildWarrantyPayload>;
+
+  try {
+    warrantyPayload = buildWarrantyPayload(parsed.data);
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel calcular a validade da garantia.",
+      values
+    };
+  }
+
+  const deliveredAt =
+    parsed.data.status === "entregue"
+      ? parsed.data.delivered_at ?? new Date().toISOString()
+      : null;
 
   const { error: deviceError } = await supabase
     .from("devices")
@@ -830,6 +1007,8 @@ export async function updateMaintenanceOrderAction(
     .eq("organization_id", organization.id);
 
   if (deviceError) {
+    console.error("Erro ao atualizar device da maintenance_order:", deviceError);
+
     return {
       error: "Não foi possível atualizar os dados do aparelho.",
       values
@@ -841,10 +1020,13 @@ export async function updateMaintenanceOrderAction(
     .update({
       reported_issue: parsed.data.reported_issue,
       diagnosis: parsed.data.diagnosis ?? null,
+      status: parsed.data.status,
       expected_delivery_date: parsed.data.expected_delivery_date ?? null,
+      delivered_at: deliveredAt,
       estimated_price: parsed.data.estimated_price ?? null,
       final_price: parsed.data.final_price ?? null,
-      internal_notes: parsed.data.internal_notes ?? null
+      internal_notes: parsed.data.internal_notes ?? null,
+      ...warrantyPayload
     })
     .eq("id", orderId)
     .eq("organization_id", organization.id)
@@ -853,10 +1035,84 @@ export async function updateMaintenanceOrderAction(
     .maybeSingle<{ id: string }>();
 
   if (error || !updated) {
+    console.error("Erro ao atualizar maintenance_order:", error);
+
     return {
       error: friendlyMaintenanceError(error?.code),
       values
     };
+  }
+
+  const warrantyChanged = didWarrantyChange(order, warrantyPayload);
+  const statusChanged = order.status !== parsed.data.status;
+  const detailsChanged = [
+    !sameValue(order.reported_issue, parsed.data.reported_issue),
+    !sameValue(order.diagnosis, parsed.data.diagnosis),
+    !sameValue(order.expected_delivery_date, parsed.data.expected_delivery_date),
+    !sameValue(order.delivered_at, deliveredAt),
+    !sameValue(order.estimated_price, parsed.data.estimated_price),
+    !sameValue(order.final_price, parsed.data.final_price),
+    !sameValue(order.internal_notes, parsed.data.internal_notes)
+  ].some(Boolean);
+  const eventRows: Array<{
+    organization_id: string;
+    maintenance_order_id: string;
+    event_type: string;
+    old_status: MaintenanceStatus | null;
+    new_status: MaintenanceStatus | null;
+    description: string;
+    created_by: string;
+  }> = [];
+
+  if (statusChanged) {
+    eventRows.push({
+      organization_id: organization.id,
+      maintenance_order_id: order.id,
+      event_type: "status_changed",
+      old_status: order.status,
+      new_status: parsed.data.status,
+      description: `Status da ordem ${order.order_number} alterado de ${maintenanceStatusLabels[order.status]} para ${maintenanceStatusLabels[parsed.data.status]}.`,
+      created_by: userId
+    });
+  }
+
+  if (warrantyChanged) {
+    eventRows.push({
+      organization_id: organization.id,
+      maintenance_order_id: order.id,
+      event_type: "warranty_updated",
+      old_status: order.status,
+      new_status: parsed.data.status,
+      description: `Garantia da ordem ${order.order_number} atualizada pela edicao da OS.`,
+      created_by: userId
+    });
+  }
+
+  if (detailsChanged && !statusChanged && !warrantyChanged) {
+    eventRows.push({
+      organization_id: organization.id,
+      maintenance_order_id: order.id,
+      event_type: "maintenance_updated",
+      old_status: order.status,
+      new_status: parsed.data.status,
+      description: `Dados da ordem ${order.order_number} atualizados.`,
+      created_by: userId
+    });
+  }
+
+  if (eventRows.length > 0) {
+    const { error: eventError } = await supabase
+      .from("maintenance_events")
+      .insert(eventRows);
+
+    if (eventError) {
+      console.error("Erro ao registrar maintenance_event de edicao:", eventError);
+      return {
+        error:
+          "A manutencao foi atualizada, mas nao foi possivel registrar o historico.",
+        values
+      };
+    }
   }
 
   revalidatePath("/manutencoes");
