@@ -56,6 +56,7 @@ pnpm --filter web dev
 8. Fase 7: alertas operacionais, mensagens prontas e ajustes finais.
 9. Fase 8: responsividade/mobile para dashboard, listagens, formularios, mensagens e quiosque.
 10. Fase 9: garantia em ordens de servico, mensagem manual de garantia no WhatsApp e checklist do piloto.
+11. Fase 10: mensagens personalizadas por organizacao para WhatsApp manual.
 
 Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -174,6 +175,7 @@ Funcionalidades incluidas:
 - manutencao rapida;
 - alertas operacionais;
 - mensagens e WhatsApp manual;
+- mensagens personalizadas por organizacao;
 - responsividade mobile basica.
 
 Fora do escopo:
@@ -279,3 +281,16 @@ Documentacao da fase:
 
 - `docs/planejamento/fase-8-responsividade-mobile.md`
 - `docs/planejamento/fase-8-checklist.md`
+
+## Fase 10 - Mensagens Personalizadas
+
+A rota `/mensagens` agora separa modelos padrao do sistema e mensagens personalizadas da organizacao. Mensagens personalizadas ficam em `custom_message_templates`, possuem contexto (`maintenance`, `warranty`, `customer`, `sales` ou `general`), status ativo/inativo, preview com variaveis e soft delete por `deleted_at`.
+
+No detalhe da OS, o usuario pode escolher uma mensagem personalizada ativa de manutencao, garantia ou geral. O sistema interpola variaveis da OS, registra `message_logs` com `message_type = custom_message`, `channel = whatsapp_manual` e abre `wa.me` em nova aba para envio manual.
+
+A migration `supabase/migrations/0005_add_custom_message_templates.sql` cria a tabela, indices, trigger de `updated_at`, RLS, policies e adiciona o enum `custom_message`.
+
+Documentacao da fase:
+
+- `docs/planejamento/fase-10-mensagens-personalizadas.md`
+- `docs/planejamento/fase-10-checklist.md`

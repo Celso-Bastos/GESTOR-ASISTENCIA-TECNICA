@@ -75,6 +75,20 @@
 - `delivery_today` so deve ser usado quando a previsao de entrega for hoje.
 - Variaveis ausentes em modelos de mensagem devem ser substituidas por texto vazio ou seguro.
 
+## Mensagens Personalizadas
+
+- Mensagens personalizadas pertencem sempre a organizacao atual.
+- `organization_id` nunca vem do formulario; deve ser derivado no servidor.
+- Usuario so pode ver, criar, editar, desativar e usar mensagens da propria organizacao.
+- Mensagens personalizadas usam contextos controlados: `maintenance`, `warranty`, `customer`, `sales` e `general`.
+- Listagens devem ignorar mensagens com `deleted_at` preenchido.
+- Desativar mensagem personalizada deve usar soft delete (`deleted_at`) e `is_active = false`; nao usar hard delete.
+- Mensagens inativas ou removidas nao podem ser usadas no WhatsApp.
+- No detalhe da OS, apenas mensagens ativas de `maintenance`, `warranty` ou `general` ficam disponiveis.
+- Ao usar mensagem personalizada em OS, a action deve reconsultar a OS e a mensagem dentro da organizacao atual.
+- Ao usar mensagem personalizada em OS, registrar `message_logs.message_type = custom_message`.
+- Mensagens promocionais futuras devem respeitar opt-in; disparo em massa e API oficial do WhatsApp nao fazem parte desta fase.
+
 ## Usuarios
 
 - Papeis iniciais: dono, gerente, tecnico e atendente.

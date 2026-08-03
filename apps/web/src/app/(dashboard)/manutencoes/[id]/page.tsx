@@ -20,6 +20,8 @@ import {
 import { MaintenanceStatusBadge } from "../maintenance-status-badge";
 import { MaintenanceStatusControls } from "../maintenance-status-controls";
 import { MaintenanceTimeline } from "../maintenance-timeline";
+import { getActiveCustomMessageTemplatesForMaintenance } from "../../mensagens/actions";
+import { CustomWhatsAppMessageForm } from "../../mensagens/custom-whatsapp-message-form";
 import { WhatsAppButton } from "../../mensagens/whatsapp-button";
 
 type ManutencaoDetalhePageProps = {
@@ -151,7 +153,10 @@ export default async function ManutencaoDetalhePage({
   params
 }: ManutencaoDetalhePageProps) {
   const { id } = await params;
-  const order = await getMaintenanceOrderById(id);
+  const [order, customWhatsAppTemplates] = await Promise.all([
+    getMaintenanceOrderById(id),
+    getActiveCustomMessageTemplatesForMaintenance()
+  ]);
 
   if (!order) {
     notFound();
@@ -266,6 +271,11 @@ export default async function ManutencaoDetalhePage({
             {warrantyBlockReason}
           </p>
         ) : null}
+        <CustomWhatsAppMessageForm
+          disabled={!customer?.phone}
+          orderId={order.id}
+          templates={customWhatsAppTemplates}
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">

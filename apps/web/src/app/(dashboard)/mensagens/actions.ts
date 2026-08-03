@@ -14,13 +14,26 @@ import {
   isOperationalMessageType,
   type MessageTemplate
 } from "@/lib/messages/defaults";
-import { interpolateMessageTemplate } from "@/lib/messages/interpolation";
-import { buildWhatsAppUrl } from "@/lib/messages/whatsapp";
+import {
+  interpolateMessageTemplate,
+  type MessageVariables
+} from "@/lib/messages/interpolation";
+import {
+  buildWhatsAppUrl,
+  normalizePhoneForWhatsApp
+} from "@/lib/messages/whatsapp";
 import {
   getCurrentOrganization,
   requireOrganization
 } from "@/lib/organization/queries";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createCustomMessageTemplateSchema,
+  customMessageContexts,
+  deleteCustomMessageTemplateSchema,
+  type CustomMessageContext,
+  updateCustomMessageTemplateSchema
+} from "@/lib/validations/custom-message-template.schema";
 
 export type MessageTemplateActionState = {
   error?: string;
@@ -31,6 +44,24 @@ export type WhatsAppMessageActionState = {
   error?: string;
   success?: string;
   whatsappUrl?: string;
+};
+
+export type CustomMessageTemplateActionState = {
+  error?: string;
+  success?: string;
+};
+
+export type CustomMessageTemplate = {
+  id: string;
+  organization_id: string;
+  title: string;
+  body: string;
+  context: CustomMessageContext;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
 };
 
 type MessageOrder = {
@@ -68,6 +99,9 @@ type MessageOrder = {
     | null;
 };
 
+const CUSTOM_MESSAGE_TEMPLATE_SELECT =
+  "id, organization_id, title, body, context, is_active, created_by, created_at, updated_at, deleted_at";
+
 function singleRelation<T>(value: T | T[] | null | undefined) {
   if (Array.isArray(value)) {
     return value[0] ?? null;
@@ -99,6 +133,52 @@ function todayISO() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function hasValidWhatsAppPhone(phone: string) {
+  const normalized = normalizePhoneForWhatsApp(phone);
+
+  return (
+    normalized.startsWith("55") &&
+    normalized.length >= 12 &&
+    normalized.length <= 13
+  );
+}
+
+function customTemplateFormInput(formData: FormData) {
+  return {
+    title: String(formData.get("title") ?? ""),
+    body: String(formData.get("body") ?? ""),
+    context: String(formData.get("context") ?? ""),
+    is_active: formData.get("is_active") === "on"
+  };
+}
+
+function buildOrderMessageVariables({
+  order,
+  organizationName
+}: {
+  order: MessageOrder;
+  organizationName: string;
+}): MessageVariables {
+  const customer = singleRelation(order.customers);
+  const device = singleRelation(order.devices);
+  const warrantyPeriod = formatWarrantyPeriod(
+    order.warranty_amount,
+    order.warranty_unit
+  );
+
+  return {
+    cliente_nome: customer?.name,
+    cliente_telefone: customer?.phone,
+    aparelho_modelo: device?.model,
+    numero_ordem: order.order_number,
+    status: maintenanceStatusLabels[order.status],
+    data_entrega: formatDate(order.expected_delivery_date),
+    loja_nome: organizationName,
+    garantia_periodo: warrantyPeriod,
+    garantia_validade: formatDate(order.warranty_expires_at)
+  };
+}
+
 async function getMessageContext() {
   const user = await getCurrentUser();
 
@@ -119,6 +199,25 @@ async function getMessageContext() {
   }
 
   return { ok: true as const, user, organization };
+}
+
+async function getOrderForWhatsApp(organizationId: string, orderId: string) {
+  const supabase = await createClient();
+  const { data: order, error: orderError } = await supabase
+    .from("maintenance_orders")
+    .select(
+      "id, customer_id, order_number, status, expected_delivery_date, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_expires_at, customers(id, name, phone), devices(id, model)"
+    )
+    .eq("id", orderId)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
+    .maybeSingle<MessageOrder>();
+
+  if (orderError) {
+    console.error("Erro ao buscar OS para WhatsApp:", orderError);
+  }
+
+  return order ?? null;
 }
 
 export async function ensureDefaultMessageTemplates(organizationId: string) {
@@ -167,6 +266,186 @@ export async function getMessageTemplatesForCurrentOrganization() {
   return (data ?? []).filter((template) => isOperationalMessageType(template.type)).sort(
     (left, right) => order.indexOf(left.type) - order.indexOf(right.type)
   );
+}
+
+export async function getCustomMessageTemplates(context?: CustomMessageContext) {
+  const organization = await requireOrganization();
+  const supabase = await createClient();
+  let query = supabase
+    .from("custom_message_templates")
+    .select(CUSTOM_MESSAGE_TEMPLATE_SELECT)
+    .eq("organization_id", organization.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (context && customMessageContexts.includes(context)) {
+    query = query.eq("context", context);
+  }
+
+  const { data, error } = await query.returns<CustomMessageTemplate[]>();
+
+  if (error) {
+    console.error("Erro ao carregar mensagens personalizadas:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function getActiveCustomMessageTemplatesForMaintenance() {
+  const organization = await requireOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("custom_message_templates")
+    .select(CUSTOM_MESSAGE_TEMPLATE_SELECT)
+    .eq("organization_id", organization.id)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .in("context", ["maintenance", "warranty", "general"])
+    .order("title", { ascending: true })
+    .returns<CustomMessageTemplate[]>();
+
+  if (error) {
+    console.error("Erro ao carregar mensagens personalizadas da OS:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function createCustomMessageTemplateAction(
+  _prevState: CustomMessageTemplateActionState,
+  formData: FormData
+): Promise<CustomMessageTemplateActionState> {
+  const context = await getMessageContext();
+
+  if (!context.ok) {
+    return { error: context.error };
+  }
+
+  const parsed = createCustomMessageTemplateSchema.safeParse(
+    customTemplateFormInput(formData)
+  );
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Revise a mensagem personalizada."
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("custom_message_templates").insert({
+    organization_id: context.organization.id,
+    title: parsed.data.title,
+    body: parsed.data.body,
+    context: parsed.data.context,
+    is_active: parsed.data.is_active,
+    created_by: context.user.id
+  });
+
+  if (error) {
+    console.error("Erro ao criar mensagem personalizada:", error);
+    return { error: "Nao foi possivel criar a mensagem personalizada." };
+  }
+
+  revalidatePath("/mensagens");
+
+  return { success: "Mensagem personalizada criada." };
+}
+
+export async function updateCustomMessageTemplateAction(
+  templateId: string,
+  _prevState: CustomMessageTemplateActionState,
+  formData: FormData
+): Promise<CustomMessageTemplateActionState> {
+  const context = await getMessageContext();
+
+  if (!context.ok) {
+    return { error: context.error };
+  }
+
+  const parsed = updateCustomMessageTemplateSchema.safeParse({
+    id: templateId,
+    ...customTemplateFormInput(formData)
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Revise a mensagem personalizada."
+    };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("custom_message_templates")
+    .update({
+      title: parsed.data.title,
+      body: parsed.data.body,
+      context: parsed.data.context,
+      is_active: parsed.data.is_active
+    })
+    .eq("id", parsed.data.id)
+    .eq("organization_id", context.organization.id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (error || !data) {
+    console.error("Erro ao atualizar mensagem personalizada:", error);
+    return { error: "Nao foi possivel atualizar a mensagem personalizada." };
+  }
+
+  revalidatePath("/mensagens");
+  revalidatePath("/manutencoes");
+
+  return { success: "Mensagem personalizada atualizada." };
+}
+
+export async function disableCustomMessageTemplateAction(
+  templateId: string,
+  _prevState: CustomMessageTemplateActionState,
+  _formData: FormData
+): Promise<CustomMessageTemplateActionState> {
+  void _prevState;
+  void _formData;
+
+  const context = await getMessageContext();
+
+  if (!context.ok) {
+    return { error: context.error };
+  }
+
+  const parsed = deleteCustomMessageTemplateSchema.safeParse({ id: templateId });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Mensagem personalizada invalida."
+    };
+  }
+
+  const now = new Date().toISOString();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("custom_message_templates")
+    .update({
+      is_active: false,
+      deleted_at: now
+    })
+    .eq("id", parsed.data.id)
+    .eq("organization_id", context.organization.id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (error || !data) {
+    console.error("Erro ao desativar mensagem personalizada:", error);
+    return { error: "Nao foi possivel desativar a mensagem personalizada." };
+  }
+
+  revalidatePath("/mensagens");
+  revalidatePath("/manutencoes");
+
+  return { success: "Mensagem personalizada desativada." };
 }
 
 export async function updateMessageTemplateAction(
@@ -298,17 +577,9 @@ export async function logWhatsAppMessageAction(
   }
 
   const supabase = await createClient();
-  const { data: order, error: orderError } = await supabase
-    .from("maintenance_orders")
-    .select(
-      "id, customer_id, order_number, status, expected_delivery_date, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_expires_at, customers(id, name, phone), devices(id, model)"
-    )
-    .eq("id", orderId)
-    .eq("organization_id", context.organization.id)
-    .is("deleted_at", null)
-    .maybeSingle<MessageOrder>();
+  const order = await getOrderForWhatsApp(context.organization.id, orderId);
 
-  if (orderError || !order) {
+  if (!order) {
     return { error: "Manutencao nao encontrada para esta organizacao." };
   }
 
@@ -338,28 +609,23 @@ export async function logWhatsAppMessageAction(
   }
 
   const customer = singleRelation(order.customers);
-  const device = singleRelation(order.devices);
 
   if (!customer?.phone) {
     return { error: "Cliente sem telefone para WhatsApp." };
   }
 
+  if (!hasValidWhatsAppPhone(customer.phone)) {
+    return { error: "Cliente sem telefone valido para WhatsApp." };
+  }
+
   const templateBody = await getTemplateBody(context.organization.id, type);
-  const warrantyPeriod = formatWarrantyPeriod(
-    order.warranty_amount,
-    order.warranty_unit
+  const messageBody = interpolateMessageTemplate(
+    templateBody,
+    buildOrderMessageVariables({
+      order,
+      organizationName: context.organization.name
+    })
   );
-  const messageBody = interpolateMessageTemplate(templateBody, {
-    cliente_nome: customer.name,
-    cliente_telefone: customer.phone,
-    aparelho_modelo: device?.model,
-    numero_ordem: order.order_number,
-    status: maintenanceStatusLabels[order.status],
-    data_entrega: formatDate(order.expected_delivery_date),
-    loja_nome: context.organization.name,
-    garantia_periodo: warrantyPeriod,
-    garantia_validade: formatDate(order.warranty_expires_at)
-  });
   const openedAt = new Date().toISOString();
   const { error: logError } = await supabase.from("message_logs").insert({
     organization_id: context.organization.id,
@@ -413,6 +679,102 @@ export async function logWhatsAppMessageAction(
           "O clique foi registrado, mas nao foi possivel registrar o historico."
       };
     }
+  }
+
+  revalidatePath(`/manutencoes/${orderId}`);
+
+  return {
+    success: "Clique registrado. Abrindo WhatsApp...",
+    whatsappUrl: buildWhatsAppUrl(customer.phone, messageBody)
+  };
+}
+
+export async function useCustomMessageTemplateAction(
+  orderId: string,
+  _prevState: WhatsAppMessageActionState,
+  formData: FormData
+): Promise<WhatsAppMessageActionState> {
+  const context = await getMessageContext();
+
+  if (!context.ok) {
+    return { error: context.error };
+  }
+
+  const parsed = deleteCustomMessageTemplateSchema.safeParse({
+    id: String(formData.get("template_id") ?? "")
+  });
+
+  if (!parsed.success) {
+    return { error: "Selecione uma mensagem personalizada valida." };
+  }
+
+  const supabase = await createClient();
+  const { data: template, error: templateError } = await supabase
+    .from("custom_message_templates")
+    .select("id, title, body, context, is_active, deleted_at")
+    .eq("id", parsed.data.id)
+    .eq("organization_id", context.organization.id)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .in("context", ["maintenance", "warranty", "general"])
+    .maybeSingle<{
+      id: string;
+      title: string;
+      body: string;
+      context: CustomMessageContext;
+      is_active: boolean;
+      deleted_at: string | null;
+    }>();
+
+  if (templateError || !template) {
+    if (templateError) {
+      console.error("Erro ao buscar mensagem personalizada:", templateError);
+    }
+
+    return {
+      error:
+        "Mensagem personalizada nao encontrada, inativa ou indisponivel para esta OS."
+    };
+  }
+
+  const order = await getOrderForWhatsApp(context.organization.id, orderId);
+
+  if (!order) {
+    return { error: "Manutencao nao encontrada para esta organizacao." };
+  }
+
+  const customer = singleRelation(order.customers);
+
+  if (!customer?.phone) {
+    return { error: "Cliente sem telefone para WhatsApp." };
+  }
+
+  if (!hasValidWhatsAppPhone(customer.phone)) {
+    return { error: "Cliente sem telefone valido para WhatsApp." };
+  }
+
+  const messageBody = interpolateMessageTemplate(
+    template.body,
+    buildOrderMessageVariables({
+      order,
+      organizationName: context.organization.name
+    })
+  );
+  const openedAt = new Date().toISOString();
+  const { error: logError } = await supabase.from("message_logs").insert({
+    organization_id: context.organization.id,
+    customer_id: customer.id,
+    maintenance_order_id: order.id,
+    message_type: MESSAGE_TYPES.CUSTOM_MESSAGE as MessageType,
+    channel: "whatsapp_manual",
+    message_body: messageBody,
+    opened_whatsapp_at: openedAt,
+    created_by: context.user.id
+  });
+
+  if (logError) {
+    console.error("Erro ao registrar message_log personalizado:", logError);
+    return { error: "Nao foi possivel registrar o clique no WhatsApp." };
   }
 
   revalidatePath(`/manutencoes/${orderId}`);

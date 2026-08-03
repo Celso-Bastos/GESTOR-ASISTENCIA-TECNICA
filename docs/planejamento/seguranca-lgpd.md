@@ -42,4 +42,6 @@ Na Fase 7, o log de WhatsApp e criado por server action autenticada. A action va
 
 Na Fase 9, mensagens de garantia tambem passam por server action autenticada. A action exige OS ativa (`deleted_at is null`), organizacao atual, garantia ativa, aceite do cliente e campos completos antes de registrar `warranty_notice`. O aceite de garantia (`warranty_signed`) nao substitui o consentimento promocional de WhatsApp e nao autoriza campanhas.
 
+Na Fase 10, mensagens personalizadas sao isoladas por organizacao em `custom_message_templates` com RLS. O conteudo e de responsabilidade da organizacao usuaria. A action de uso em OS valida mensagem ativa, `deleted_at is null`, OS da organizacao atual e telefone valido antes de abrir WhatsApp manual e registrar `custom_message`.
+
 Mensagens operacionais de manutencao e entrega podem ser tratadas como comunicacao do servico. Mensagens promocionais futuras devem depender de `whatsapp_opt_in = true`, finalidade especifica e controles de descadastro quando forem implementadas.

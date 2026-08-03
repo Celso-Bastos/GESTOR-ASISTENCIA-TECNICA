@@ -2,31 +2,52 @@ import {
   AVAILABLE_MESSAGE_VARIABLES,
   FUTURE_MESSAGE_TEMPLATES
 } from "@/lib/messages/defaults";
-import { getMessageTemplatesForCurrentOrganization } from "./actions";
+import {
+  getCustomMessageTemplates,
+  getMessageTemplatesForCurrentOrganization
+} from "./actions";
+import { CustomMessageTemplateManager } from "./custom-message-template-manager";
 import { MessageTemplateForm } from "./message-template-form";
 
 export default async function MensagensPage() {
-  const templates = await getMessageTemplatesForCurrentOrganization();
+  const [templates, customTemplates] = await Promise.all([
+    getMessageTemplatesForCurrentOrganization(),
+    getCustomMessageTemplates()
+  ]);
 
   return (
     <section className="grid gap-6">
       <div>
-        <p className="text-sm font-medium uppercase text-teal-700">Fase 7</p>
+        <p className="text-sm font-medium uppercase text-teal-700">Fase 10</p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-950">
           Mensagens
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Configure modelos operacionais para WhatsApp manual. O sistema monta a
-          mensagem, registra o clique e abre o WhatsApp em uma nova aba; nenhum
-          envio automatico e feito pelo MVP.
+          Configure modelos operacionais e mensagens personalizadas para
+          WhatsApp manual. O sistema monta a mensagem, registra o clique e abre
+          o WhatsApp em nova aba; nenhum envio automatico e feito pelo MVP.
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="grid gap-4">
-          {templates.map((template) => (
-            <MessageTemplateForm key={template.type} template={template} />
-          ))}
+          <section className="grid gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">
+                Modelos padrao do sistema
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Modelos operacionais fixos da organizacao, usados nos botoes
+                rapidos do detalhe da OS.
+              </p>
+            </div>
+
+            {templates.map((template) => (
+              <MessageTemplateForm key={template.type} template={template} />
+            ))}
+          </section>
+
+          <CustomMessageTemplateManager templates={customTemplates} />
         </div>
 
         <aside className="grid content-start gap-4">

@@ -4,6 +4,7 @@ export const MESSAGE_TYPES = {
   MAINTENANCE_REMINDER: "maintenance_reminder",
   DELIVERY_TODAY: "delivery_today",
   WARRANTY_NOTICE: "warranty_notice",
+  CUSTOM_MESSAGE: "custom_message",
   PROMOTION_FUTURE: "promotion_future",
   SALES_FUTURE: "sales_future"
 } as const;

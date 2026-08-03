@@ -1,13 +1,13 @@
 # Banco de Dados
 
-A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao. A Fase 3 adiciona `supabase/migrations/0002_customers_active_phone_unique.sql` para ajustar a unicidade de telefone de clientes ativos. A Fase 5 adiciona `supabase/migrations/0003_maintenance_order_rpc.sql` para criar OS de forma atomica.
+A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamento de assistencia tecnica de celulares. A migration versionada fica em `supabase/migrations/0001_initial_schema.sql` e deve ser aplicada manualmente apos revisao. A Fase 3 adiciona `supabase/migrations/0002_customers_active_phone_unique.sql` para ajustar a unicidade de telefone de clientes ativos. A Fase 5 adiciona `supabase/migrations/0003_maintenance_order_rpc.sql` para criar OS de forma atomica. A Fase 10 adiciona `supabase/migrations/0005_add_custom_message_templates.sql` para mensagens personalizadas por organizacao.
 
 ## Enums
 
 - `user_role`: `owner`, `admin`, `employee`.
 - `customer_source`: `manual`, `tablet`, `future_import`.
 - `maintenance_status`: `recebido`, `em_analise`, `aguardando_peca`, `em_manutencao`, `pronto_para_entrega`, `entregue`, `cancelado`.
-- `message_type`: `maintenance_received`, `maintenance_ready`, `maintenance_reminder`, `delivery_today`, `warranty_notice`, `promotion_future`, `sales_future`.
+- `message_type`: `maintenance_received`, `maintenance_ready`, `maintenance_reminder`, `delivery_today`, `warranty_notice`, `custom_message`, `promotion_future`, `sales_future`.
 - `message_channel`: `whatsapp_manual`, `whatsapp_api_future`, `sms_future`, `email_future`.
 
 ## Tabelas
@@ -20,6 +20,7 @@ A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamen
 - `maintenance_orders`: ordens de manutencao, status, diagnostico, previsao de entrega, valores estimados/finais, observacoes internas e garantia opcional.
 - `maintenance_events`: historico de eventos de cada ordem, incluindo mudancas de status e usuario que registrou o evento.
 - `message_templates`: modelos de mensagens prontas para WhatsApp manual e canais futuros.
+- `custom_message_templates`: mensagens personalizadas por organizacao, com contexto, status ativo e soft delete.
 - `message_logs`: historico minimo das mensagens preparadas/abertas para envio manual, sem armazenar conversa completa.
 - `kiosk_tokens`: tokens controlados para tablet/quiosque de cadastro.
 
@@ -28,7 +29,7 @@ A Fase 1 cria a base do Supabase Postgres para o MVP 1 do sistema de gerenciamen
 - `profiles.user_id` referencia `auth.users.id`.
 - `organization_members.organization_id` referencia `organizations.id`.
 - `organization_members.user_id` referencia `auth.users.id`.
-- `customers.organization_id`, `devices.organization_id`, `maintenance_orders.organization_id`, `maintenance_events.organization_id`, `message_templates.organization_id`, `message_logs.organization_id` e `kiosk_tokens.organization_id` separam os dados por organizacao.
+- `customers.organization_id`, `devices.organization_id`, `maintenance_orders.organization_id`, `maintenance_events.organization_id`, `message_templates.organization_id`, `custom_message_templates.organization_id`, `message_logs.organization_id` e `kiosk_tokens.organization_id` separam os dados por organizacao.
 - `devices.customer_id` referencia `customers.id`.
 - `maintenance_orders.customer_id` referencia `customers.id` com `on delete restrict`, preservando historico de ordens.
 - `maintenance_orders.device_id` referencia `devices.id` com `on delete restrict`.
@@ -73,6 +74,7 @@ Todas as tabelas da Fase 1 tem Row Level Security ativado. A funcao `public.is_o
 - ler, inserir e atualizar clientes, aparelhos e ordens da propria organizacao;
 - ler e inserir eventos e logs de mensagem da propria organizacao;
 - ler, inserir e atualizar templates da propria organizacao;
+- ler, inserir e atualizar mensagens personalizadas da propria organizacao;
 - gerenciar tokens de quiosque da propria organizacao.
 
 ## Escalabilidade futura

@@ -70,6 +70,19 @@
 6. Sistema abre o WhatsApp em nova aba com texto codificado.
 7. Usuario revisa e envia manualmente pelo WhatsApp.
 
+## Mensagens personalizadas
+
+1. Usuario acessa `/mensagens`.
+2. Sistema exibe modelos padrao do sistema e mensagens personalizadas da organizacao.
+3. Usuario cria ou edita uma mensagem com titulo, contexto, corpo e status ativo/inativo.
+4. Sistema valida dados com Zod e salva `organization_id` no servidor.
+5. Usuario visualiza preview com variaveis interpoladas em dados seguros.
+6. No detalhe da OS, usuario escolhe uma mensagem personalizada ativa.
+7. Sistema reconsulta mensagem e OS dentro da organizacao atual.
+8. Sistema interpola variaveis reais da OS.
+9. Sistema registra `message_logs` com `message_type = custom_message`.
+10. Sistema abre WhatsApp em nova aba para envio manual.
+
 ## Alertas operacionais
 
 1. Usuario acessa `/dashboard`.
