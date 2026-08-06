@@ -83,6 +83,35 @@
 9. Sistema registra `message_logs` com `message_type = custom_message`.
 10. Sistema abre WhatsApp em nova aba para envio manual.
 
+## Saidas/Vendas
+
+1. Usuario acessa `/saidas/nova`.
+2. Escolhe categoria e opcionalmente um modelo salvo.
+3. Se escolher modelo salvo, o sistema usa o modelo da organizacao atual e preenche preco padrao no formulario.
+4. Se nao escolher modelo salvo, usuario informa o modelo digitado.
+5. Usuario informa quantidade, valor unitario, data, cliente opcional e observacao.
+6. Se marcar "Salvar este modelo para usar depois", o servidor cria ou reaproveita modelo salvo ativo.
+7. Servidor valida usuario, organizacao, modelo e cliente.
+8. Servidor calcula `total_price = quantity * unit_price`.
+9. Sistema grava `product_outflows` com `organization_id` da organizacao atual.
+10. Usuario retorna para `/saidas` e visualiza a venda na lista.
+
+## Modelos de produtos
+
+1. Usuario acessa `/saidas/modelos`.
+2. Cria modelo com categoria, nome, preco padrao opcional e status ativo.
+3. Sistema valida duplicidade de modelo ativo na mesma organizacao/categoria.
+4. Usuario pode editar, desativar, reativar pelo checkbox de ativo ou excluir por soft delete.
+
+## Relatorio de reposicao
+
+1. Usuario acessa `/relatorios/reposicao`.
+2. Sistema usa o mes atual como padrao.
+3. Usuario pode filtrar por mes e categoria.
+4. Sistema busca saidas da organizacao atual com `deleted_at is null`.
+5. Sistema agrupa por categoria e modelo salvo ou modelo digitado.
+6. Sistema mostra quantidade vendida, valor total vendido, total do mes, categoria mais vendida e itens para repor.
+
 ## Alertas operacionais
 
 1. Usuario acessa `/dashboard`.

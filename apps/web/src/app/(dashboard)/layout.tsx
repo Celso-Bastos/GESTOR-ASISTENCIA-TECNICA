@@ -1,10 +1,12 @@
 import Link from "next/link";
 import {
   Bell,
+  BarChart3,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageSquareText,
+  PackageSearch,
   Settings,
   Smartphone,
   TabletSmartphone,
@@ -19,6 +21,8 @@ const navItems = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/manutencoes", label: "Manutencoes", icon: Smartphone },
   { href: "/manutencoes/rapida", label: "Manutencao rapida", icon: Zap },
+  { href: "/saidas", label: "Saidas/Vendas", icon: PackageSearch },
+  { href: "/relatorios/reposicao", label: "Reposicao", icon: BarChart3 },
   { href: "/mensagens", label: "Mensagens", icon: MessageSquareText },
   { href: "/configuracoes", label: "Configuracoes", icon: Settings },
   { href: "/configuracoes/quiosque", label: "Quiosque", icon: TabletSmartphone }

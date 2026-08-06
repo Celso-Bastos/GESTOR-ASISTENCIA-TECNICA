@@ -57,8 +57,9 @@ pnpm --filter web dev
 9. Fase 8: responsividade/mobile para dashboard, listagens, formularios, mensagens e quiosque.
 10. Fase 9: garantia em ordens de servico, mensagem manual de garantia no WhatsApp e checklist do piloto.
 11. Fase 10: mensagens personalizadas por organizacao para WhatsApp manual.
+12. Fase 11: saidas/vendas modulares de produtos e relatorio de reposicao mensal.
 
-Fora do MVP inicial: estoque, vendas, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
+Fora do MVP inicial: estoque fixo tradicional, entradas de estoque, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
 ## Regras de seguranca
 
@@ -128,6 +129,8 @@ Fluxos minimos para validar:
 - detalhe da OS e mudanca de status;
 - mensagens e WhatsApp manual;
 - garantia em manutencoes com aceite do cliente;
+- saidas/vendas de produtos;
+- relatorio de reposicao mensal;
 - navegacao mobile basica.
 
 ## Como configurar variaveis
@@ -176,12 +179,15 @@ Funcionalidades incluidas:
 - alertas operacionais;
 - mensagens e WhatsApp manual;
 - mensagens personalizadas por organizacao;
+- saidas/vendas modulares de produtos;
+- relatorio mensal de reposicao;
 - responsividade mobile basica.
 
 Fora do escopo:
 
-- estoque;
-- vendas;
+- estoque fixo tradicional;
+- entrada de estoque;
+- saldo atual exato;
 - WhatsApp API oficial;
 - envio automatico de mensagens;
 - promocoes em massa;
@@ -294,3 +300,26 @@ Documentacao da fase:
 
 - `docs/planejamento/fase-10-mensagens-personalizadas.md`
 - `docs/planejamento/fase-10-checklist.md`
+
+## Fase 11 - Saidas/Vendas Modulares
+
+O modulo de saidas esta disponivel em `/saidas` para usuarios autenticados com organizacao.
+
+Funcionalidades:
+
+- cadastro de modelos salvos em `/saidas/modelos`;
+- registro de saida/venda em `/saidas/nova`;
+- produtos base fixos como pelicula, capinha, carregador, fone, cabo e outros;
+- modelo salvo opcional ou modelo digitado esporadico;
+- cliente opcional;
+- opcao de salvar modelo digitado para uso futuro;
+- `total_price` calculado no servidor;
+- soft delete de saidas;
+- relatorio mensal de reposicao em `/relatorios/reposicao`.
+
+A migration `supabase/migrations/0006_add_product_outflows.sql` cria `product_model_templates`, `product_outflows`, indices, triggers, RLS e policies por organizacao.
+
+Documentacao da fase:
+
+- `docs/planejamento/fase-11-saidas-vendas-modulares.md`
+- `docs/planejamento/fase-11-checklist.md`

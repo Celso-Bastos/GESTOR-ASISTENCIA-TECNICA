@@ -89,6 +89,30 @@
 - Ao usar mensagem personalizada em OS, registrar `message_logs.message_type = custom_message`.
 - Mensagens promocionais futuras devem respeitar opt-in; disparo em massa e API oficial do WhatsApp nao fazem parte desta fase.
 
+## Saidas/Vendas Modulares
+
+- Saidas/vendas registram produtos vendidos sem controlar estoque fixo tradicional.
+- Cada saida e cada modelo salvo pertencem a organizacao atual.
+- `organization_id` nunca vem do formulario; deve ser derivado no servidor.
+- Usuario autenticado so pode ver, criar, editar, desativar e excluir dados da propria organizacao.
+- Categorias sao fixas: `charger`, `earphone`, `bluetooth_earphone`, `screen_protector`, `cable`, `case`, `keyboard` e `other`.
+- Modelos salvos ficam em `product_model_templates`.
+- Saidas/vendas ficam em `product_outflows`.
+- Modelo salvo ativo nao deve duplicar `organization_id + category + model_name`.
+- Uma saida precisa ter `model_template_id` ou `custom_model_name`.
+- Se `custom_model_name` for informado, nao pode ser vazio.
+- `quantity` deve ser inteiro positivo.
+- `unit_price` deve ser maior ou igual a zero.
+- `total_price` deve ser calculado no servidor como `quantity * unit_price`.
+- O formulario nao pode enviar `total_price` como fonte de verdade.
+- `model_template_id`, quando usado, precisa pertencer a organizacao atual e nao estar removido.
+- `customer_id`, quando usado, precisa pertencer a organizacao atual e nao estar removido.
+- Se uma saida com modelo digitado marcar `save_as_template`, o sistema cria ou reaproveita modelo salvo ativo da mesma organizacao/categoria.
+- Excluir saida deve ser soft delete com `deleted_at`; nao usar hard delete.
+- Relatorios devem ignorar saidas com `deleted_at` preenchido.
+- Relatorio de reposicao agrupa por categoria e modelo dentro do mes filtrado.
+- Esta fase nao controla entrada de estoque, saldo atual, fornecedor, custo medio, fiscal ou lucro liquido real.
+
 ## Usuarios
 
 - Papeis iniciais: dono, gerente, tecnico e atendente.
