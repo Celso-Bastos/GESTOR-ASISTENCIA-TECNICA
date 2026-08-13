@@ -309,15 +309,17 @@ Funcionalidades:
 
 - cadastro de modelos salvos em `/saidas/modelos`;
 - registro de saida/venda em `/saidas/nova`;
-- produtos base fixos como pelicula, capinha, carregador, fone, cabo e outros;
+- produtos base fixos como Película, Película privativa, Case, Carregador, Cabo, fone e outros;
 - modelo salvo opcional ou modelo digitado esporadico;
+- valor base por categoria e valor proprio opcional por modelo salvo;
+- valor unitario editavel em cada venda, sem alterar a categoria nem o modelo salvo;
 - cliente opcional;
 - opcao de salvar modelo digitado para uso futuro;
 - `total_price` calculado no servidor;
 - soft delete de saidas;
 - relatorio mensal de reposicao em `/relatorios/reposicao`.
 
-A migration `supabase/migrations/0006_add_product_outflows.sql` cria `product_model_templates`, `product_outflows`, indices, triggers, RLS e policies por organizacao.
+A migration `supabase/migrations/0006_add_product_outflows.sql` cria `product_model_templates`, `product_outflows`, indices, triggers, RLS e policies por organizacao. A migration `supabase/migrations/0007_add_privacy_screen_protector_category.sql` adiciona a categoria `privacy_screen_protector` (Película privativa) as constraints dessas tabelas.
 
 Documentacao da fase:
 

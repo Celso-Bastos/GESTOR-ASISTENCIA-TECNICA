@@ -26,7 +26,7 @@ export default async function NovaSaidaPage() {
           Nova saida
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Registre uma venda de pelicula, capinha, carregador, fone, cabo ou
+          Registre uma venda de película, case, carregador, fone, cabo ou
           outro acessorio.
         </p>
       </div>

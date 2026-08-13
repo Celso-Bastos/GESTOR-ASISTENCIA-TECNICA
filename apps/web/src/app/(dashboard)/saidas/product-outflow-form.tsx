@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Save } from "lucide-react";
+import { PackagePlus, Save } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useActionState } from "react";
 import {
+  getSuggestedUnitPrice,
   productCategories,
   productCategoryLabels,
   type ProductCategory
@@ -39,7 +40,9 @@ export function ProductOutflowForm({
   const [templateId, setTemplateId] = useState(
     String(state.values?.model_template_id ?? "")
   );
-  const [unitPrice, setUnitPrice] = useState(String(state.values?.unit_price ?? ""));
+  const [unitPrice, setUnitPrice] = useState(
+    String(state.values?.unit_price ?? getSuggestedUnitPrice(category))
+  );
   const [customModelName, setCustomModelName] = useState(
     String(state.values?.custom_model_name ?? "")
   );
@@ -48,21 +51,25 @@ export function ProductOutflowForm({
     [templates]
   );
 
+  function handleCategoryChange(value: ProductCategory) {
+    setCategory(value);
+    setTemplateId("");
+    setUnitPrice(String(getSuggestedUnitPrice(value)));
+  }
+
   function handleTemplateChange(value: string) {
     setTemplateId(value);
 
     const template = activeTemplates.find((item) => item.id === value);
 
     if (!template) {
+      setUnitPrice(String(getSuggestedUnitPrice(category)));
       return;
     }
 
     setCategory(template.category);
     setCustomModelName("");
-
-    if (template.default_price !== null) {
-      setUnitPrice(String(template.default_price));
-    }
+    setUnitPrice(String(getSuggestedUnitPrice(template.category, template)));
   }
 
   return (
@@ -73,7 +80,9 @@ export function ProductOutflowForm({
           <select
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             name="category"
-            onChange={(event) => setCategory(event.target.value as ProductCategory)}
+            onChange={(event) =>
+              handleCategoryChange(event.target.value as ProductCategory)
+            }
             value={category}
           >
             {productCategories.map((item) => (
@@ -85,14 +94,14 @@ export function ProductOutflowForm({
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-slate-700">
-          Modelo salvo
+          Usar produto na saida
           <select
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             name="model_template_id"
             onChange={(event) => handleTemplateChange(event.target.value)}
             value={templateId}
           >
-            <option value="">Sem modelo salvo</option>
+            <option value="">Sem produto cadastrado</option>
             {activeTemplates.map((template) => (
               <option key={template.id} value={template.id}>
                 {productCategoryLabels[template.category]} - {template.model_name}
@@ -207,6 +216,13 @@ export function ProductOutflowForm({
           href="/saidas"
         >
           Cancelar
+        </Link>
+        <Link
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          href="/saidas/modelos"
+        >
+          <PackagePlus className="size-4" aria-hidden="true" />
+          Produtos cadastrados
         </Link>
       </div>
     </form>

@@ -3,6 +3,7 @@ export const productCategories = [
   "earphone",
   "bluetooth_earphone",
   "screen_protector",
+  "privacy_screen_protector",
   "cable",
   "case",
   "keyboard",
@@ -15,15 +16,47 @@ export const productCategoryLabels: Record<ProductCategory, string> = {
   charger: "Carregador",
   earphone: "Fone",
   bluetooth_earphone: "Fone Bluetooth",
-  screen_protector: "Pelicula",
+  screen_protector: "Película",
+  privacy_screen_protector: "Película privativa",
   cable: "Cabo",
-  case: "Capinha",
+  case: "Case",
   keyboard: "Teclado",
   other: "Outro"
 };
 
+export const productCategoryBasePrices: Record<ProductCategory, number | null> = {
+  charger: 30,
+  earphone: null,
+  bluetooth_earphone: null,
+  screen_protector: 10,
+  privacy_screen_protector: 20,
+  cable: 15,
+  case: 20,
+  keyboard: null,
+  other: null
+};
+
 export function formatProductCategoryLabel(category: ProductCategory | string) {
   return productCategoryLabels[category as ProductCategory] ?? "Outro";
+}
+
+export function getProductCategoryBasePrice(
+  category: ProductCategory | string
+) {
+  return productCategoryBasePrices[category as ProductCategory] ?? null;
+}
+
+export function getSuggestedUnitPrice(
+  category: ProductCategory | string,
+  selectedModel?: { default_price?: number | string | null } | null
+) {
+  const modelPrice = parseCurrencyInput(selectedModel?.default_price);
+
+  if (modelPrice !== undefined) {
+    return modelPrice;
+  }
+
+  return getProductCategoryBasePrice(category) ?? 0;
 }
 
 export function formatCurrencyBRL(value: number | string | null | undefined) {

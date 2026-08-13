@@ -55,7 +55,7 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
             className="inline-flex h-11 w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
             href="/saidas/modelos"
           >
-            Modelos
+            Produtos cadastrados
           </Link>
         </div>
       </div>

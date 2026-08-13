@@ -1,9 +1,10 @@
 "use client";
 
-import { Archive, Plus, Save, Trash2 } from "lucide-react";
+import { Archive, Plus, Save, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useActionState } from "react";
 import {
+  getProductCategoryBasePrice,
   productCategories,
   productCategoryLabels,
   type ProductCategory
@@ -46,17 +47,20 @@ function StateMessage({ state }: { state: ProductActionState }) {
 }
 
 function CategorySelect({
-  defaultValue,
-  name = "category"
+  name = "category",
+  onChange,
+  value
 }: {
-  defaultValue?: ProductCategory;
   name?: string;
+  onChange: (value: ProductCategory) => void;
+  value: ProductCategory;
 }) {
   return (
     <select
       className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
-      defaultValue={defaultValue ?? "screen_protector"}
       name={name}
+      onChange={(event) => onChange(event.target.value as ProductCategory)}
+      value={value}
     >
       {productCategories.map((category) => (
         <option key={category} value={category}>
@@ -67,33 +71,50 @@ function CategorySelect({
   );
 }
 
+function CategoryBasePriceText({ category }: { category: ProductCategory }) {
+  const basePrice = getProductCategoryBasePrice(category);
+
+  return (
+    <p className="text-xs font-medium text-slate-500">
+      Valor base da categoria:{" "}
+      {basePrice === null ? (
+        "sem valor definido"
+      ) : (
+        <MoneyDisplay value={basePrice} />
+      )}
+    </p>
+  );
+}
+
 function CreateTemplateForm() {
   const [state, action, isPending] = useActionState(
     createProductModelTemplateAction,
     initialState
+  );
+  const [category, setCategory] = useState<ProductCategory>(
+    (state.values?.category as ProductCategory) ?? "screen_protector"
   );
 
   return (
     <article className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div>
         <p className="text-xs font-medium uppercase text-teal-700">
-          Novo modelo
+          Novo produto
         </p>
         <h2 className="mt-1 text-lg font-semibold text-slate-950">
-          Modelo salvo
+          Produto cadastrado
         </h2>
       </div>
 
       <form action={action} className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Categoria
-          <CategorySelect
-            defaultValue={(state.values?.category as ProductCategory) ?? undefined}
-          />
+          <CategorySelect onChange={setCategory} value={category} />
+          <CategoryBasePriceText category={category} />
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-slate-700">
-          Preco padrao
+          Valor do modelo (opcional)
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={String(state.values?.default_price ?? "")}
@@ -104,7 +125,7 @@ function CreateTemplateForm() {
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
-          Modelo
+          Nome/modelo
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={String(state.values?.model_name ?? "")}
@@ -136,7 +157,7 @@ function CreateTemplateForm() {
             type="submit"
           >
             <Plus className="size-4" aria-hidden="true" />
-            {isPending ? "Criando..." : "Criar modelo"}
+            {isPending ? "Criando..." : "Criar produto"}
           </button>
         </div>
       </form>
@@ -145,6 +166,7 @@ function CreateTemplateForm() {
 }
 
 function TemplateCard({ template }: { template: ProductModelTemplate }) {
+  const [category, setCategory] = useState<ProductCategory>(template.category);
   const [saveState, saveAction, isSaving] = useActionState(
     updateProductModelTemplateAction.bind(null, template.id),
     initialState
@@ -167,8 +189,9 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
             {template.model_name}
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Preco padrao: <MoneyDisplay value={template.default_price} />
+            Valor do modelo: <MoneyDisplay value={template.default_price} />
           </p>
+          <CategoryBasePriceText category={template.category} />
         </div>
         <span
           className={
@@ -184,11 +207,12 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
       <form action={saveAction} className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Categoria
-          <CategorySelect defaultValue={template.category} />
+          <CategorySelect onChange={setCategory} value={category} />
+          <CategoryBasePriceText category={category} />
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-slate-700">
-          Preco padrao
+          Valor do modelo (opcional)
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={template.default_price ?? ""}
@@ -198,7 +222,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
-          Modelo
+          Nome/modelo
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
             defaultValue={template.model_name}
@@ -272,43 +296,67 @@ export function ProductModelTemplateManager({
   templates
 }: ProductModelTemplateManagerProps) {
   const [filter, setFilter] = useState<ProductCategory | "all">("all");
+  const [search, setSearch] = useState("");
   const filteredTemplates = useMemo(() => {
-    if (filter === "all") {
-      return templates;
-    }
+    const normalizedSearch = search.trim().toLowerCase();
 
-    return templates.filter((template) => template.category === filter);
-  }, [filter, templates]);
+    return templates.filter((template) => {
+      const matchesCategory = filter === "all" || template.category === filter;
+      const matchesSearch =
+        !normalizedSearch ||
+        template.model_name.toLowerCase().includes(normalizedSearch);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [filter, search, templates]);
 
   return (
     <section className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-950">
-            Modelos salvos
+            Produtos cadastrados
           </h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            Ative, desative e ajuste os modelos usados no formulario de saida.
+            Ative, desative e ajuste os produtos usados no formulario de saida.
           </p>
         </div>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700 sm:w-56">
-          Categoria
-          <select
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-            onChange={(event) =>
-              setFilter(event.target.value as ProductCategory | "all")
-            }
-            value={filter}
-          >
-            <option value="all">Todas</option>
-            {productCategories.map((category) => (
-              <option key={category} value={category}>
-                {productCategoryLabels[category]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-3 sm:grid-cols-[minmax(14rem,1fr)_14rem]">
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Buscar por nome
+            <span className="relative">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                className="h-11 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Ex.: iPhone 11"
+                value={search}
+              />
+            </span>
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Categoria
+            <select
+              className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              onChange={(event) =>
+                setFilter(event.target.value as ProductCategory | "all")
+              }
+              value={filter}
+            >
+              <option value="all">Todas</option>
+              {productCategories.map((category) => (
+                <option key={category} value={category}>
+                  {productCategoryLabels[category]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <CreateTemplateForm />
