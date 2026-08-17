@@ -58,6 +58,7 @@ pnpm --filter web dev
 10. Fase 9: garantia em ordens de servico, mensagem manual de garantia no WhatsApp e checklist do piloto.
 11. Fase 10: mensagens personalizadas por organizacao para WhatsApp manual.
 12. Fase 11: saidas/vendas modulares de produtos e relatorio de reposicao mensal.
+13. Fase 12: dashboard profissional com faturamento, desempenho, vendas, reposicao, clientes e alertas.
 
 Fora do MVP inicial: estoque fixo tradicional, entradas de estoque, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
@@ -131,6 +132,7 @@ Fluxos minimos para validar:
 - garantia em manutencoes com aceite do cliente;
 - saidas/vendas de produtos;
 - relatorio de reposicao mensal;
+- dashboard profissional de faturamento e desempenho;
 - navegacao mobile basica.
 
 ## Como configurar variaveis
@@ -181,6 +183,7 @@ Funcionalidades incluidas:
 - mensagens personalizadas por organizacao;
 - saidas/vendas modulares de produtos;
 - relatorio mensal de reposicao;
+- dashboard profissional com filtro de periodo, receita, vendas, reposicao, clientes e alertas;
 - responsividade mobile basica.
 
 Fora do escopo:
@@ -325,3 +328,24 @@ Documentacao da fase:
 
 - `docs/planejamento/fase-11-saidas-vendas-modulares.md`
 - `docs/planejamento/fase-11-checklist.md`
+
+## Fase 12 - Dashboard Profissional
+
+O dashboard em `/dashboard` mostra uma visao consolidada do desempenho da organizacao atual.
+
+Funcionalidades:
+
+- filtro de periodo com hoje, semana atual, mes atual, mes passado e personalizado simples;
+- faturamento total, receita de manutencoes, receita de vendas e tickets medios;
+- comparacao simples com o periodo anterior para faturamento, vendas e entregas;
+- manutencoes abertas, entregues no periodo, atrasadas, prontas para entrega, aguardando peca e garantias;
+- vendas por unidade, registros de saida, categoria/modelo mais vendido e top 5 por quantidade/faturamento;
+- itens para repor por categoria/modelo;
+- clientes novos, ativos, com WhatsApp autorizado, vindos do quiosque e recorrentes.
+
+Os valores financeiros representam receita/faturamento, nao lucro real. Lucro exige custos e fica para fase futura.
+
+Documentacao da fase:
+
+- `docs/planejamento/fase-12-dashboard-profissional.md`
+- `docs/planejamento/fase-12-checklist.md`

@@ -113,6 +113,26 @@
 - Relatorio de reposicao agrupa por categoria e modelo dentro do mes filtrado.
 - Esta fase nao controla entrada de estoque, saldo atual, fornecedor, custo medio, fiscal ou lucro liquido real.
 
+## Dashboard Profissional
+
+- O dashboard sempre exige usuario autenticado e organizacao atual.
+- A organizacao e definida no servidor; `organization_id` nunca pode vir de formulario, query publica ou componente client-side.
+- Todas as consultas do dashboard devem filtrar por `organization_id` da organizacao atual.
+- O dashboard deve respeitar RLS e ignorar registros com `deleted_at` preenchido.
+- O filtro padrao do dashboard e o mes atual.
+- O filtro de periodo deve afetar receita, vendas, clientes novos, manutencoes entregues e produtos mais vendidos.
+- Os valores financeiros do dashboard representam receita/faturamento, nao lucro real.
+- Receita de manutencoes usa `maintenance_orders.final_price` de ordens entregues no periodo.
+- Receita de vendas usa `product_outflows.total_price` de saidas/vendas no periodo.
+- Ticket medio de manutencao usa receita de manutencoes dividida por manutencoes entregues com valor final.
+- Ticket medio de venda usa receita de vendas dividida por registros de saida no MVP.
+- Manutencoes abertas sao ordens com status diferente de `entregue` e `cancelado`.
+- Manutencoes atrasadas usam `expected_delivery_date` anterior a hoje e status ainda aberto.
+- Garantias ativas exigem `warranty_enabled = true`, `warranty_signed = true` e `warranty_expires_at` maior ou igual a hoje.
+- Garantias vencidas exigem `warranty_enabled = true`, `warranty_signed = true` e `warranty_expires_at` anterior a hoje.
+- Clientes recorrentes no MVP sao clientes com mais de uma manutencao.
+- Lucro real fica para fase futura com registro de custos.
+
 ## Usuarios
 
 - Papeis iniciais: dono, gerente, tecnico e atendente.

@@ -115,9 +115,13 @@
 ## Alertas operacionais
 
 1. Usuario acessa `/dashboard`.
-2. Sistema calcula cards reais da organizacao atual.
-3. Equipe acompanha entregas de hoje, atrasadas, aguardando peca e prontas para entrega.
-4. Em entregas de hoje e prontas para entrega, usuario pode abrir a OS ou iniciar WhatsApp manual.
+2. Sistema exige usuario autenticado e organizacao atual.
+3. Sistema usa o mes atual como periodo padrao.
+4. Usuario pode alterar o filtro para hoje, semana atual, mes atual, mes passado ou intervalo personalizado simples.
+5. Sistema calcula cards reais da organizacao atual, sempre filtrando por `organization_id`.
+6. Equipe acompanha faturamento, receita de manutencoes, receita de vendas, tickets medios, manutencoes abertas, atrasadas, aguardando peca e prontas para entrega.
+7. Equipe acompanha vendas por produto/modelo, itens para repor, clientes novos e garantias.
+8. Em alertas importantes, usuario pode abrir a OS relacionada.
 
 ## Uso mobile
 

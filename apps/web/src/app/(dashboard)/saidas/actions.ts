@@ -12,6 +12,7 @@ import {
   currentMonthRange,
   type ProductCategory
 } from "@/lib/products/format";
+import { groupRestockOutflows } from "@/lib/products/restock";
 import { createClient } from "@/lib/supabase/server";
 import {
   createProductModelTemplateSchema,
@@ -960,36 +961,24 @@ export async function getMonthlyRestockReport(input?: {
     };
   }
 
-  const grouped = new Map<string, RestockReportRow>();
+  const rows = groupRestockOutflows(data ?? []).map(
+    ({ category, model, quantity, total }) =>
+      ({
+        category,
+        model,
+        quantity,
+        total
+      }) satisfies RestockReportRow
+  );
   const categoryTotals = new Map<ProductCategory, number>();
 
-  for (const outflow of data ?? []) {
-    const template = singleRelation(outflow.product_model_templates);
-    const model = template?.model_name ?? outflow.custom_model_name ?? "Sem modelo";
-    const key = `${outflow.category}::${model.trim().toLowerCase()}`;
-    const current = grouped.get(key) ?? {
-      category: outflow.category,
-      model,
-      quantity: 0,
-      total: 0
-    };
-
-    current.quantity += Number(outflow.quantity);
-    current.total += Number(outflow.total_price);
-    grouped.set(key, current);
+  for (const row of rows) {
     categoryTotals.set(
-      outflow.category,
-      (categoryTotals.get(outflow.category) ?? 0) + Number(outflow.quantity)
+      row.category,
+      (categoryTotals.get(row.category) ?? 0) + row.quantity
     );
   }
 
-  const rows = Array.from(grouped.values()).sort((left, right) => {
-    if (left.category === right.category) {
-      return left.model.localeCompare(right.model, "pt-BR");
-    }
-
-    return left.category.localeCompare(right.category);
-  });
   const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
   const totalSold = rows.reduce((sum, row) => sum + row.total, 0);
   const topCategory =
