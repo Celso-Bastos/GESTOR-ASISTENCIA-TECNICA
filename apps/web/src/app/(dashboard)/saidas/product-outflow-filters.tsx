@@ -21,7 +21,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Categoria
         <select
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
           defaultValue={filters.category}
           name="category"
         >
@@ -37,7 +37,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Modelo
         <input
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
           defaultValue={filters.q}
           name="q"
           placeholder="Buscar modelo"
@@ -48,7 +48,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Inicio
         <input
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
           defaultValue={filters.start}
           name="start"
           type="date"
@@ -58,7 +58,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
       <label className="grid gap-2 text-sm font-medium text-slate-700">
         Fim
         <input
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
           defaultValue={filters.end}
           name="end"
           type="date"
@@ -67,7 +67,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
 
       <div className="flex items-end">
         <button
-          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="inline-flex h-12 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-11"
           type="submit"
         >
           Filtrar

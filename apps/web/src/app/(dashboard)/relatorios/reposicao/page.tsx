@@ -98,7 +98,7 @@ export default async function ReposicaoPage({
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Mes
           <input
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
             defaultValue={report.month}
             name="month"
             type="month"
@@ -108,7 +108,7 @@ export default async function ReposicaoPage({
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Categoria
           <select
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
             defaultValue={params?.category ?? ""}
             name="category"
           >
@@ -123,7 +123,7 @@ export default async function ReposicaoPage({
 
         <div className="flex items-end">
           <button
-            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
+            className="inline-flex h-12 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-11"
             type="submit"
           >
             Filtrar

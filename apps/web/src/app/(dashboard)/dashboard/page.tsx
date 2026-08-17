@@ -186,10 +186,10 @@ function ProductRanking({
 function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
   return (
     <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-base font-semibold text-slate-950">Itens para repor</h3>
         <Link
-          className="text-sm font-semibold text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="inline-flex h-11 items-center justify-center rounded-md border border-teal-200 px-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-auto sm:border-0 sm:p-0"
           href="/relatorios/reposicao"
         >
           Ver relatorio
@@ -199,8 +199,45 @@ function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
       {rows.length === 0 ? (
         <p className="mt-4 text-sm text-slate-600">Nenhum item vendido no periodo.</p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <>
+          <div className="mt-4 grid gap-3 md:hidden">
+            {rows.map((row) => (
+              <article
+                className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
+                key={`${row.category}-${row.model}`}
+              >
+                <div>
+                  <p className="text-xs font-medium uppercase text-slate-500">
+                    {row.categoryLabel}
+                  </p>
+                  <h4 className="mt-1 break-words text-sm font-semibold text-slate-950">
+                    {row.model}
+                  </h4>
+                </div>
+                <dl className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-slate-500">
+                      Quantidade
+                    </dt>
+                    <dd className="mt-1 text-slate-800">
+                      {formatNumber(row.quantity)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-slate-500">
+                      Total vendido
+                    </dt>
+                    <dd className="mt-1 font-semibold text-slate-950">
+                      {formatCurrencyBRL(row.total)}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-4 hidden overflow-x-auto md:block">
+            <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
               <tr>
                 <th className="py-3 pr-4 font-semibold">Produto</th>
@@ -221,8 +258,9 @@ function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );
@@ -293,7 +331,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
 
         <Link
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
           href="/manutencoes/rapida"
         >
           <Zap className="size-4" aria-hidden="true" />
@@ -338,7 +376,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </label>
 
         <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 md:w-auto"
           type="submit"
         >
           <CalendarDays className="size-4" aria-hidden="true" />

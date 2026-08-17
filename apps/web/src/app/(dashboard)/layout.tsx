@@ -85,7 +85,7 @@ export default async function DashboardLayout({
                   <Menu className="size-5" aria-hidden="true" />
                 </summary>
 
-                <div className="absolute right-0 top-14 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-slate-200 bg-white p-3 shadow-lg">
+                <div className="absolute right-0 top-14 z-30 max-h-[calc(100vh-6rem)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-slate-200 bg-white p-3 shadow-lg">
                   <nav className="grid gap-1" aria-label="Menu principal">
                     {navItems.map((item) => {
                       const Icon = item.icon;

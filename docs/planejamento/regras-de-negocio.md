@@ -95,7 +95,7 @@
 - Cada saida e cada modelo salvo pertencem a organizacao atual.
 - `organization_id` nunca vem do formulario; deve ser derivado no servidor.
 - Usuario autenticado so pode ver, criar, editar, desativar e excluir dados da propria organizacao.
-- Categorias sao fixas: `charger`, `earphone`, `bluetooth_earphone`, `screen_protector`, `cable`, `case`, `keyboard` e `other`.
+- Categorias sao fixas: `charger`, `earphone`, `bluetooth_earphone`, `screen_protector`, `privacy_screen_protector`, `cable`, `case`, `keyboard` e `other`.
 - Modelos salvos ficam em `product_model_templates`.
 - Saidas/vendas ficam em `product_outflows`.
 - Modelo salvo ativo nao deve duplicar `organization_id + category + model_name`.
