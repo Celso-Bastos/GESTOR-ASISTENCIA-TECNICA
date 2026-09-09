@@ -32,23 +32,21 @@ export function QuickMaintenanceForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Nome do cliente
+            Nome do cliente (opcional)
             <input
               className={inputClass}
               defaultValue={valueFrom(state, "customer_name")}
               name="customer_name"
-              required
             />
           </label>
 
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Telefone/WhatsApp
+            Telefone/WhatsApp (opcional)
             <input
               className={inputClass}
               defaultValue={valueFrom(state, "phone")}
               inputMode="tel"
               name="phone"
-              required
             />
           </label>
         </div>
@@ -102,8 +100,8 @@ export function QuickMaintenanceForm() {
       </fieldset>
 
       <p className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-        A garantia pode ser preenchida depois no detalhe da OS pelo cadastro
-        completo.
+        Você pode abrir uma manutenção rápida mesmo sem os dados do cliente.
+        Depois será possível completar as informações na edição da OS.
       </p>
 
       {state.error ? (

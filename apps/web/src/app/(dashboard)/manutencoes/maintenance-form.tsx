@@ -46,6 +46,8 @@ export function MaintenanceForm({
 
   const values = {
     customer_id: valueFrom(state, initialValues, "customer_id"),
+    customer_name: valueFrom(state, initialValues, "customer_name"),
+    customer_phone: valueFrom(state, initialValues, "customer_phone"),
     brand: valueFrom(state, initialValues, "brand"),
     model: valueFrom(state, initialValues, "model"),
     color: valueFrom(state, initialValues, "color"),
@@ -83,6 +85,36 @@ export function MaintenanceForm({
             customers={customers}
             defaultCustomerId={values.customer_id}
           />
+        </fieldset>
+      ) : null}
+
+      {mode === "edit" ? (
+        <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <legend className="px-1 text-sm font-semibold text-slate-950">
+            Cliente
+          </legend>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Nome do cliente
+              <input
+                className={inputClass}
+                defaultValue={values.customer_name}
+                name="customer_name"
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Telefone/WhatsApp
+              <input
+                className={inputClass}
+                defaultValue={values.customer_phone}
+                inputMode="tel"
+                name="customer_phone"
+                type="tel"
+              />
+            </label>
+          </div>
         </fieldset>
       ) : null}
 

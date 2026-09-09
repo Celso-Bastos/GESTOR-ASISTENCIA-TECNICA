@@ -20,8 +20,8 @@ export type CustomerRow = {
   id: string;
   organization_id: string;
   name: string;
-  phone: string;
-  phone_normalized: string;
+  phone: string | null;
+  phone_normalized: string | null;
   whatsapp_opt_in: boolean;
   whatsapp_opt_in_at: string | null;
   source: "manual" | "tablet" | "future_import";
@@ -91,9 +91,13 @@ async function getCustomerActionContext(): Promise<
 
 async function getCustomerDuplicate(
   organizationId: string,
-  phoneNormalized: string,
+  phoneNormalized: string | undefined,
   ignoredCustomerId?: string
 ) {
+  if (!phoneNormalized) {
+    return { duplicateId: undefined };
+  }
+
   const supabase = await createClient();
   let query = supabase
     .from("customers")
@@ -213,7 +217,9 @@ export async function createCustomerAction(
     };
   }
 
-  const phoneNormalized = normalizePhoneBR(parsed.data.phone);
+  const phoneNormalized = parsed.data.phone
+    ? normalizePhoneBR(parsed.data.phone)
+    : undefined;
   const duplicate = await getCustomerDuplicate(organization.id, phoneNormalized);
 
   if (duplicate.error) {
@@ -235,8 +241,8 @@ export async function createCustomerAction(
   const { error } = await supabase.from("customers").insert({
     organization_id: organization.id,
     name: parsed.data.name,
-    phone: parsed.data.phone,
-    phone_normalized: phoneNormalized,
+    phone: parsed.data.phone ?? null,
+    phone_normalized: phoneNormalized ?? null,
     whatsapp_opt_in: parsed.data.whatsapp_opt_in,
     whatsapp_opt_in_at: whatsappOptInAt,
     source: "manual",
@@ -276,7 +282,9 @@ export async function updateCustomerAction(
     };
   }
 
-  const phoneNormalized = normalizePhoneBR(parsed.data.phone);
+  const phoneNormalized = parsed.data.phone
+    ? normalizePhoneBR(parsed.data.phone)
+    : undefined;
   const duplicate = await getCustomerDuplicate(
     organization.id,
     phoneNormalized,
@@ -303,8 +311,8 @@ export async function updateCustomerAction(
     .from("customers")
     .update({
       name: parsed.data.name,
-      phone: parsed.data.phone,
-      phone_normalized: phoneNormalized,
+      phone: parsed.data.phone ?? null,
+      phone_normalized: phoneNormalized ?? null,
       whatsapp_opt_in: parsed.data.whatsapp_opt_in,
       whatsapp_opt_in_at: whatsappOptInAt,
       notes: parsed.data.notes || null

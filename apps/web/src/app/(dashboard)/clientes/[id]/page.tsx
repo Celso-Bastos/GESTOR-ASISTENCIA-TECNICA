@@ -81,7 +81,7 @@ export default async function ClienteDetalhePage({
             Telefone
           </dt>
           <dd className="mt-1 text-sm text-slate-950">
-            {formatPhoneBR(customer.phone)}
+            {customer.phone ? formatPhoneBR(customer.phone) : "Nao informado"}
           </dd>
         </div>
         <div>

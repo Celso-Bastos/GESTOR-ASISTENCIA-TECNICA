@@ -11,8 +11,8 @@ export default function ManutencaoRapidaPage() {
           Manutenção rápida
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Abra uma OS com os dados mínimos do cliente, aparelho e defeito. A
-          ordem pode ser completada depois na edição.
+          Abra uma OS apenas com modelo do aparelho e defeito informado. Os
+          dados do cliente podem ser completados depois na edição.
         </p>
       </div>
 

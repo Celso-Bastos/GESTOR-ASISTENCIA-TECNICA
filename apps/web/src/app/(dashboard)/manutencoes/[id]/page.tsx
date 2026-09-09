@@ -264,7 +264,7 @@ export default async function ManutencaoDetalhePage({
         </div>
         {!customer?.phone ? (
           <p className="text-xs leading-5 text-slate-500">
-            Cliente sem telefone para WhatsApp.
+            Informe um telefone do cliente para abrir o WhatsApp.
           </p>
         ) : warrantyBlockReason ? (
           <p className="text-xs leading-5 text-amber-700">
@@ -280,7 +280,7 @@ export default async function ManutencaoDetalhePage({
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <dl className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5">
-          <Field label="Cliente" value={customer?.name} />
+          <Field label="Cliente" value={customer?.name ?? "Cliente não informado"} />
           <Field
             label="Telefone"
             value={customer?.phone ? formatPhoneBR(customer.phone) : null}

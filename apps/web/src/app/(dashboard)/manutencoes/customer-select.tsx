@@ -21,7 +21,7 @@ export function CustomerSelect({
     }
 
     return customers.filter((customer) => {
-      const text = `${customer.name} ${customer.phone} ${customer.phone_normalized}`;
+      const text = `${customer.name} ${customer.phone ?? ""} ${customer.phone_normalized ?? ""}`;
       return text.toLowerCase().includes(normalizedSearch);
     });
   }, [customers, normalizedSearch]);
@@ -50,7 +50,8 @@ export function CustomerSelect({
           <option value="">Selecione um cliente</option>
           {filteredCustomers.map((customer) => (
             <option key={customer.id} value={customer.id}>
-              {customer.name} - {formatPhoneBR(customer.phone)}
+              {customer.name}
+              {customer.phone ? ` - ${formatPhoneBR(customer.phone)}` : ""}
             </option>
           ))}
         </select>

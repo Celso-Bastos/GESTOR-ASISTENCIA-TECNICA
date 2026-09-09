@@ -4,7 +4,10 @@ import {
   updateMaintenanceOrderAction
 } from "../../actions";
 import { MaintenanceForm } from "../../maintenance-form";
-import { getMaintenanceDevice } from "../../maintenance-relations";
+import {
+  getMaintenanceCustomer,
+  getMaintenanceDevice
+} from "../../maintenance-relations";
 
 type EditarManutencaoPageProps = {
   params: Promise<{
@@ -46,6 +49,7 @@ export default async function EditarManutencaoPage({
     notFound();
   }
 
+  const customer = getMaintenanceCustomer(order);
   const device = getMaintenanceDevice(order);
 
   return (
@@ -66,6 +70,8 @@ export default async function EditarManutencaoPage({
       <MaintenanceForm
         action={updateMaintenanceOrderAction.bind(null, order.id)}
         initialValues={{
+          customer_name: customer?.name ?? "",
+          customer_phone: customer?.phone ?? "",
           brand: device?.brand ?? "",
           model: device?.model ?? "",
           color: device?.color ?? "",

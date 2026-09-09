@@ -78,8 +78,8 @@ export type ProductOutflow = {
 export type CustomerOption = {
   id: string;
   name: string;
-  phone: string;
-  phone_normalized: string;
+  phone: string | null;
+  phone_normalized: string | null;
 };
 
 export type RestockReportRow = {

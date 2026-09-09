@@ -79,12 +79,12 @@ type MessageOrder = {
     | {
         id: string;
         name: string;
-        phone: string;
+        phone: string | null;
       }
     | {
         id: string;
         name: string;
-        phone: string;
+        phone: string | null;
       }[]
     | null;
   devices:
@@ -611,7 +611,7 @@ export async function logWhatsAppMessageAction(
   const customer = singleRelation(order.customers);
 
   if (!customer?.phone) {
-    return { error: "Cliente sem telefone para WhatsApp." };
+    return { error: "Informe um telefone do cliente para abrir o WhatsApp." };
   }
 
   if (!hasValidWhatsAppPhone(customer.phone)) {
@@ -746,7 +746,7 @@ export async function useCustomMessageTemplateAction(
   const customer = singleRelation(order.customers);
 
   if (!customer?.phone) {
-    return { error: "Cliente sem telefone para WhatsApp." };
+    return { error: "Informe um telefone do cliente para abrir o WhatsApp." };
   }
 
   if (!hasValidWhatsAppPhone(customer.phone)) {

@@ -23,7 +23,7 @@ export function CustomerForm({
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   const name = state.values?.name ?? customer?.name;
-  const phone = state.values?.phone ?? customer?.phone;
+  const phone = state.values?.phone ?? customer?.phone ?? "";
   const notes = state.values?.notes ?? customer?.notes ?? "";
   const whatsappOptIn =
     state.values?.whatsapp_opt_in ?? customer?.whatsapp_opt_in ?? false;
@@ -41,14 +41,13 @@ export function CustomerForm({
       </label>
 
       <label className="grid gap-2 text-sm font-medium text-slate-700">
-        Telefone
+        Telefone (opcional)
         <input
           className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           defaultValue={phone}
           inputMode="tel"
           name="phone"
           placeholder="(11) 99999-9999"
-          required
           type="tel"
         />
       </label>

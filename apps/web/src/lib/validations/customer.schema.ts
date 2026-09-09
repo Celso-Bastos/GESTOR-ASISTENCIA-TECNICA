@@ -4,8 +4,13 @@ import { normalizePhoneBR } from "@/lib/phone";
 const phoneSchema = z
   .string()
   .trim()
-  .min(1, "Informe o telefone do cliente.")
+  .optional()
+  .transform((value) => value || undefined)
   .refine((value) => {
+    if (!value) {
+      return true;
+    }
+
     const normalized = normalizePhoneBR(value);
     return normalized.length === 10 || normalized.length === 11;
   }, "Informe um telefone com DDD valido.");

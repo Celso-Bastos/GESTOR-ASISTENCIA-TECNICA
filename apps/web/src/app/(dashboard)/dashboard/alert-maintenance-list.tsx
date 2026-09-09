@@ -67,7 +67,7 @@ export function AlertMaintenanceList({
                     <MaintenanceStatusBadge status={order.status} />
                   </div>
                   <p className="mt-1 text-sm text-slate-700">
-                    {customer?.name ?? "Cliente nao encontrado"} -{" "}
+                    {customer?.name ?? "Cliente nao informado"} -{" "}
                     {device?.model ?? "Aparelho nao encontrado"}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">

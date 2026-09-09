@@ -1,20 +1,28 @@
 # Fase 6 - Checklist
 
 - [x] `/manutencoes/rapida` abre apenas logado.
-- [x] Usuário sem organização vai para onboarding.
-- [x] Formulário exige nome, telefone, modelo e defeito.
-- [x] Telefone é normalizado.
-- [x] Cliente existente é reaproveitado.
-- [x] Cliente novo é criado quando telefone não existe.
-- [x] Não duplica cliente por telefone.
-- [x] `device` é criado.
-- [x] `maintenance_order` é criada.
-- [x] `order_number` é gerado.
-- [x] Status inicial é `recebido`.
-- [x] `maintenance_event` é criado.
+- [x] Usuario sem organizacao vai para onboarding.
+- [x] Formulario exige somente modelo do aparelho e defeito informado.
+- [x] Nome do cliente e opcional.
+- [x] Telefone/WhatsApp e opcional.
+- [x] Previsao de entrega e opcional.
+- [x] Observacao rapida e opcional.
+- [x] Telefone e normalizado quando informado.
+- [x] Cliente existente e reaproveitado quando telefone informado ja existe.
+- [x] Cliente novo e criado quando telefone informado nao existe.
+- [x] Cliente placeholder por OS e criado quando nao ha nome nem telefone.
+- [x] Nome informado sem telefone cria cliente sem telefone.
+- [x] Nao usa telefone falso.
+- [x] Nao duplica cliente por telefone preenchido.
+- [x] `device` e criado.
+- [x] `maintenance_order` e criada.
+- [x] `order_number` e gerado.
+- [x] Status inicial e `recebido`.
+- [x] `maintenance_event` e criado.
 - [x] Redireciona para detalhe da OS.
 - [x] OS aparece na listagem.
-- [x] OS pode ser editada depois.
+- [x] OS pode ter cliente e telefone completados depois pela edicao.
+- [x] WhatsApp fica bloqueado quando nao ha telefone.
 - [x] `.env.local` continua ignorado.
 - [x] `pnpm lint` passa.
 - [x] `pnpm typecheck` passa.

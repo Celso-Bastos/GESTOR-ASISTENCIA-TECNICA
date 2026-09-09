@@ -73,7 +73,7 @@ export function MaintenanceTable({ orders }: MaintenanceTableProps) {
                     Cliente
                   </dt>
                   <dd className="mt-1 text-slate-950">
-                    {customer?.name ?? "Cliente nao encontrado"}
+                    {customer?.name ?? "Cliente nao informado"}
                   </dd>
                   {customer?.phone ? (
                     <dd className="text-slate-600">
@@ -153,7 +153,7 @@ export function MaintenanceTable({ orders }: MaintenanceTableProps) {
                   </td>
                   <td className="px-4 py-3 text-slate-700">
                     <span className="block font-medium text-slate-950">
-                      {customer?.name ?? "Cliente não encontrado"}
+                      {customer?.name ?? "Cliente não informado"}
                     </span>
                     <span className="block text-xs text-slate-500">
                       {customer?.phone ? formatPhoneBR(customer.phone) : ""}

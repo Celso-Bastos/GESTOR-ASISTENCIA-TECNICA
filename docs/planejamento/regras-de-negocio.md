@@ -2,12 +2,14 @@
 
 ## Clientes
 
-- Nome e telefone sao os dados minimos para cadastro.
-- O telefone deve ser tratado como identificador operacional principal.
+- Nome e telefone sao os dados minimos para cadastros completos.
+- O fluxo de manutencao rapida pode criar cliente sem telefone para permitir abertura de OS com dados minimos.
+- O telefone deve ser tratado como identificador operacional principal quando informado.
 - O telefone deve ser normalizado em `phone_normalized` antes de salvar.
 - Cliente sempre pertence a organizacao atual do usuario autenticado.
 - O formulario nunca deve enviar nem permitir alterar `organization_id`.
-- Nao pode existir cliente ativo duplicado com o mesmo `phone_normalized` dentro da mesma organizacao.
+- Nao pode existir cliente ativo duplicado com o mesmo `phone_normalized` preenchido dentro da mesma organizacao.
+- Clientes sem telefone podem existir mais de uma vez, pois representam atendimentos diferentes ainda nao completados.
 - Clientes removidos devem usar soft delete com `deleted_at`; nao apagar fisicamente no MVP.
 - Listagens devem ignorar clientes com `deleted_at` preenchido.
 - O cadastro manual deve usar `source = manual`.
@@ -54,10 +56,17 @@
 - A mensagem de garantia so pode ser aberta no WhatsApp se a garantia estiver ativa e o cliente tiver assinado/aceitado (`warranty_signed = true`).
 - Ao abrir mensagem de garantia, registrar `message_logs.message_type = warranty_notice`, preencher `warranty_message_sent_at` e criar evento `warranty_message_opened`.
 - O fluxo de manutencao rapida nao aceita `customer_id` nem `organization_id` do formulario.
-- Manutencao rapida deve encontrar ou criar cliente por `phone_normalized` dentro da organizacao atual.
+- Manutencao rapida exige somente modelo do aparelho e defeito informado.
+- Nome do cliente, telefone/WhatsApp, previsao de entrega e observacao rapida sao opcionais na manutencao rapida.
+- Manutencao rapida deve encontrar ou criar cliente por `phone_normalized` dentro da organizacao atual quando telefone for informado.
 - Se o cliente ja existir, o sistema deve reaproveitar o cadastro sem alterar `source` e sem sobrescrever nome automaticamente.
 - Cliente criado pela manutencao rapida usa `source = manual` e `whatsapp_opt_in = false`.
+- Se nao houver telefone, o sistema deve criar um cliente especifico para aquela OS, sem reaproveitar um cliente generico compartilhado.
+- Se nao houver nome nem telefone, usar `Cliente nao informado` e registrar que o cliente foi criado automaticamente pelo fluxo rapido sem dados informados.
+- Se houver telefone sem nome, usar `Cliente sem nome`.
+- Nao usar telefone falso para clientes sem telefone.
 - OS criada pela manutencao rapida pode ser completada depois pela edicao da ordem.
+- WhatsApp manual depende de telefone informado; se nao houver telefone, o botao deve ficar bloqueado ou exibir aviso amigavel.
 
 ## Alertas
 

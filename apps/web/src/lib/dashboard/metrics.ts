@@ -58,14 +58,14 @@ type MaintenanceDashboardRow = {
     | {
         id: string;
         name: string;
-        phone: string;
-        phone_normalized: string;
+        phone: string | null;
+        phone_normalized: string | null;
       }
     | Array<{
         id: string;
         name: string;
-        phone: string;
-        phone_normalized: string;
+        phone: string | null;
+        phone_normalized: string | null;
       }>
     | null;
   devices:
@@ -375,7 +375,7 @@ function alertOrder(row: MaintenanceDashboardRow): DashboardAlertOrder {
     status: row.status,
     expectedDeliveryDate: row.expected_delivery_date,
     warrantyExpiresAt: row.warranty_expires_at,
-    customerName: customer?.name ?? "Cliente nao encontrado",
+    customerName: customer?.name ?? "Cliente nao informado",
     deviceModel: device?.model ?? "Aparelho nao encontrado"
   };
 }

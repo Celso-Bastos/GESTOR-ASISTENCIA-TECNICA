@@ -23,6 +23,37 @@ const optionalDate = z
     message: "Informe uma data válida."
   });
 
+const optionalQuickCustomerName = z
+  .string()
+  .trim()
+  .max(120, "Use no máximo 120 caracteres no nome.")
+  .optional()
+  .transform((value) => value || undefined)
+  .refine((value) => !value || value.length >= 2, {
+    message: "Use pelo menos 2 caracteres no nome do cliente."
+  });
+
+const optionalQuickPhone = z
+  .string()
+  .trim()
+  .max(30, "Use no máximo 30 caracteres no telefone.")
+  .optional()
+  .transform((value) => value || undefined)
+  .refine(
+    (value) => {
+      if (!value) {
+        return true;
+      }
+
+      const normalized = normalizePhoneBR(value);
+
+      return normalized.length >= 10 && normalized.length <= 11;
+    },
+    {
+      message: "Informe um telefone válido com DDD."
+    }
+  );
+
 const optionalDateTime = z
   .string()
   .trim()
@@ -155,21 +186,8 @@ export const createMaintenanceOrderSchema = z.object({
 }).and(warrantySchema);
 
 export const createQuickMaintenanceOrderSchema = z.object({
-  customer_name: z
-    .string()
-    .trim()
-    .min(2, "Informe o nome do cliente.")
-    .max(120, "Use no máximo 120 caracteres no nome."),
-  phone: z
-    .string()
-    .trim()
-    .min(8, "Informe o telefone do cliente.")
-    .max(30, "Use no máximo 30 caracteres no telefone.")
-    .refine((value) => {
-      const normalized = normalizePhoneBR(value);
-
-      return normalized.length >= 10 && normalized.length <= 11;
-    }, "Informe um telefone válido com DDD."),
+  customer_name: optionalQuickCustomerName,
+  phone: optionalQuickPhone,
   device_model: z
     .string()
     .trim()

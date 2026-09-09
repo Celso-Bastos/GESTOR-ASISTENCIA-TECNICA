@@ -38,7 +38,7 @@ export function CustomerTable({ customers }: CustomerTableProps) {
                   {customer.name}
                 </h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  {formatPhoneBR(customer.phone)}
+                  {customer.phone ? formatPhoneBR(customer.phone) : "Nao informado"}
                 </p>
               </div>
               <span
@@ -112,7 +112,7 @@ export function CustomerTable({ customers }: CustomerTableProps) {
                   {customer.name}
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {formatPhoneBR(customer.phone)}
+                  {customer.phone ? formatPhoneBR(customer.phone) : "Nao informado"}
                 </td>
                 <td className="px-4 py-3">
                   <span

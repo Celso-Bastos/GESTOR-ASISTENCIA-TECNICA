@@ -29,8 +29,8 @@ import {
 export type MaintenanceCustomer = {
   id: string;
   name: string;
-  phone: string;
-  phone_normalized: string;
+  phone: string | null;
+  phone_normalized: string | null;
 };
 
 export type MaintenanceDevice = {
@@ -150,6 +150,8 @@ function todayISO() {
 function formValues(formData: FormData) {
   return {
     customer_id: String(formData.get("customer_id") ?? ""),
+    customer_name: String(formData.get("customer_name") ?? ""),
+    customer_phone: String(formData.get("customer_phone") ?? ""),
     brand: String(formData.get("brand") ?? ""),
     model: String(formData.get("model") ?? ""),
     color: String(formData.get("color") ?? ""),
@@ -538,31 +540,38 @@ async function findOrCreateQuickCustomer({
   phoneNormalized
 }: {
   organizationId: string;
-  name: string;
-  phone: string;
-  phoneNormalized: string;
+  name?: string;
+  phone?: string;
+  phoneNormalized?: string;
 }) {
-  const existing = await getExistingCustomerByPhone(
-    organizationId,
-    phoneNormalized
-  );
+  if (phoneNormalized) {
+    const existing = await getExistingCustomerByPhone(
+      organizationId,
+      phoneNormalized
+    );
 
-  if (existing.error || existing.customer) {
-    return existing;
+    if (existing.error || existing.customer) {
+      return existing;
+    }
   }
 
   const supabase = await createClient();
+  const customerName = name ?? (phone ? "Cliente sem nome" : "Cliente não informado");
+  const notes =
+    !name && !phone
+      ? "Cliente criado automaticamente pelo fluxo de manutenção rápida sem dados informados."
+      : null;
   const { data, error } = await supabase
     .from("customers")
     .insert({
       organization_id: organizationId,
-      name,
-      phone,
-      phone_normalized: phoneNormalized,
+      name: customerName,
+      phone: phone ?? null,
+      phone_normalized: phoneNormalized ?? null,
       whatsapp_opt_in: false,
       whatsapp_opt_in_at: null,
       source: "manual",
-      notes: null
+      notes
     })
     .select("id, name")
     .maybeSingle<{ id: string; name: string }>();
@@ -573,7 +582,7 @@ async function findOrCreateQuickCustomer({
 
   console.error("Erro ao criar cliente da manutenção rápida:", error);
 
-  if (error?.code === "23505") {
+  if (error?.code === "23505" && phoneNormalized) {
     return getExistingCustomerByPhone(organizationId, phoneNormalized);
   }
 
@@ -872,7 +881,9 @@ export async function createQuickMaintenanceOrderAction(
   }
 
   const { organization, userId } = context;
-  const phoneNormalized = normalizePhoneBR(parsed.data.phone);
+  const phoneNormalized = parsed.data.phone
+    ? normalizePhoneBR(parsed.data.phone)
+    : undefined;
   const customerResult = await findOrCreateQuickCustomer({
     organizationId: organization.id,
     name: parsed.data.customer_name,
@@ -900,7 +911,14 @@ export async function createQuickMaintenanceOrderAction(
     reported_issue: parsed.data.reported_issue,
     expected_delivery_date: parsed.data.expected_delivery_date,
     estimated_price: undefined,
-    internal_notes: parsed.data.quick_notes,
+    internal_notes: [
+      parsed.data.quick_notes,
+      !parsed.data.customer_name && !parsed.data.phone
+        ? "Criada sem dados de cliente. Completar cadastro posteriormente."
+        : undefined
+    ]
+      .filter(Boolean)
+      .join("\n\n") || undefined,
     warranty_enabled: false,
     warranty_signed: false,
     warranty_amount: undefined,
@@ -969,6 +987,66 @@ export async function updateMaintenanceOrderAction(
 
     return {
       error: "Manutenção não encontrada para esta organização.",
+      values
+    };
+  }
+
+  const customerName = values.customer_name.trim() || "Cliente não informado";
+  const customerPhone = values.customer_phone.trim();
+  const customerPhoneNormalized = customerPhone
+    ? normalizePhoneBR(customerPhone)
+    : null;
+
+  if (
+    customerPhone &&
+    (!customerPhoneNormalized || customerPhoneNormalized.length < 10 || customerPhoneNormalized.length > 11)
+  ) {
+    return {
+      error: "Informe um telefone válido com DDD.",
+      values
+    };
+  }
+
+  if (customerPhoneNormalized) {
+    const duplicate = await getExistingCustomerByPhone(
+      organization.id,
+      customerPhoneNormalized
+    );
+
+    if (duplicate.error) {
+      return {
+        error: duplicate.error,
+        values
+      };
+    }
+
+    if (duplicate.customer && duplicate.customer.id !== order.customer_id) {
+      return {
+        error: "Ja existe um cliente ativo com esse telefone.",
+        values
+      };
+    }
+  }
+
+  const { error: customerError } = await supabase
+    .from("customers")
+    .update({
+      name: customerName,
+      phone: customerPhone || null,
+      phone_normalized: customerPhoneNormalized
+    })
+    .eq("id", order.customer_id)
+    .eq("organization_id", organization.id)
+    .is("deleted_at", null);
+
+  if (customerError) {
+    console.error("Erro ao atualizar cliente da maintenance_order:", customerError);
+
+    return {
+      error:
+        customerError.code === "23505"
+          ? "Ja existe um cliente ativo com esse telefone."
+          : "Não foi possível atualizar os dados do cliente.",
       values
     };
   }
