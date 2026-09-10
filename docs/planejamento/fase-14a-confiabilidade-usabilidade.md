@@ -12,29 +12,107 @@
 8. Garantia mensal mantém o dia quando possível; caso contrário usa o último dia do mês de destino, incluindo ano bissexto.
 9. Vendas possuem edição em `/saidas/[id]/editar`, acessível nos cards e na tabela. Quantidade, preço, cliente, observação, modelo e data podem ser corrigidos. O total é mostrado antes de salvar e recalculado no servidor. Preços decimais vindos do banco mantêm os centavos.
 
-## Banco e publicação
+## Banco e publicação — correção do PGRST202 (10/09/2026)
 
-Aplicar todas as migrations anteriores e, em ordem:
+Diagnóstico: a migration `0010_atomic_maintenance_intake.sql` já existe e declara os sete argumentos usados pela action. O erro da Vercel informa que o PostgREST não encontra essa RPC/assinatura no cache. A confirmação fornecida de `is_nullable = NO` para ambos os telefones comprova também que o banco ainda não possui o efeito da migration 0009. O estado remoto não foi consultado por esta execução.
 
-- `0009_allow_customers_without_phone.sql`, se ainda estiver pendente.
-- `0010_atomic_maintenance_intake.sql`.
+Não foi criada outra migration nem alterada a chamada do aplicativo. Corrigidos os arquivos existentes para instalação/reaplicação neste banco pendente:
 
-A nova migration mantém os dados existentes, adiciona uma coluna de tentativa e seu índice, permite telefones nulos e cria a RPC transacional. Usa `security invoker`, verifica autenticação e participação na organização e deriva o criador de `auth.uid()`. Mantém as policies existentes. Execução da nova função é concedida a `authenticated`, não a `anon`/PUBLIC.
+- `0009`: alteração de nulabilidade e reconstrução do índice único agora estão em uma única transação; notifica recarga do cache ao confirmar.
+- `0010`: preserva assinatura e retorno; verifica a RPC dependente da 0004 antes da instalação; rejeita payload nulo/inválido; não confirma criação se a RPC interna não retornar OS ou se a tentativa não puder ser registrada; mantém grants e notifica recarga do cache.
+- As constraints de produtos/película privativa não são alteradas.
 
-A migration NÃO foi aplicada ao Supabase nesta execução. O schema remoto não foi consultado. O envio/publicação de código não substitui aplicação de SQL.
-
-Verificação somente de leitura após aplicar:
+### Assinatura final e retorno
 
 ```sql
-select column_name, is_nullable
-from information_schema.columns
-where table_schema = 'public' and table_name = 'customers'
-  and column_name in ('phone', 'phone_normalized');
-
-select to_regprocedure('public.create_maintenance_intake(uuid,uuid,uuid,text,text,jsonb,boolean)');
+public.create_maintenance_intake(
+  p_organization_id uuid,
+  p_request_id uuid,
+  p_customer_id uuid,
+  p_customer_name text,
+  p_customer_phone text,
+  p_input jsonb,
+  p_quick boolean default false
+)
+returns table (order_id uuid, order_number text)
 ```
 
-Resultado esperado: ambos os telefones permitem NULL e a função é encontrada.
+As sete chaves do objeto passado à RPC correspondem aos nomes acima. A ordem alfabética exibida no erro não é a ordem posicional de SQL: o PostgREST associa as chaves JSON pelos nomes. Não criar uma segunda sobrecarga reordenando os tipos dos argumentos.
+
+Foi mantido `TABLE(order_id uuid, order_number text)` porque a action usa `.maybeSingle()` e redireciona com `order.order_id`. O retorno jsonb sugerido não é necessário para resolver o incidente e mudaria o contrato já publicado. Uma linha indica a OS confirmada; erro SQL aborta a operação inteira. IDs de cliente e aparelho permanecem na própria OS.
+
+Grant correspondente, já incluído na 0010:
+
+```sql
+grant execute on function public.create_maintenance_intake(
+  uuid, uuid, uuid, text, text, jsonb, boolean
+) to authenticated;
+```
+
+A função usa `security invoker`, verifica autenticação e participação na organização e deriva o criador de `auth.uid()`. A execução não é concedida a `anon`/PUBLIC. As policies existentes continuam valendo.
+
+### Sequência para o Supabase de produção
+
+1. Abrir o SQL Editor do mesmo projeto Supabase configurado no ambiente Production da Vercel. Conferir o projeto no painel, sem compartilhar variáveis ou chaves.
+2. Executar o conteúdo COMPLETO de `supabase/migrations/0009_allow_customers_without_phone.sql` e confirmar sucesso.
+3. Executar o conteúdo COMPLETO de `supabase/migrations/0010_atomic_maintenance_intake.sql` e confirmar sucesso. A 0010 depende das migrations anteriores, especialmente da RPC com garantia criada na 0004. Se a verificação inicial acusar ausência da 0004, aplicar a migration indicada e repetir a 0010; não ignorar o erro nem reaplicar o schema inicial sobre tabelas existentes.
+4. Executar a recarga explícita abaixo após as migrations concluídas. Ela também já está incluída nos arquivos e não cria funções ausentes por si só.
+5. Conferir nulabilidade, assinatura e grant com as consultas abaixo.
+6. Fazer os testes autenticados na URL de produção da Vercel.
+
+Não foi aplicado SQL remotamente. Estas instruções corrigem o banco; um novo build da Vercel não executa as migrations por conta própria.
+
+### Consultas para conferir a aplicação
+
+Verificar telefone opcional (esperado: duas linhas com `YES`):
+
+```sql
+select
+  column_name,
+  is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'customers'
+  and column_name in ('phone', 'phone_normalized');
+```
+
+Verificar RPC (esperado: a assinatura acima e retorno `TABLE(order_id uuid, order_number text)`):
+
+```sql
+select
+  n.nspname as schema,
+  p.proname as function_name,
+  pg_get_function_arguments(p.oid) as arguments,
+  pg_get_function_result(p.oid) as result
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname = 'create_maintenance_intake';
+```
+
+Conferir permissão (esperado: `authenticated_execute = true`):
+
+```sql
+select has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_execute
+from pg_proc p
+where p.oid = to_regprocedure(
+  'public.create_maintenance_intake(uuid,uuid,uuid,text,text,jsonb,boolean)'
+);
+```
+
+Recarregar cache:
+
+```sql
+notify pgrst, 'reload schema';
+```
+
+Se a RPC existir mas o PGRST202 continuar, conferir os sete nomes/tipos, a conclusão do COMMIT e o projeto Supabase realmente usado pela Vercel. O teste SQL Editor como administrador não substitui o teste pelo usuário autenticado do app.
+
+### Redeploy
+
+Não é necessário redeploy se a Vercel já executa a chamada acima e aponta para o projeto Supabase corrigido. A correção é nas migrations/cache. Fazer redeploy se for preciso alterar as variáveis de ambiente da Vercel ou se o código publicado ainda não corresponder à Fase 14A.
+
+Referências oficiais: [argumentos nomeados de RPC](https://postgrest.org/en/stable/references/api/functions.html) e [recarga do cache](https://postgrest.org/en/stable/references/schema_cache.html).
 
 ## Limites da proteção contra duplicação
 
@@ -116,5 +194,30 @@ Código implementado e verificações locais aprovadas. Pode iniciar preparaçã
 - `apps/web/src/app/(dashboard)/mensagens/whatsapp-controls.tsx`
 - `apps/web/src/app/(dashboard)/saidas/[id]/editar/page.tsx`
 - `apps/web/tests/fase-14a.test.cjs`
+- `docs/planejamento/fase-14a-confiabilidade-usabilidade.md`
+- `docs/planejamento/fase-14a-checklist.md`
+
+## Validação da correção das migrations
+
+Arquivo: `supabase/tests/maintenance-intake.test.cjs`.
+
+O teste usa PostgreSQL descartável via PGlite e lê as migrations do repositório. Substitui somente o provedor `auth` por uma sessão de teste e usa `gen_random_uuid()` nativo em vez da extensão pgcrypto. Não lê `.env`, não usa dados reais e não acessa o Supabase. Exercita telefone nulo, assinatura/retorno/grants, cenários A/B/C, completa, reenvio, isolamento de organização, dependência ausente e rollback por falha forçada no evento e no registro da tentativa. Não valida o cache PostgREST nem concorrência entre sessões remotas.
+
+Para executar sem adicionar dependência ao aplicativo (PowerShell):
+
+```powershell
+npm.cmd install --prefix "$env:TEMP\assistencia-14a-sql-validation" --cache "$env:TEMP\assistencia-14a-sql-validation\npm-cache" --no-save --ignore-scripts --no-package-lock @electric-sql/pglite@0.5.8
+$env:PGLITE_TEST_MODULE = "$env:TEMP\assistencia-14a-sql-validation\node_modules\@electric-sql\pglite"
+node --wasm-num-compilation-tasks=1 --wasm-lazy-compilation --test --test-isolation=none supabase/tests/maintenance-intake.test.cjs
+pnpm.cmd --filter web test:14a
+```
+
+Resultado em 10/09/2026: os 11 cenários SQL passaram (o executor Node informa 12 testes ao incluir o teste pai). Os 10 testes existentes da aplicação também passaram. A primeira tentativa do executor SQL excedeu memória; a execução acima limita compilação WebAssembly e passou. Foi usado PGlite 0.5.8 apenas na pasta temporária, sem alterar dependências do projeto. As alterações desta correção são restritas a SQL, testes SQL e documentação; não houve novo build do aplicativo nem commit.
+
+## Arquivos desta correção de produção
+
+- `supabase/migrations/0009_allow_customers_without_phone.sql`
+- `supabase/migrations/0010_atomic_maintenance_intake.sql`
+- `supabase/tests/maintenance-intake.test.cjs` (novo)
 - `docs/planejamento/fase-14a-confiabilidade-usabilidade.md`
 - `docs/planejamento/fase-14a-checklist.md`

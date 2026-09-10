@@ -2,6 +2,15 @@
 -- Cliente, aparelho, OS e evento sao confirmados na mesma transacao.
 begin;
 
+-- Nao instalar uma RPC que so falharia no primeiro atendimento.
+do $$
+begin
+  if to_regprocedure('public.create_maintenance_order(uuid,uuid,uuid,text,text,text,text,text,text,text,date,numeric,text,boolean,boolean,integer,text,date,date,text)') is null then
+    raise exception 'Dependencia ausente: aplique a migration 0004_add_warranty_to_maintenance_orders.sql antes da 0010.';
+  end if;
+end;
+$$;
+
 alter table public.customers
   alter column phone drop not null,
   alter column phone_normalized drop not null;
@@ -20,6 +29,8 @@ create or replace function public.create_maintenance_intake(
   p_input jsonb,
   p_quick boolean default false
 )
+-- Preserva o contrato do app: .rpc(...).maybeSingle() usa order_id/order_number.
+-- As chaves JSON sao argumentos nomeados; sua ordem no erro PGRST202 nao altera a assinatura.
 returns table (order_id uuid, order_number text)
 language plpgsql
 security invoker
@@ -46,12 +57,13 @@ begin
     where mo.organization_id = p_organization_id and mo.intake_request_id = p_request_id;
   if found then return; end if;
 
-  if nullif(btrim(p_input->'device'->>'model'), '') is null
+  if p_input is null or jsonb_typeof(p_input) is distinct from 'object'
+    or nullif(btrim(p_input->'device'->>'model'), '') is null
     or length(btrim(coalesce(p_input->>'reported_issue', ''))) < 3 then
     raise exception 'Informe modelo e defeito.' using errcode = '22023';
   end if;
   if v_customer_id is null then
-    if not p_quick and v_name is null then
+    if not coalesce(p_quick, false) and v_name is null then
       raise exception 'Informe o nome do cliente.' using errcode = '22023';
     end if;
     if v_phone is not null then
@@ -99,12 +111,19 @@ begin
     (p_input->>'warranty_started_at')::date, (p_input->>'warranty_expires_at')::date,
     p_input->>'warranty_notes'
   );
+  if v_order.order_id is null or v_order.order_number is null then
+    raise exception 'Nao foi possivel confirmar a criacao da OS.' using errcode = '23514';
+  end if;
   update public.maintenance_orders set intake_request_id = p_request_id
     where id = v_order.order_id and organization_id = p_organization_id;
+  if not found then
+    raise exception 'Nao foi possivel registrar a tentativa de abertura.' using errcode = '42501';
+  end if;
   return query select v_order.order_id::uuid, v_order.order_number::text;
 end;
 $$;
 
 revoke all on function public.create_maintenance_intake(uuid, uuid, uuid, text, text, jsonb, boolean) from public, anon;
 grant execute on function public.create_maintenance_intake(uuid, uuid, uuid, text, text, jsonb, boolean) to authenticated;
+notify pgrst, 'reload schema';
 commit;
