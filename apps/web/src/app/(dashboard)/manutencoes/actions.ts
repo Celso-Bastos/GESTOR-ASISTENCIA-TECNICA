@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth, getCurrentUser } from "@/lib/auth/queries";
@@ -149,6 +150,8 @@ function todayISO() {
 
 function formValues(formData: FormData) {
   return {
+    request_id: String(formData.get("request_id") ?? ""),
+    customer_mode: String(formData.get("customer_mode") ?? "existing"),
     customer_id: String(formData.get("customer_id") ?? ""),
     customer_name: String(formData.get("customer_name") ?? ""),
     customer_phone: String(formData.get("customer_phone") ?? ""),
@@ -177,6 +180,9 @@ function formValues(formData: FormData) {
 
 function createInput(values: Record<string, string>) {
   return {
+    customer_mode: values.customer_mode,
+    customer_name: values.customer_name,
+    customer_phone: values.customer_phone,
     customer_id: values.customer_id,
     device: {
       brand: values.brand,
@@ -201,6 +207,7 @@ function createInput(values: Record<string, string>) {
 
 function quickFormValues(formData: FormData) {
   return {
+    request_id: String(formData.get("request_id") ?? ""),
     customer_name: String(formData.get("customer_name") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     device_model: String(formData.get("device_model") ?? ""),
@@ -342,175 +349,6 @@ function sanitizeSearchTerm(value: string) {
   return value.replace(/[,%]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-async function ensureCustomerFromOrganization(
-  organizationId: string,
-  customerId: string
-) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("id", customerId)
-    .eq("organization_id", organizationId)
-    .is("deleted_at", null)
-    .maybeSingle<{ id: string }>();
-
-  if (error || !data) {
-    return false;
-  }
-
-  return true;
-}
-
-async function generateNextOrderNumber(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  organizationId: string
-) {
-  const { data, error } = await supabase
-    .from("maintenance_orders")
-    .select("order_number")
-    .eq("organization_id", organizationId)
-    .order("order_number", { ascending: false })
-    .limit(1)
-    .maybeSingle<{ order_number: string }>();
-
-  if (error) {
-    console.error("Erro ao gerar order_number:", error);
-    return null;
-  }
-
-  const current = data?.order_number?.match(/^OS-(\d+)$/)?.[1];
-  const next = current ? Number(current) + 1 : 1;
-
-  return `OS-${String(next).padStart(6, "0")}`;
-}
-
-async function createMaintenanceOrderWithDirectInserts({
-  organization,
-  userId,
-  input,
-  eventDescription
-}: {
-  organization: CurrentOrganization;
-  userId: string;
-  input: CreateMaintenanceOrderInput;
-  eventDescription?: string;
-}) {
-  const supabase = await createClient();
-  let warrantyPayload: ReturnType<typeof buildWarrantyPayload>;
-
-  try {
-    warrantyPayload = buildWarrantyPayload(input);
-  } catch (error) {
-    return {
-      order: null,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel calcular a validade da garantia."
-    };
-  }
-
-  const { data: device, error: deviceError } = await supabase
-    .from("devices")
-    .insert({
-      organization_id: organization.id,
-      customer_id: input.customer_id,
-      brand: input.device.brand ?? null,
-      model: input.device.model,
-      color: input.device.color ?? null,
-      storage: input.device.storage ?? null,
-      imei: input.device.imei ?? null,
-      notes: input.device.notes ?? null
-    })
-    .select("id")
-    .maybeSingle<{ id: string }>();
-
-  if (deviceError || !device) {
-    console.error("Erro ao criar device:", deviceError);
-    return {
-      order: null,
-      error: "Não foi possível salvar os dados do aparelho."
-    };
-  }
-
-  let order:
-    | {
-        id: string;
-        order_number: string;
-      }
-    | null = null;
-  let lastInsertCode: string | undefined;
-
-  for (let attempt = 0; attempt < 3 && !order; attempt += 1) {
-    const orderNumber = await generateNextOrderNumber(supabase, organization.id);
-
-    if (!orderNumber) {
-      return {
-        order: null,
-        error: friendlyMaintenanceError()
-      };
-    }
-
-    const { data, error } = await supabase
-      .from("maintenance_orders")
-      .insert({
-        organization_id: organization.id,
-        customer_id: input.customer_id,
-        device_id: device.id,
-        order_number: orderNumber,
-        reported_issue: input.reported_issue,
-        status: "recebido",
-        expected_delivery_date: input.expected_delivery_date ?? null,
-        estimated_price: input.estimated_price ?? null,
-        internal_notes: input.internal_notes ?? null,
-        ...warrantyPayload
-      })
-      .select("id, order_number")
-      .maybeSingle<{ id: string; order_number: string }>();
-
-    if (data) {
-      order = data;
-    } else {
-      lastInsertCode = error?.code;
-      console.error("Erro ao criar maintenance_order:", error);
-
-      if (error?.code !== "23505") {
-        break;
-      }
-    }
-  }
-
-  if (!order) {
-    return {
-      order: null,
-      error: friendlyMaintenanceError(lastInsertCode)
-    };
-  }
-
-  const { error: eventError } = await supabase.from("maintenance_events").insert({
-    organization_id: organization.id,
-    maintenance_order_id: order.id,
-    event_type: "created",
-    old_status: null,
-    new_status: "recebido",
-    description:
-      eventDescription ||
-      `Ordem ${order.order_number} criada com status Recebido.`,
-    created_by: userId
-  });
-
-  if (eventError) {
-    console.error("Erro ao criar maintenance_event:", eventError);
-    return {
-      order: null,
-      error: "A ordem foi criada, mas não foi possível registrar o histórico."
-    };
-  }
-
-  return { order, error: null };
-}
-
 async function getExistingCustomerByPhone(
   organizationId: string,
   phoneNormalized: string
@@ -531,65 +369,6 @@ async function getExistingCustomerByPhone(
   }
 
   return { customer: data ?? null, error: null };
-}
-
-async function findOrCreateQuickCustomer({
-  organizationId,
-  name,
-  phone,
-  phoneNormalized
-}: {
-  organizationId: string;
-  name?: string;
-  phone?: string;
-  phoneNormalized?: string;
-}) {
-  if (phoneNormalized) {
-    const existing = await getExistingCustomerByPhone(
-      organizationId,
-      phoneNormalized
-    );
-
-    if (existing.error || existing.customer) {
-      return existing;
-    }
-  }
-
-  const supabase = await createClient();
-  const customerName = name ?? (phone ? "Cliente sem nome" : "Cliente não informado");
-  const notes =
-    !name && !phone
-      ? "Cliente criado automaticamente pelo fluxo de manutenção rápida sem dados informados."
-      : null;
-  const { data, error } = await supabase
-    .from("customers")
-    .insert({
-      organization_id: organizationId,
-      name: customerName,
-      phone: phone ?? null,
-      phone_normalized: phoneNormalized ?? null,
-      whatsapp_opt_in: false,
-      whatsapp_opt_in_at: null,
-      source: "manual",
-      notes
-    })
-    .select("id, name")
-    .maybeSingle<{ id: string; name: string }>();
-
-  if (data) {
-    return { customer: data, error: null };
-  }
-
-  console.error("Erro ao criar cliente da manutenção rápida:", error);
-
-  if (error?.code === "23505" && phoneNormalized) {
-    return getExistingCustomerByPhone(organizationId, phoneNormalized);
-  }
-
-  return {
-    customer: null,
-    error: "Não foi possível criar o cliente para a manutenção rápida."
-  };
 }
 
 async function findSearchRelationIds(organizationId: string, search: string) {
@@ -751,199 +530,78 @@ export async function getMaintenanceOrderById(orderId: string) {
   } satisfies MaintenanceOrderDetail;
 }
 
-export async function createMaintenanceOrderAction(
-  _prevState: MaintenanceActionState,
-  formData: FormData
+async function createOrderTransaction(
+  context: { organization: CurrentOrganization },
+  values: Record<string, string>,
+  input: CreateMaintenanceOrderInput,
+  quick = false
 ): Promise<MaintenanceActionState> {
-  const context = await getMaintenanceActionContext();
-  const values = formValues(formData);
-
-  if (!context.ok) {
-    return { error: context.error, values };
+  if (!z.string().uuid().safeParse(values.request_id).success) {
+    return { error: "Reabra o formulário para iniciar uma nova tentativa de cadastro.", values };
   }
-
-  const parsed = createMaintenanceOrderSchema.safeParse(createInput(values));
-
-  if (!parsed.success) {
-    return {
-      error:
-        parsed.error.issues[0]?.message ?? "Revise os dados da manutenção.",
-      values
-    };
+  let warranty: ReturnType<typeof buildWarrantyPayload>;
+  try { warranty = buildWarrantyPayload(input); }
+  catch (error) {
+    return { error: error instanceof Error ? error.message : "Revise a garantia.", values };
   }
-
-  const { organization, userId } = context;
-  const customerOk = await ensureCustomerFromOrganization(
-    organization.id,
-    parsed.data.customer_id
-  );
-
-  if (!customerOk) {
-    return {
-      error: "Cliente não encontrado ou inválido.",
-      values
-    };
-  }
-
-  let warrantyPayload: ReturnType<typeof buildWarrantyPayload>;
-
-  try {
-    warrantyPayload = buildWarrantyPayload(parsed.data);
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel calcular a validade da garantia.",
-      values
-    };
-  }
-
   const supabase = await createClient();
-  const { data: order, error } = await supabase
-    .rpc("create_maintenance_order", {
-      p_organization_id: organization.id,
-      p_customer_id: parsed.data.customer_id,
-      p_created_by: userId,
-      p_device_brand: parsed.data.device.brand ?? null,
-      p_device_model: parsed.data.device.model,
-      p_device_color: parsed.data.device.color ?? null,
-      p_device_storage: parsed.data.device.storage ?? null,
-      p_device_imei: parsed.data.device.imei ?? null,
-      p_device_notes: parsed.data.device.notes ?? null,
-      p_reported_issue: parsed.data.reported_issue,
-      p_expected_delivery_date: parsed.data.expected_delivery_date ?? null,
-      p_estimated_price: parsed.data.estimated_price ?? null,
-      p_internal_notes: parsed.data.internal_notes ?? null,
-      p_warranty_enabled: warrantyPayload.warranty_enabled,
-      p_warranty_signed: warrantyPayload.warranty_signed,
-      p_warranty_amount: warrantyPayload.warranty_amount,
-      p_warranty_unit: warrantyPayload.warranty_unit,
-      p_warranty_started_at: warrantyPayload.warranty_started_at,
-      p_warranty_expires_at: warrantyPayload.warranty_expires_at,
-      p_warranty_notes: warrantyPayload.warranty_notes
-    })
-    .maybeSingle<{ order_id: string; order_number: string }>();
-
-  if (!order) {
-    console.error("Erro ao criar maintenance_order:", error);
-
-    if (isMissingRpcError(error?.code)) {
-      const fallback = await createMaintenanceOrderWithDirectInserts({
-        organization,
-        userId,
-        input: parsed.data
-      });
-
-      if (!fallback.order) {
-        return {
-          error: fallback.error ?? friendlyMaintenanceError(error?.code),
-          values
-        };
-      }
-
-      revalidatePath("/manutencoes");
-      revalidatePath("/dashboard");
-      redirect(`/manutencoes/${fallback.order.id}`);
-    }
-
+  const { data: order, error } = await supabase.rpc("create_maintenance_intake", {
+    p_organization_id: context.organization.id,
+    p_request_id: values.request_id,
+    p_customer_id: input.customer_mode === "existing" ? input.customer_id : null,
+    p_customer_name: input.customer_name ?? null,
+    p_customer_phone: input.customer_phone ?? null,
+    p_input: { ...input, ...warranty },
+    p_quick: quick
+  }).maybeSingle<{ order_id: string; order_number: string }>();
+  if (error || !order) {
+    console.error("Erro na transacao de abertura da OS:", error);
     return {
-      error: friendlyMaintenanceError(error?.code),
+      error: isMissingRpcError(error?.code) || error?.code === "23502"
+        ? "O banco precisa da atualização da Fase 14A. Solicite ao responsável a aplicação das migrations 0009 e 0010."
+        : "Não foi possível confirmar a abertura. Tente novamente neste formulário: a mesma tentativa não criará outra OS.",
       values
     };
   }
-
+  revalidatePath("/clientes");
   revalidatePath("/manutencoes");
   revalidatePath("/dashboard");
   redirect(`/manutencoes/${order.order_id}`);
 }
 
+export async function createMaintenanceOrderAction(
+  _prevState: MaintenanceActionState, formData: FormData
+): Promise<MaintenanceActionState> {
+  const context = await getMaintenanceActionContext();
+  const values = formValues(formData);
+  if (!context.ok) return { error: context.error, values };
+  const parsed = createMaintenanceOrderSchema.safeParse(createInput(values));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os dados da manutenção.", values };
+  return createOrderTransaction(context, values, parsed.data);
+}
+
 export async function createQuickMaintenanceOrderAction(
-  _prevState: MaintenanceActionState,
-  formData: FormData
+  _prevState: MaintenanceActionState, formData: FormData
 ): Promise<MaintenanceActionState> {
   const context = await getMaintenanceActionContext();
   const values = quickFormValues(formData);
-
-  if (!context.ok) {
-    return { error: context.error, values };
-  }
-
+  if (!context.ok) return { error: context.error, values };
   const parsed = createQuickMaintenanceOrderSchema.safeParse(values);
-
-  if (!parsed.success) {
-    return {
-      error:
-        parsed.error.issues[0]?.message ??
-        "Revise os dados da manutenção rápida.",
-      values
-    };
-  }
-
-  const { organization, userId } = context;
-  const phoneNormalized = parsed.data.phone
-    ? normalizePhoneBR(parsed.data.phone)
-    : undefined;
-  const customerResult = await findOrCreateQuickCustomer({
-    organizationId: organization.id,
-    name: parsed.data.customer_name,
-    phone: parsed.data.phone,
-    phoneNormalized
-  });
-
-  if (customerResult.error || !customerResult.customer) {
-    return {
-      error: customerResult.error ?? "Cliente não encontrado ou inválido.",
-      values
-    };
-  }
-
-  const orderInput: CreateMaintenanceOrderInput = {
-    customer_id: customerResult.customer.id,
-    device: {
-      brand: undefined,
-      model: parsed.data.device_model,
-      color: undefined,
-      storage: undefined,
-      imei: undefined,
-      notes: "Criado pelo fluxo de manutenção rápida."
-    },
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os dados da manutenção rápida.", values };
+  return createOrderTransaction(context, values, {
+    customer_mode: "new",
+    customer_name: parsed.data.customer_name,
+    customer_phone: parsed.data.phone,
+    device: { model: parsed.data.device_model, brand: undefined, color: undefined, storage: undefined, imei: undefined, notes: undefined },
     reported_issue: parsed.data.reported_issue,
     expected_delivery_date: parsed.data.expected_delivery_date,
+    internal_notes: [parsed.data.quick_notes, !parsed.data.customer_name && !parsed.data.phone
+      ? "Criada sem dados de cliente. Completar cadastro posteriormente." : ""].filter(Boolean).join("\n\n"),
     estimated_price: undefined,
-    internal_notes: [
-      parsed.data.quick_notes,
-      !parsed.data.customer_name && !parsed.data.phone
-        ? "Criada sem dados de cliente. Completar cadastro posteriormente."
-        : undefined
-    ]
-      .filter(Boolean)
-      .join("\n\n") || undefined,
     warranty_enabled: false,
     warranty_signed: false,
-    warranty_amount: undefined,
-    warranty_unit: undefined,
-    warranty_started_at: undefined,
-    warranty_notes: undefined
-  };
-  const result = await createMaintenanceOrderWithDirectInserts({
-    organization,
-    userId,
-    input: orderInput,
-    eventDescription: "Ordem criada pelo fluxo de manutenção rápida."
-  });
-
-  if (!result.order) {
-    return {
-      error: result.error ?? friendlyMaintenanceError(),
-      values
-    };
-  }
-
-  revalidatePath("/clientes");
-  revalidatePath("/manutencoes");
-  revalidatePath("/dashboard");
-  redirect(`/manutencoes/${result.order.id}`);
+    warranty_amount: undefined, warranty_unit: undefined, warranty_started_at: undefined, warranty_notes: undefined
+  }, true);
 }
 
 export async function updateMaintenanceOrderAction(

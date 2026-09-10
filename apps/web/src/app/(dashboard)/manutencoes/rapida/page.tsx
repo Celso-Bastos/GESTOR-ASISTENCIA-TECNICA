@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { QuickMaintenanceForm } from "./quick-maintenance-form";
 
 export default function ManutencaoRapidaPage() {
@@ -16,7 +17,7 @@ export default function ManutencaoRapidaPage() {
         </p>
       </div>
 
-      <QuickMaintenanceForm />
+      <QuickMaintenanceForm requestId={randomUUID()} />
     </section>
   );
 }

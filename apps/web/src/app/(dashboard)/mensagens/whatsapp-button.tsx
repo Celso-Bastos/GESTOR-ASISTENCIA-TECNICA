@@ -1,12 +1,10 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { useActionState } from "react";
+import { useWhatsAppAction, WhatsAppAlternatives } from "./whatsapp-controls";
 import type { OperationalMessageType } from "@assistencia/shared/constants/message-types";
 import {
-  logWhatsAppMessageAction,
-  type WhatsAppMessageActionState
+  logWhatsAppMessageAction
 } from "./actions";
 
 type WhatsAppButtonProps = {
@@ -17,7 +15,6 @@ type WhatsAppButtonProps = {
   variant?: "primary" | "secondary";
 };
 
-const initialState: WhatsAppMessageActionState = {};
 
 export function WhatsAppButton({
   orderId,
@@ -26,18 +23,9 @@ export function WhatsAppButton({
   disabled = false,
   variant = "secondary"
 }: WhatsAppButtonProps) {
-  const [state, action, isPending] = useActionState(
-    logWhatsAppMessageAction.bind(null, orderId, messageType),
-    initialState
+  const { state, formAction, isPending, prepare, feedback } = useWhatsAppAction(
+    logWhatsAppMessageAction.bind(null, orderId, messageType)
   );
-  const openedUrlRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (state.whatsappUrl && openedUrlRef.current !== state.whatsappUrl) {
-      openedUrlRef.current = state.whatsappUrl;
-      window.open(state.whatsappUrl, "_blank", "noopener,noreferrer");
-    }
-  }, [state.whatsappUrl]);
 
   const className =
     variant === "primary"
@@ -45,12 +33,13 @@ export function WhatsAppButton({
       : "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-10 sm:w-auto";
 
   return (
-    <form action={action} className="grid w-full gap-2 sm:w-auto">
+    <form action={formAction} onSubmit={prepare} className="grid w-full gap-2 sm:w-auto">
       <button className={className} disabled={disabled || isPending} type="submit">
         <MessageCircle className="size-4" aria-hidden="true" />
         {isPending ? "Abrindo..." : label}
       </button>
 
+      <WhatsAppAlternatives state={state} feedback={feedback} />
       {state.error ? (
         <p className="max-w-xs rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
           {state.error}

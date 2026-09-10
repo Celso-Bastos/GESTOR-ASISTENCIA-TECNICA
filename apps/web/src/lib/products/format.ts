@@ -50,9 +50,10 @@ export function getSuggestedUnitPrice(
   category: ProductCategory | string,
   selectedModel?: { default_price?: number | string | null } | null
 ) {
-  const modelPrice = parseCurrencyInput(selectedModel?.default_price);
+  const storedPrice = selectedModel?.default_price;
+  const modelPrice = storedPrice === null || storedPrice === undefined || storedPrice === "" ? undefined : Number(storedPrice);
 
-  if (modelPrice !== undefined) {
+  if (modelPrice !== undefined && Number.isFinite(modelPrice)) {
     return modelPrice;
   }
 

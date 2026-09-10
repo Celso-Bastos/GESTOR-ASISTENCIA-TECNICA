@@ -7,11 +7,13 @@ import type { CustomerOption } from "./actions";
 type CustomerSelectProps = {
   customers: CustomerOption[];
   defaultCustomerId?: string;
+  disabled?: boolean;
 };
 
 export function CustomerSelect({
   customers,
-  defaultCustomerId
+  defaultCustomerId,
+  disabled = false
 }: CustomerSelectProps) {
   const [search, setSearch] = useState("");
   const normalizedSearch = search.trim().toLowerCase();
@@ -44,6 +46,7 @@ export function CustomerSelect({
         <select
           className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           defaultValue={defaultCustomerId ?? ""}
+          disabled={disabled}
           name="customer_id"
           required
         >

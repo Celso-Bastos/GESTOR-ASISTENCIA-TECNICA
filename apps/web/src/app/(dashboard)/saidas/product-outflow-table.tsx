@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatDateBR } from "@/lib/products/format";
 import {
   deleteProductOutflowAction,
@@ -83,6 +84,7 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
               </div>
             </dl>
 
+            <Link className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
             <ProductActionButton
               action={deleteProductOutflowAction.bind(null, outflow.id)}
               confirmMessage="Excluir esta saida? Essa acao sera um soft delete."
@@ -133,7 +135,8 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
                     {getCustomerName(outflow)}
                   </td>
                   <td className="px-4 py-3">
-                    <ProductActionButton
+                    <Link className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
+            <ProductActionButton
                       action={deleteProductOutflowAction.bind(null, outflow.id)}
                       confirmMessage="Excluir esta saida? Essa acao sera um soft delete."
                       idleLabel="Excluir"

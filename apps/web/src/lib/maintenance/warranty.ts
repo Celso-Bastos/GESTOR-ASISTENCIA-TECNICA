@@ -49,7 +49,11 @@ export function calculateWarrantyExpiration(
   if (unit === "days") {
     date.setUTCDate(date.getUTCDate() + amount);
   } else {
+    const day = date.getUTCDate();
+    date.setUTCDate(1);
     date.setUTCMonth(date.getUTCMonth() + amount);
+    const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+    date.setUTCDate(Math.min(day, lastDay));
   }
 
   return toISODate(date);

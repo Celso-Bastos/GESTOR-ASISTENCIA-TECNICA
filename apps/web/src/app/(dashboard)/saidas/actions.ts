@@ -1010,3 +1010,13 @@ export async function getSalesSummaryByPeriod(input?: {
     restockItems: report.rows.length
   };
 }
+
+export async function getProductOutflowById(id: string) {
+  await requireAuth();
+  const organization = await requireOrganization();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("product_outflows").select(OUTFLOW_SELECT)
+    .eq("id", id).eq("organization_id", organization.id).is("deleted_at", null).maybeSingle<ProductOutflow>();
+  if (error) throw new Error("Não foi possível carregar a venda para edição.");
+  return data;
+}

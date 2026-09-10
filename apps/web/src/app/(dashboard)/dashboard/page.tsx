@@ -390,7 +390,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         Os valores abaixo representam receita/faturamento, nao lucro real.
       </div>
 
-      <section className="grid gap-4">
+      <DashboardBlock title="Resumo financeiro" error={metrics.errors.financial}>
         <SectionTitle
           title="Resumo financeiro"
           description="Receita de manutencoes entregues e saidas registradas no periodo."
@@ -434,9 +434,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             value={formatCurrencyBRL(metrics.financial.averageSaleTicketByRecord)}
           />
         </div>
-      </section>
+      </DashboardBlock>
 
-      <section className="grid gap-4">
+      <DashboardBlock title="Operacao de manutencoes" error={metrics.errors.operations}>
         <SectionTitle
           title="Operacao de manutencoes"
           description="Leitura operacional das ordens ativas, entregas e garantias."
@@ -493,9 +493,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             value={formatNumber(metrics.operations.expiringWarranties)}
           />
         </div>
-      </section>
+      </DashboardBlock>
 
-      <section className="grid gap-4">
+      <DashboardBlock title="Vendas e reposicao" error={metrics.errors.sales}>
         <SectionTitle
           title="Vendas e reposicao"
           description="Produtos vendidos agrupados por categoria e modelo para apoiar recompra."
@@ -539,9 +539,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           />
         </div>
         <RestockTable rows={metrics.sales.restockItems} />
-      </section>
+      </DashboardBlock>
 
-      <section className="grid gap-4">
+      <DashboardBlock title="Clientes" error={metrics.errors.customers}>
         <SectionTitle
           title="Clientes"
           description="Base ativa, novos cadastros e sinais simples de relacionamento."
@@ -580,9 +580,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             value={formatNumber(metrics.customers.recurring)}
           />
         </div>
-      </section>
+      </DashboardBlock>
 
-      <section className="grid gap-4">
+      <DashboardBlock title="Alertas importantes" error={metrics.errors.alerts}>
         <SectionTitle
           title="Alertas importantes"
           description="Listas curtas para priorizar atendimento manual no balcao."
@@ -607,7 +607,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             title="Garantias vencendo"
           />
         </div>
-      </section>
+      </DashboardBlock>
     </section>
   );
+}
+
+function DashboardBlock({ title, error, children }: { title: string; error: boolean; children: React.ReactNode }) {
+  return <section className="grid gap-4">
+    {error ? <div role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <p>Não foi possível carregar este bloco. Os valores estão indisponíveis; atualize a página para tentar novamente.</p>
+    </div> : children}
+  </section>;
 }

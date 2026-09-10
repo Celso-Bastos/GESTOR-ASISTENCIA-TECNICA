@@ -121,6 +121,7 @@ export type DashboardAlertOrder = {
 };
 
 export type DashboardMetrics = {
+  errors: Record<"financial" | "operations" | "sales" | "customers" | "alerts", boolean>;
   organization: CurrentOrganization;
   range: DashboardRange;
   financial: {
@@ -532,6 +533,13 @@ export async function getDashboardMetrics(input?: DashboardInput): Promise<Dashb
   return {
     organization,
     range,
+    errors: {
+      financial: Boolean(maintenanceResult.error || currentOutflowsResult.error || previousOutflowsResult.error),
+      operations: Boolean(maintenanceResult.error),
+      sales: Boolean(currentOutflowsResult.error),
+      customers: Boolean(customersResult.error || maintenanceResult.error),
+      alerts: Boolean(maintenanceResult.error)
+    },
     financial: {
       totalRevenue,
       maintenanceRevenue,

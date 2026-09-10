@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   createMaintenanceOrderAction,
   getCustomersForMaintenance
@@ -17,18 +18,19 @@ export default async function NovaManutencaoPage() {
           Nova manutenção
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Selecione um cliente existente, registre o aparelho e informe o
+          Selecione ou cadastre um cliente nesta tela, registre o aparelho e informe o
           defeito relatado para abrir a OS.
         </p>
       </div>
 
       {customers.length === 0 ? (
         <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          Cadastre um cliente antes de abrir uma manutenção.
+          Use a opção Novo cliente para cadastrar junto com a manutenção.
         </p>
       ) : null}
 
       <MaintenanceForm
+        requestId={randomUUID()}
         action={createMaintenanceOrderAction}
         customers={customers}
         mode="create"

@@ -6,12 +6,16 @@ import { useMemo, useState } from "react";
 import { useActionState } from "react";
 import {
   getSuggestedUnitPrice,
+  formatCurrencyBRL,
+  parseCurrencyInput,
   productCategories,
   productCategoryLabels,
   type ProductCategory
 } from "@/lib/products/format";
 import {
   createProductOutflowAction,
+  updateProductOutflowAction,
+  type ProductOutflow,
   type CustomerOption,
   type ProductActionState,
   type ProductModelTemplate
@@ -21,6 +25,7 @@ type ProductOutflowFormProps = {
   templates: ProductModelTemplate[];
   customers: CustomerOption[];
   today: string;
+  outflow?: ProductOutflow;
 };
 
 const initialState: ProductActionState = {};
@@ -28,33 +33,36 @@ const initialState: ProductActionState = {};
 export function ProductOutflowForm({
   templates,
   customers,
-  today
+  today,
+  outflow
 }: ProductOutflowFormProps) {
   const [state, action, isPending] = useActionState(
-    createProductOutflowAction,
+    outflow ? updateProductOutflowAction.bind(null, outflow.id) : createProductOutflowAction,
     initialState
   );
   const [category, setCategory] = useState<ProductCategory>(
-    (state.values?.category as ProductCategory) || "screen_protector"
+    (state.values?.category as ProductCategory) || outflow?.category || "screen_protector"
   );
   const [templateId, setTemplateId] = useState(
-    String(state.values?.model_template_id ?? "")
+    String(state.values?.model_template_id ?? outflow?.model_template_id ?? "")
   );
   const [unitPrice, setUnitPrice] = useState(
-    String(state.values?.unit_price ?? getSuggestedUnitPrice(category))
+    String(state.values?.unit_price ?? outflow?.unit_price ?? getSuggestedUnitPrice(category)).replace(".", ",")
   );
   const [customModelName, setCustomModelName] = useState(
-    String(state.values?.custom_model_name ?? "")
+    String(state.values?.custom_model_name ?? outflow?.custom_model_name ?? "")
   );
+  const [quantity, setQuantity] = useState(String(outflow?.quantity ?? 1));
+  const total = Number(quantity) * (parseCurrencyInput(unitPrice) ?? 0);
   const activeTemplates = useMemo(
-    () => templates.filter((template) => template.is_active),
-    [templates]
+    () => templates.filter((template) => template.is_active || template.id === outflow?.model_template_id),
+    [templates, outflow?.model_template_id]
   );
 
   function handleCategoryChange(value: ProductCategory) {
     setCategory(value);
     setTemplateId("");
-    setUnitPrice(String(getSuggestedUnitPrice(value)));
+    setUnitPrice(String(getSuggestedUnitPrice(value)).replace(".", ","));
   }
 
   function handleTemplateChange(value: string) {
@@ -63,13 +71,13 @@ export function ProductOutflowForm({
     const template = activeTemplates.find((item) => item.id === value);
 
     if (!template) {
-      setUnitPrice(String(getSuggestedUnitPrice(category)));
+      setUnitPrice(String(getSuggestedUnitPrice(category)).replace(".", ","));
       return;
     }
 
     setCategory(template.category);
     setCustomModelName("");
-    setUnitPrice(String(getSuggestedUnitPrice(template.category, template)));
+    setUnitPrice(String(getSuggestedUnitPrice(template.category, template)).replace(".", ","));
   }
 
   return (
@@ -127,7 +135,8 @@ export function ProductOutflowForm({
           Quantidade
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
-            defaultValue={String(state.values?.quantity ?? "1")}
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
             min={1}
             name="quantity"
             required
@@ -152,7 +161,7 @@ export function ProductOutflowForm({
           Data da venda/saida
           <input
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
-            defaultValue={String(state.values?.sold_at ?? today)}
+            defaultValue={String(state.values?.sold_at ?? outflow?.sold_at ?? today)}
             name="sold_at"
             required
             type="date"
@@ -163,7 +172,7 @@ export function ProductOutflowForm({
           Cliente opcional
           <select
             className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
-            defaultValue={String(state.values?.customer_id ?? "")}
+            defaultValue={String(state.values?.customer_id ?? outflow?.customer_id ?? "")}
             name="customer_id"
           >
             <option value="">Sem cliente vinculado</option>
@@ -179,16 +188,16 @@ export function ProductOutflowForm({
           Observacao
           <textarea
             className="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
-            defaultValue={String(state.values?.notes ?? "")}
+            defaultValue={String(state.values?.notes ?? outflow?.notes ?? "")}
             maxLength={1000}
             name="notes"
           />
         </label>
 
-        <label className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700 sm:col-span-2">
+        <label className={outflow ? "hidden" : "flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700 sm:col-span-2"}>
           <input
             className="mt-1 size-5 shrink-0 rounded border-slate-300 text-teal-700"
-            disabled={Boolean(templateId)}
+            disabled={Boolean(templateId) || Boolean(outflow)}
             name="save_as_template"
             type="checkbox"
           />
@@ -196,6 +205,8 @@ export function ProductOutflowForm({
         </label>
       </div>
 
+      <p className="rounded-md bg-teal-50 p-4 text-lg font-semibold" aria-live="polite">Total: {Number.isFinite(total) ? formatCurrencyBRL(total) : "Revise quantidade e valor"}</p>
+      {state.success ? <p role="status" className="rounded-md bg-teal-50 p-3">{state.success}</p> : null}
       {state.error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}
@@ -209,7 +220,7 @@ export function ProductOutflowForm({
           type="submit"
         >
           <Save className="size-4" aria-hidden="true" />
-          {isPending ? "Salvando..." : "Registrar saida"}
+          {isPending ? "Salvando..." : outflow ? "Salvar alterações" : "Registrar saida"}
         </button>
         <Link
           className="inline-flex h-12 items-center justify-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200"

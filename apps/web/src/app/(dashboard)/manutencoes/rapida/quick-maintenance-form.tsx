@@ -17,7 +17,7 @@ function valueFrom(state: MaintenanceActionState, key: string) {
   return state.values?.[key] ?? "";
 }
 
-export function QuickMaintenanceForm() {
+export function QuickMaintenanceForm({ requestId }: { requestId: string }) {
   const [state, formAction, isPending] = useActionState(
     createQuickMaintenanceOrderAction,
     initialState
@@ -25,6 +25,7 @@ export function QuickMaintenanceForm() {
 
   return (
     <form action={formAction} className="grid w-full max-w-3xl gap-5">
+      <input type="hidden" name="request_id" value={state.values?.request_id ?? requestId} />
       <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <legend className="px-1 text-sm font-semibold text-slate-950">
           Cliente

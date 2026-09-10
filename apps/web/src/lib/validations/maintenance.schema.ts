@@ -170,7 +170,10 @@ const warrantySchema = z
   });
 
 export const createMaintenanceOrderSchema = z.object({
-  customer_id: z.string().uuid("Selecione um cliente válido."),
+  customer_mode: z.enum(["existing", "new"]).default("existing"),
+  customer_id: z.string().uuid("Selecione um cliente válido.").optional().or(z.literal("")),
+  customer_name: optionalQuickCustomerName,
+  customer_phone: optionalQuickPhone,
   device: deviceSchema,
   reported_issue: z
     .string()
@@ -183,6 +186,13 @@ export const createMaintenanceOrderSchema = z.object({
     2000,
     "Use no máximo 2000 caracteres nas observações internas."
   )
+}).superRefine((value, ctx) => {
+  if (value.customer_mode === "existing" && !value.customer_id) {
+    ctx.addIssue({ code: "custom", path: ["customer_id"], message: "Selecione um cliente existente." });
+  }
+  if (value.customer_mode === "new" && !value.customer_name) {
+    ctx.addIssue({ code: "custom", path: ["customer_name"], message: "Informe o nome do novo cliente." });
+  }
 }).and(warrantySchema);
 
 export const createQuickMaintenanceOrderSchema = z.object({

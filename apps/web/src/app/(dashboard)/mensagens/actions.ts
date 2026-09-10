@@ -8,15 +8,14 @@ import {
 } from "@assistencia/shared/constants/message-types";
 import { getCurrentUser } from "@/lib/auth/queries";
 import { maintenanceStatusLabels } from "@/lib/maintenance/status";
-import { formatWarrantyPeriod } from "@/lib/maintenance/warranty";
+import { buildOrderMessageVariables } from "@/lib/messages/order-variables";
 import {
   DEFAULT_MESSAGE_TEMPLATES,
   isOperationalMessageType,
   type MessageTemplate
 } from "@/lib/messages/defaults";
 import {
-  interpolateMessageTemplate,
-  type MessageVariables
+  interpolateMessageTemplate
 } from "@/lib/messages/interpolation";
 import {
   buildWhatsAppUrl,
@@ -44,6 +43,7 @@ export type WhatsAppMessageActionState = {
   error?: string;
   success?: string;
   whatsappUrl?: string;
+  messageBody?: string;
 };
 
 export type CustomMessageTemplateActionState = {
@@ -110,17 +110,6 @@ function singleRelation<T>(value: T | T[] | null | undefined) {
   return value ?? null;
 }
 
-function formatDate(value: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeZone: "America/Sao_Paulo"
-  }).format(new Date(`${value}T00:00:00`));
-}
-
 function todayISO() {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -149,33 +138,6 @@ function customTemplateFormInput(formData: FormData) {
     body: String(formData.get("body") ?? ""),
     context: String(formData.get("context") ?? ""),
     is_active: formData.get("is_active") === "on"
-  };
-}
-
-function buildOrderMessageVariables({
-  order,
-  organizationName
-}: {
-  order: MessageOrder;
-  organizationName: string;
-}): MessageVariables {
-  const customer = singleRelation(order.customers);
-  const device = singleRelation(order.devices);
-  const warrantyPeriod = formatWarrantyPeriod(
-    order.warranty_amount,
-    order.warranty_unit
-  );
-
-  return {
-    cliente_nome: customer?.name,
-    cliente_telefone: customer?.phone,
-    aparelho_modelo: device?.model,
-    numero_ordem: order.order_number,
-    status: maintenanceStatusLabels[order.status],
-    data_entrega: formatDate(order.expected_delivery_date),
-    loja_nome: organizationName,
-    garantia_periodo: warrantyPeriod,
-    garantia_validade: formatDate(order.warranty_expires_at)
   };
 }
 
@@ -685,6 +647,7 @@ export async function logWhatsAppMessageAction(
 
   return {
     success: "Clique registrado. Abrindo WhatsApp...",
+    messageBody,
     whatsappUrl: buildWhatsAppUrl(customer.phone, messageBody)
   };
 }
@@ -781,6 +744,7 @@ export async function useCustomMessageTemplateAction(
 
   return {
     success: "Clique registrado. Abrindo WhatsApp...",
+    messageBody,
     whatsappUrl: buildWhatsAppUrl(customer.phone, messageBody)
   };
 }

@@ -137,6 +137,7 @@ export default async function ReposicaoPage({
         </p>
       ) : null}
 
+      {!error ? <>
       <RestockSummaryCards report={report} />
 
       <section className="grid gap-3">
@@ -159,6 +160,7 @@ export default async function ReposicaoPage({
       </section>
 
       <RestockReportTable report={report} />
+      </> : null}
     </section>
   );
 }

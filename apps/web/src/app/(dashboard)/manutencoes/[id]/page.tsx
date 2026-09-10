@@ -1,3 +1,5 @@
+import { requireOrganization } from "@/lib/organization/queries";
+import { buildOrderMessageVariables } from "@/lib/messages/order-variables";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -162,6 +164,7 @@ export default async function ManutencaoDetalhePage({
     notFound();
   }
 
+  const organization = await requireOrganization();
   const customer = getMaintenanceCustomer(order);
   const device = getMaintenanceDevice(order);
   const canUseWhatsApp = Boolean(customer?.phone) && isOpenMaintenanceStatus(order.status);
@@ -272,6 +275,7 @@ export default async function ManutencaoDetalhePage({
           </p>
         ) : null}
         <CustomWhatsAppMessageForm
+          previewVariables={buildOrderMessageVariables({ order, organizationName: organization.name })}
           disabled={!customer?.phone}
           orderId={order.id}
           templates={customWhatsAppTemplates}

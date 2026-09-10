@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   maintenanceStatusLabels,
   maintenanceStatuses
@@ -19,6 +19,7 @@ type MaintenanceFormProps = {
   initialValues?: Record<string, string | undefined>;
   mode: "create" | "edit";
   submitLabel: string;
+  requestId?: string;
 };
 
 const initialState: MaintenanceActionState = {};
@@ -40,9 +41,12 @@ export function MaintenanceForm({
   customers = [],
   initialValues,
   mode,
-  submitLabel
+  submitLabel,
+  requestId
 }: MaintenanceFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+
+  const [customerMode, setCustomerMode] = useState("existing");
 
   const values = {
     customer_id: valueFrom(state, initialValues, "customer_id"),
@@ -76,15 +80,31 @@ export function MaintenanceForm({
 
   return (
     <form action={formAction} className="grid w-full max-w-4xl gap-5">
+      {mode === "create" ? <input type="hidden" name="request_id" value={state.values?.request_id ?? requestId} /> : null}
       {mode === "create" ? (
         <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <legend className="px-1 text-sm font-semibold text-slate-950">
             Cliente
           </legend>
-          <CustomerSelect
-            customers={customers}
-            defaultCustomerId={values.customer_id}
-          />
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Como identificar o cliente
+            <select name="customer_mode" className={inputClass} value={customerMode} onChange={(event) => setCustomerMode(event.target.value)}>
+              <option value="existing">Cliente existente</option>
+              <option value="new">Novo cliente</option>
+            </select>
+          </label>
+          <div hidden={customerMode !== "existing"}>
+            <CustomerSelect customers={customers} defaultCustomerId={values.customer_id} disabled={customerMode !== "existing"} />
+          </div>
+          <fieldset disabled={customerMode !== "new"} className={customerMode === "new" ? "grid gap-3" : "hidden"}>
+            <label className="grid gap-2 text-sm font-medium text-slate-700">Nome do novo cliente
+              <input className={inputClass} name="customer_name" defaultValue={values.customer_name} required minLength={2} maxLength={120} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium text-slate-700">Telefone/WhatsApp (opcional)
+              <input className={inputClass} name="customer_phone" defaultValue={values.customer_phone} type="tel" inputMode="tel" />
+            </label>
+            <p className="text-sm text-slate-600">O cliente será cadastrado ao salvar a OS. Se o telefone já existir, o cadastro existente será utilizado.</p>
+          </fieldset>
         </fieldset>
       ) : null}
 
