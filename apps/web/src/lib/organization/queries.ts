@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/queries";
+import { requireAuth } from "@/lib/auth/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export type CurrentOrganization = {
@@ -29,11 +29,7 @@ type OrganizationMemberRow = {
 };
 
 export async function getCurrentOrganization() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
+  const user = await requireAuth();
 
   const supabase = await createClient();
   const { data, error } = await supabase

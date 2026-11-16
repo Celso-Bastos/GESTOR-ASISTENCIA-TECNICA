@@ -5,7 +5,7 @@
 1. Manutenção rápida continua exigindo apenas modelo e defeito. Nome e telefone são opcionais; telefone informado é validado. A estrutura mantém cliente obrigatório no banco, com cliente exclusivo sem telefone por OS quando necessário.
 2. Criação rápida e completa usam `create_maintenance_intake`: cliente, aparelho, OS e evento são gravados na mesma transação. O código não recorre a inserts separados quando a RPC está ausente.
 3. Um UUID de tentativa é gerado no servidor e preservado no formulário após erros. A RPC serializa a criação por organização e retorna a OS existente no reenvio do mesmo identificador. O UUID fica em `maintenance_orders.intake_request_id`, com índice único por organização.
-4. Nova manutenção oferece Cliente existente / Novo cliente. A alternância mantém os campos da OS montados. O cliente novo é criado junto com a OS; telefone já existente reaproveita o cadastro ativo sem sobrescrever nome.
+4. Nova manutenção oferece Cliente existente / Novo cliente. A alternância mantém os campos da OS montados. O cliente é resolvido junto com a OS; telefone já existente reaproveita o cadastro ativo sem sobrescrever nome ou reativa o arquivado da mesma organização, preservando ID e histórico.
 5. WhatsApp abre uma janela durante a ação do usuário, prepara a mensagem e direciona essa janela. A mesma mensagem pode ser aberta novamente. Há link alternativo, cópia e seleção manual do texto se o clipboard falhar. Bloqueio ou fechamento da janela gera orientação.
 6. Prévia personalizada e envio compartilham o mesmo gerador de variáveis com dados reais da OS e da organização. Datas de calendário são formatadas sem deslocamento de fuso.
 7. Dashboard apresenta indisponibilidade por bloco afetado. Não renderiza os números substitutos de uma consulta com erro. Reposição com erro não renderiza totais nem lista copiável.
@@ -221,3 +221,61 @@ Resultado em 10/09/2026: os 11 cenários SQL passaram (o executor Node informa 1
 - `supabase/tests/maintenance-intake.test.cjs` (novo)
 - `docs/planejamento/fase-14a-confiabilidade-usabilidade.md`
 - `docs/planejamento/fase-14a-checklist.md`
+
+## Reativação de cliente arquivado pelo telefone — 03/11/2026
+
+### Causa e auditoria de unicidade
+
+A RPC da 0010 procurava somente `deleted_at is null`, tanto na busca inicial quanto após `unique_violation`. Um telefone arquivado era tratado como novo. O schema inicial (0001) tem a constraint `customers_organization_id_phone_normalized_key`, única por `(organization_id, phone_normalized)` para todos os cadastros; nesse estado, a inserção falha. A 0002 remove essa constraint e cria unicidade só entre ativos. A 0009 recria o índice `customers_active_phone_normalized_unique` com predicado `deleted_at is null and phone_normalized is not null`. Com esse índice parcial, o mesmo erro de lógica permite duplicar um cadastro arquivado em vez de reativá-lo.
+
+A auditoria acima foi feita no código e nas migrations; o estado do Supabase remoto não foi consultado. A 0011 não remove nem altera constraints/índices e funciona também quando a constraint original ainda existe, desde que os demais pré-requisitos da 0010 estejam instalados. Para conferir o estado real, executar no SQL Editor:
+
+```sql
+select conname, pg_get_constraintdef(oid) as definition
+from pg_constraint
+where conrelid = 'public.customers'::regclass;
+
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public' and tablename = 'customers';
+```
+
+### Comportamento e concorrência
+
+Manutenção rápida (`/manutencoes/rapida`) e normal (`/manutencoes/nova`, modo Novo cliente) continuam usando uma única `create_maintenance_intake`. A migration nova `0011_restore_archived_customer_on_intake.sql` substitui essa função, mantendo sete parâmetros, retorno `TABLE(order_id uuid, order_number text)`, grants, `security invoker`, RLS, validação de organização, bloqueio por organização e UUID de tentativa.
+
+Depois de normalizar o telefone, a RPC procura e bloqueia o cliente ativo da organização; se houver, reutiliza sem sobrescrever dados. Caso contrário, procura e bloqueia o arquivado. Ao reativar, define explicitamente `deleted_at = null`, conserva o ID, atualiza `phone` e `phone_normalized`, usa o nome preenchido no formulário ou preserva o anterior. Nome anterior com menos de 2 ou mais de 120 caracteres após trim recebe `Cliente sem nome` quando o formulário não informa nome. `organization_id`, `notes`, origem, consentimento WhatsApp, data de consentimento, criação e histórico não são sobrescritos. O `updated_at` segue o trigger já existente.
+
+Somente quando não existe nenhum cadastro correspondente a RPC insere outro cliente. Sem telefone, permanece a regra anterior de cliente exclusivo. Se o índice parcial tiver permitido vários arquivados no passado, o mais recentemente arquivado tem prioridade (desempate por ID); os demais não são alterados ou mesclados. Um ativo sempre tem prioridade sobre todos os arquivados.
+
+O tratamento de `unique_violation` engloba inserção e reativação. A busca por ativos e arquivados é repetida em até três tentativas, para reutilizar inclusive um cliente reativado por outra operação. Conflito persistente é propagado com seus detalhes e desfaz a transação. Falha posterior ao reativar, por exemplo no evento da OS, desfaz também a reativação e as mudanças de nome/telefone. A action registra o erro técnico no servidor e, para `23505` identificado como conflito de telefone, mostra: “Este telefone já pertence a outro cadastro. Não foi possível vincular automaticamente o cliente.” Outros erros mantêm o tratamento anterior.
+
+### SQL a aplicar e publicação
+
+Executar o conteúdo **completo** de `supabase/migrations/0011_restore_archived_customer_on_intake.sql` no SQL Editor do projeto Supabase utilizado pelo aplicativo. Não executar somente `notify` e não reaplicar migrations antigas já instaladas. Se o banco estiver atrasado, aplicar primeiro as migrations faltantes na ordem numérica até 0010. A 0011 já inclui `begin`, `create or replace function`, grants, `notify pgrst, 'reload schema';` e `commit`.
+
+Não foi aplicado SQL remoto. Não foram lidas ou expostas chaves/`.env.local`. Não houve commit. A reativação passa a valer após aplicar a 0011 no banco; publicar o código atualizado na Vercel também disponibiliza a mensagem específica de conflito. Um build/redeploy da Vercel não aplica SQL automaticamente.
+
+### Validação e roteiro local/Vercel
+
+O teste SQL `supabase/tests/maintenance-intake.test.cjs` aplica a 0011 duas vezes e verifica assinatura, grants e índices intactos. Exercita novos/ativos/arquivados nos modos rápido e normal, histórico com três OS, nome e telefone atuais, preservação de notas/origem/consentimento verdadeiro, falso e nulo, fallback de nome legado, vários arquivados, prioridade do ativo, constraint global antiga, isolamento RLS entre organizações, reenvio do UUID, retry controlado de `unique_violation`, conflito persistente e rollback da reativação ao falhar evento. O retry é injetado por trigger em banco descartável; não comprova concorrência real entre sessões.
+
+Os testes da aplicação cobrem ambas as actions, os argumentos da RPC e a mensagem de conflito com preservação do UUID e log técnico. Os comandos SQL/PGlite estão na seção de validação acima. Verificações de qualidade: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm --filter web test:14a`.
+
+Para validar no aplicativo local, aplicar as migrations no banco de desenvolvimento e executar `pnpm dev`. Repetir o roteiro abaixo em **cada** uma das rotas `/manutencoes/rapida` e `/manutencoes/nova` (Novo cliente). Na normal, informar nome; na rápida, testar também sem nome.
+
+| Cenário | Ação e resultado esperado |
+|---|---|
+| Telefone novo | Informar telefone nunca usado: um cliente e uma OS são criados. |
+| Cliente ativo | Repetir o telefone com nova tentativa: nova OS no mesmo cliente, sem alteração do nome ativo. |
+| Arquivado com histórico | Anotar ID, OS antigas, notas e consentimento; arquivar o cliente e abrir OS com telefone formatado, inclusive +55: mesmo ID reativado, `deleted_at = null`, nova OS e antigas no mesmo cliente, notas/consentimento preservados. |
+| Nome na reativação | Nome atual preenchido substitui o antigo; rápida sem nome mantém nome válido anterior. |
+| Outra organização | Usar telefone presente só em outra loja: criar/reutilizar cliente da loja atual, sem reativar ou alterar o externo. |
+| Reenvio | Repetir a mesma tentativa/UUID: retornar a mesma OS, sem novas gravações. |
+| Concorrência real | Em banco de teste, enviar duas solicitações com o mesmo telefone (novo e arquivado) e UUIDs distintos: duas OS, um cliente; com mesmo UUID: uma OS. Testar também cadastro/reativação externo concorrente. |
+
+Na Vercel, depois de aplicar a 0011 no projeto correto e publicar a action atualizada, repetir o mesmo roteiro autenticado. Conferir ausência do erro genérico/conflito para arquivados e inspecionar os logs do servidor se houver falha. Não provocar falhas de evento em produção.
+
+### Limites e pendências
+
+Não são criadas duplicatas por uma abertura normal desta RPC ao encontrar arquivado. Duplicatas históricas não são mescladas. O índice parcial existente continua permitindo que outros fluxos de cadastro criem um cliente usando telefone de arquivado, e operações externas não compartilham necessariamente o bloqueio da RPC; não há garantia global de unicidade entre ativos e arquivados. A constraint/índice existente continua protegendo o escopo que já protegia. Alterar globalmente esse modelo exigiria tratar os dados e fluxos de cadastro fora desta correção. Permanecem pendentes a aplicação remota da migration, os testes autenticados no navegador e a concorrência real entre sessões em banco de teste.

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAccountAccessStatus } from "@/lib/auth/account-access";
 
 export async function getCurrentUser() {
   const supabase = await createClient();
@@ -21,6 +22,9 @@ export async function requireAuth() {
   if (!user) {
     redirect("/login");
   }
+
+  const status = await getAccountAccessStatus(await createClient());
+  if (status !== "approved") redirect(`/login?conta=${status}`);
 
   return user;
 }

@@ -49,3 +49,21 @@
 - [ ] Na Vercel: rápida com nome/sem telefone e com telefone/sem nome.
 - [ ] Na Vercel: completa com cliente existente.
 - [ ] Confirmar ausência de PGRST202 nos testes acima.
+
+## Cliente arquivado no fluxo de manutenção — 03/11/2026
+
+- [x] Auditadas as migrations: constraint original global por organização; índice atual parcial por organização e telefone ativo não nulo. Estado remoto ainda não consultado.
+- [x] Criada 0011 com `create or replace function`, grants e reload de schema; migrations antigas intactas.
+- [x] Regra centralizada na RPC compartilhada por rápida e normal: ativo, arquivado, somente então novo cliente.
+- [x] Reativação explícita (`deleted_at = null`), preservando ID, organização, histórico, notas e consentimento WhatsApp.
+- [x] Nome informado e telefone atualizados na reativação; nome anterior válido preservado quando omitido, com fallback para inválido.
+- [x] Ativo priorizado; vários arquivados legados têm escolha estável, sem mesclar ou apagar dados.
+- [x] `unique_violation` repete a busca por ativos/arquivados, com tentativas limitadas e rollback transacional.
+- [x] Conflito de telefone persistente tem mensagem específica, log técnico no servidor e UUID preservado.
+- [x] Testes de regressão SQL e actions adicionados; instruções de aplicação e testes local/Vercel documentadas.
+- [ ] Conferir constraints/índices reais do Supabase com o SQL de auditoria documentado.
+- [ ] Aplicar 0011 no Supabase utilizado pela Vercel, após migrations anteriores faltantes.
+- [ ] Publicar a action atualizada para disponibilizar a mensagem específica.
+- [ ] Repetir em rápida e normal: telefone novo, ativo, arquivado com histórico e mesmo telefone em outra organização.
+- [ ] Validar concorrência real com UUIDs iguais/distintos e com cadastro/reativação externo em banco de teste.
+- [ ] Confirmar no app: mesmo ID, histórico e notas preservados; `whatsapp_opt_in` não alterado; nenhuma duplicata nova.

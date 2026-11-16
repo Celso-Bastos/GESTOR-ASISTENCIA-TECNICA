@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:14a": "node --test tests/fase-14a.test.cjs"
+    "test:14a": "node --test tests/fase-14a.test.cjs",
+    "test:14a2": "node --test tests/fase-14a2.test.cjs"
   },
   "dependencies": {
     "@assistencia/shared": "workspace:*",

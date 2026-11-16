@@ -44,6 +44,16 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
       }
       assert.ok((await db.query(columns)).rows.every(row => row.is_nullable === 'YES'));
     });
+    await t.test('0011 substitui a RPC sem alterar unicidade e pode ser reaplicada', async () => {
+      const indexes = () => db.query("select indexname,indexdef from pg_indexes where schemaname='public' and tablename='customers' order by indexname");
+      const before = (await indexes()).rows;
+      const unique = before.find(row => row.indexname === 'customers_active_phone_normalized_unique');
+      assert.match(unique.indexdef, /UNIQUE.*organization_id, phone_normalized/);
+      assert.match(unique.indexdef, /deleted_at IS NULL.*phone_normalized IS NOT NULL/);
+      await db.exec(sql('0011_restore_archived_customer_on_intake.sql'));
+      await db.exec(sql('0011_restore_archived_customer_on_intake.sql'));
+      assert.deepEqual((await indexes()).rows, before);
+    });
     await t.test('parametros, retorno e grant correspondem ao contrato da action', async () => {
       const rows = (await db.query("select proargnames, pg_get_function_result(oid) as result from pg_proc where oid=to_regprocedure($1)", [signature])).rows;
       assert.equal(rows.length, 1);
@@ -83,6 +93,9 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         (select count(*) from devices) as devices,(select count(*) from maintenance_orders) as orders,
         (select count(*) from maintenance_events) as events`)).rows[0];
     }
+    async function customerRow(id) {
+      return (await db.query('select * from customers where id=$1', [id])).rows[0];
+    }
     await t.test('A: sem dados cria cliente exclusivo, aparelho, OS e evento', async () => {
       const a = await details((await intake()).order_id), b = await details((await intake()).order_id);
       assert.equal(a.name, 'Cliente não informado'); assert.equal(a.phone, null); assert.equal(a.phone_normalized, null);
@@ -104,6 +117,139 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
       const row = await intake({ customer: existingCustomer, quick: false });
       assert.match(row.order_number, /^OS-\d+$/); assert.equal((await details(row.order_id)).customer_id, existingCustomer);
     });
+    await t.test('reativa tambem com a constraint global antiga sem remove-la', async () => {
+      await db.exec('reset role; alter table customers add constraint customers_organization_id_phone_normalized_key unique (organization_id,phone_normalized); set role authenticated;');
+      try {
+        const first = await details((await intake({ phone: '11987654321', name: 'Cadastro antigo' })).order_id);
+        await db.query('update customers set deleted_at=now() where id=$1', [first.customer_id]);
+        const second = await details((await intake({ phone: '+55 (11) 98765-4321', name: 'Cadastro reativado' })).order_id);
+        assert.equal(second.customer_id, first.customer_id);
+        assert.equal((await customerRow(first.customer_id)).deleted_at, null);
+        assert.equal((await db.query("select count(*)::int as n from pg_constraint where conname='customers_organization_id_phone_normalized_key'")).rows[0].n, 1);
+      } finally {
+        await db.exec('reset role; alter table customers drop constraint customers_organization_id_phone_normalized_key; set role authenticated;');
+      }
+    });
+    for (const quick of [true, false]) {
+      await t.test(`${quick ? 'rapida' : 'normal'}: novo, ativo, arquivado e historico sem duplicar`, async () => {
+        const phone = quick ? '21987650001' : '21987650002';
+        const firstOrder = await intake({ phone, name: 'Nome original', quick });
+        const first = await details(firstOrder.order_id);
+        const active = await details((await intake({ phone, name: 'Nao sobrescrever ativo', quick })).order_id);
+        assert.equal(active.customer_id, first.customer_id);
+        assert.equal(active.name, 'Nome original');
+        await db.query(`update customers set deleted_at=now(),notes='Notas e historico preservados',
+          whatsapp_opt_in=$2,whatsapp_opt_in_at='2026-01-01T12:00:00Z',source='tablet' where id=$1`, [first.customer_id, quick]);
+        const archived = await customerRow(first.customer_id);
+        const request = randomUUID();
+        const restoredOrder = await intake({ phone: `+55 (${phone.slice(0, 2)}) ${phone.slice(2)}`, name: 'Nome atualizado', quick, request });
+        const restored = await customerRow(first.customer_id);
+        assert.equal((await details(restoredOrder.order_id)).customer_id, first.customer_id);
+        assert.equal((await details(firstOrder.order_id)).customer_id, first.customer_id);
+        assert.equal(restored.deleted_at, null);
+        assert.equal(restored.name, 'Nome atualizado');
+        assert.equal(restored.phone, `+55 (${phone.slice(0, 2)}) ${phone.slice(2)}`);
+        assert.equal(restored.phone_normalized, phone);
+        for (const field of ['id', 'organization_id', 'notes', 'whatsapp_opt_in', 'source']) assert.equal(restored[field], archived[field]);
+        assert.deepEqual(restored.whatsapp_opt_in_at, archived.whatsapp_opt_in_at);
+        assert.deepEqual(restored.created_at, archived.created_at);
+        assert.equal((await db.query('select count(*)::int as n from customers where organization_id=$1 and phone_normalized=$2', [org, phone])).rows[0].n, 1);
+        assert.equal((await db.query('select count(*)::int as n from maintenance_orders where customer_id=$1', [first.customer_id])).rows[0].n, 3);
+        const before = await counts();
+        assert.deepEqual(await intake({ request, phone, name: 'Nao alterar no reenvio', quick }), restoredOrder);
+        assert.deepEqual(await counts(), before);
+        assert.equal((await customerRow(first.customer_id)).name, 'Nome atualizado');
+      });
+    }
+    await t.test('rapida sem nome preserva nome valido ou usa fallback para legado invalido', async () => {
+      const phone = '31987650001';
+      const id = (await details((await intake({ phone, name: 'Nome preservado' })).order_id)).customer_id;
+      for (const oldName of ['Nome preservado', '', ' ', 'X', 'x'.repeat(121)]) {
+        await db.query('update customers set name=$2,deleted_at=now(),whatsapp_opt_in=null where id=$1', [id, oldName]);
+        await intake({ phone, name: '   ' });
+        const row = await customerRow(id);
+        assert.equal(row.name, oldName === 'Nome preservado' ? oldName : 'Cliente sem nome');
+        assert.equal(row.deleted_at, null);
+        assert.equal(row.whatsapp_opt_in, null);
+      }
+    });
+    await t.test('ativo tem prioridade; entre varios arquivados reativa apenas o mais recente', async () => {
+      const phone = '41987650001';
+      const older = (await details((await intake({ phone, name: 'Mais antigo' })).order_id)).customer_id;
+      await db.query("update customers set deleted_at='2025-01-01T00:00:00Z' where id=$1", [older]);
+      const newer = randomUUID();
+      await db.query(`insert into customers(id,organization_id,name,phone,phone_normalized,deleted_at)
+        values ($1,$2,'Mais recente',$3,$3,'2026-01-01T00:00:00Z')`, [newer, org, phone]);
+      assert.equal((await details((await intake({ phone })).order_id)).customer_id, newer);
+      assert.notEqual((await customerRow(older)).deleted_at, null);
+      assert.equal((await details((await intake({ phone, name: 'Nao sobrescrever' })).order_id)).customer_id, newer);
+      assert.equal((await customerRow(newer)).name, 'Mais recente');
+      assert.notEqual((await customerRow(older)).deleted_at, null);
+    });
+    await t.test('telefone de outra organizacao nao e reutilizado nem reativado nos dois fluxos', async () => {
+      for (const quick of [true, false]) {
+        const phone = quick ? '51987650001' : '51987650002';
+        const foreign = randomUUID();
+        await db.exec('reset role;');
+        await db.query(`insert into customers(id,organization_id,name,phone,phone_normalized,deleted_at)
+          values ($1,$2,'Outra loja',$3,$3,now())`, [foreign, otherOrg, phone]);
+        const before = await customerRow(foreign);
+        await db.exec('set role authenticated;');
+        const own = await details((await intake({ phone, name: 'Minha loja', quick })).order_id);
+        assert.notEqual(own.customer_id, foreign);
+        assert.equal((await customerRow(own.customer_id)).organization_id, org);
+        assert.equal(await customerRow(foreign), undefined);
+        await assert.rejects(intake({ customer: foreign, quick }), /Cliente invalido/);
+        await db.exec('reset role;');
+        assert.deepEqual(await customerRow(foreign), before);
+        await db.exec('set role authenticated;');
+      }
+    });
+    await t.test('unique_violation na reativacao repete busca de arquivado e preserva dados', async () => {
+      const phone = '61987650001';
+      const id = (await details((await intake({ phone, name: 'Repeticao' })).order_id)).customer_id;
+      await db.query('update customers set deleted_at=now() where id=$1', [id]);
+      // Sequencias nao sofrem rollback: injeta uma unica colisao no UPDATE.
+      // Exercita o retry real, sem alegar concorrencia entre sessoes no PGlite.
+      await db.exec(`reset role;
+        create sequence intake_conflict_test;
+        grant usage,select on sequence intake_conflict_test to authenticated;
+        create function public.intake_conflict_once() returns trigger language plpgsql as $$
+        begin
+          if old.deleted_at is not null and new.deleted_at is null and nextval('intake_conflict_test')=1 then
+            raise exception 'customers_active_phone_normalized_unique' using errcode='23505';
+          end if;
+          return new;
+        end; $$;
+        create trigger intake_conflict_once before update on customers for each row execute function intake_conflict_once();
+        set role authenticated;`);
+      try {
+        const row = await details((await intake({ phone })).order_id);
+        assert.equal(row.customer_id, id);
+        assert.equal((await customerRow(id)).deleted_at, null);
+        assert.equal((await db.query('select last_value::int as n from intake_conflict_test')).rows[0].n, 2);
+      } finally {
+        await db.exec('reset role; drop trigger intake_conflict_once on customers; drop function intake_conflict_once(); drop sequence intake_conflict_test; set role authenticated;');
+      }
+    });
+    await t.test('conflito persistente nao duplica nem reativa parcialmente', async () => {
+      const phone = '71987650001';
+      const id = (await details((await intake({ phone, name: 'Conflito' })).order_id)).customer_id;
+      await db.query('update customers set deleted_at=now() where id=$1', [id]);
+      const archived = await customerRow(id), before = await counts();
+      await db.exec(`reset role;
+        create function public.intake_conflict_always() returns trigger language plpgsql as $$
+        begin raise exception 'customers_active_phone_normalized_unique' using errcode='23505'; end; $$;
+        create trigger intake_conflict_always before update on customers for each row execute function intake_conflict_always();
+        set role authenticated;`);
+      try {
+        await assert.rejects(intake({ phone, name: 'Nao persistir' }), error => error.code === '23505');
+        assert.deepEqual(await customerRow(id), archived);
+        assert.deepEqual(await counts(), before);
+      } finally {
+        await db.exec('reset role; drop trigger intake_conflict_always on customers; drop function intake_conflict_always(); set role authenticated;');
+      }
+    });
     await t.test('reenvio do mesmo UUID retorna OS existente sem gravar novamente', async () => {
       const request = randomUUID(); const a = await intake({ request }); const before = await counts();
       const b = await intake({ request }); assert.deepEqual(b, a); assert.deepEqual(await counts(), before);
@@ -116,6 +262,10 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
       assert.deepEqual(await counts(), before);
     });
     await t.test('falha no evento reverte inclusive cliente, aparelho e OS', async () => {
+      const phone = '81987650001';
+      const id = (await details((await intake({ phone, name: 'Restauracao revertida' })).order_id)).customer_id;
+      await db.query('update customers set deleted_at=now() where id=$1', [id]);
+      const archived = await customerRow(id);
       await db.exec(`reset role;
         create function public.fail_intake_test_event() returns trigger language plpgsql as $$
         begin raise exception 'EVENT_FAILURE_TEST'; end; $$;
@@ -123,6 +273,8 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         set role authenticated;`);
       const before = await counts();
       await assert.rejects(intake({ name: 'Rollback Teste' }), /EVENT_FAILURE_TEST/);
+      await assert.rejects(intake({ phone, name: 'Nao persistir nome' }), /EVENT_FAILURE_TEST/);
+      assert.deepEqual(await customerRow(id), archived);
       assert.deepEqual(await counts(), before);
       await db.exec('reset role; drop trigger fail_intake_test on maintenance_events; drop function fail_intake_test_event(); set role authenticated;');
     });

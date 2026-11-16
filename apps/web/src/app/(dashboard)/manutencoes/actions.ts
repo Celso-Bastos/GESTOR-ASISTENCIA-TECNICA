@@ -345,6 +345,10 @@ function isMissingRpcError(code?: string) {
   return code === "PGRST202" || code === "42883";
 }
 
+function isCustomerPhoneConflict(error: { code?: string; message?: string; details?: string } | null) {
+  return error?.code === "23505" && /phone|telefone/i.test(`${error.message ?? ""} ${error.details ?? ""}`);
+}
+
 function sanitizeSearchTerm(value: string) {
   return value.replace(/[,%]/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -559,6 +563,8 @@ async function createOrderTransaction(
     return {
       error: isMissingRpcError(error?.code) || error?.code === "23502"
         ? "O banco precisa da atualização da Fase 14A. Solicite ao responsável a aplicação das migrations 0009 e 0010."
+        : isCustomerPhoneConflict(error)
+        ? "Este telefone já pertence a outro cadastro. Não foi possível vincular automaticamente o cliente."
         : "Não foi possível confirmar a abertura. Tente novamente neste formulário: a mesma tentativa não criará outra OS.",
       values
     };

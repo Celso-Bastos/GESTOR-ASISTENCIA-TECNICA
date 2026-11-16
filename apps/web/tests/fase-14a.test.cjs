@@ -136,6 +136,33 @@ test('migration ausente gera orientacao e mantem o identificador de tentativa', 
   assert.equal(result.values.request_id, requestId);
 });
 
+test('conflito de telefone tem mensagem especifica nos dois fluxos sem ocultar outros erros', async () => {
+  for (const error of [
+    { code: '23505', message: 'duplicate key value violates unique constraint "customers_active_phone_normalized_unique"' },
+    { code: '23505', message: 'duplicate key', details: 'Key (organization_id, phone_normalized) already exists.' },
+    { code: '23505', message: 'duplicate key value violates unique constraint "maintenance_intake_request_unique"' },
+    { code: 'SIMULATED_FAILURE', message: 'phone query failed' }
+  ]) {
+    const logged = [];
+    const client = { rpc() { return { maybeSingle: async () => ({ data: null, error }) }; } };
+    const actions = loader(boundaries(client))('src/app/(dashboard)/manutencoes/actions.ts');
+    const originalError = console.error;
+    console.error = (...args) => logged.push(args);
+    try {
+      const results = [
+        await actions.createQuickMaintenanceOrderAction({}, form({ request_id: requestId, phone: '98999998888', device_model: 'A14', reported_issue: 'Nao carrega' })),
+        await actions.createMaintenanceOrderAction({}, form({ request_id: requestId, customer_mode: 'new', customer_name: 'Nome atual', customer_phone: '98999998888', model: 'A14', reported_issue: 'Nao carrega' }))
+      ];
+      for (const result of results) {
+        assert.match(result.error, error.code === '23505' && /phone/.test(error.message + error.details) ? /Este telefone já pertence/ : /Não foi possível confirmar a abertura/);
+        assert.equal(result.values.request_id, requestId);
+      }
+      assert.equal(logged.length, 2);
+      assert.ok(logged.every(args => args[1] === error));
+    } finally { console.error = originalError; }
+  }
+});
+
 test('WhatsApp prepara a mesma mensagem duas vezes e detecta bloqueio', async () => {
   let run, opened = 0; const feedbacks = [];
   const fakeReact = {

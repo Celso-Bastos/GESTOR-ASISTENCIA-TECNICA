@@ -1,13 +1,9 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/queries";
+import { requireAuth } from "@/lib/auth/queries";
 import { getCurrentOrganization } from "@/lib/organization/queries";
 
 export default async function Home() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  await requireAuth();
 
   const organization = await getCurrentOrganization();
 
