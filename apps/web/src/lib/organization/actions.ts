@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { organizationSchema } from "@/lib/validations/organization";
+import { organizationSchema, organizationSiteSchema } from "@/lib/validations/organization";
 import { organizationServiceCitySchema } from "@/lib/validations/service-city";
 import { requireOrganization } from "./queries";
 
@@ -93,7 +93,7 @@ export async function createInitialOrganization(
     return {
       error:
         organizationError?.code === "23505"
-          ? "Esse slug ja esta em uso."
+          ? "Este endereço já está sendo utilizado. Escolha outro."
           : "Nao foi possivel criar a organizacao.",
       values
     };
@@ -113,6 +113,35 @@ export async function createInitialOrganization(
   }
 
   redirect("/dashboard");
+}
+
+export async function updateOrganizationSite(
+  _prevState: OrganizationActionState, formData: FormData
+): Promise<OrganizationActionState> {
+  const organization = await requireOrganization();
+  if (organization.role !== "owner" && organization.role !== "admin") {
+    return { error: "Somente owner ou admin pode alterar o Site da loja." };
+  }
+  const values = { slug: String(formData.get("slug") ?? "") };
+  const parsed = organizationSiteSchema.safeParse(values);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values };
+
+  // O ID e o papel vêm da sessão, seguindo o fluxo de configuração da cidade.
+  const { data, error } = await createAdminClient().from("organizations")
+    .update({ slug: parsed.data.slug })
+    .eq("id", organization.id).select("id").maybeSingle();
+  if (error || !data) {
+    return {
+      error: error?.code === "23505"
+        ? "Este endereço já está sendo utilizado. Escolha outro."
+        : "Não foi possível salvar o Site da loja. Tente novamente.",
+      values
+    };
+  }
+  revalidatePath("/configuracoes");
+  revalidatePath("/configuracoes/quiosque");
+  revalidatePath("/kiosk/[slug]", "page");
+  return { success: "Site da loja atualizado.", values: { slug: parsed.data.slug } };
 }
 
 export async function updateOrganizationServiceCity(

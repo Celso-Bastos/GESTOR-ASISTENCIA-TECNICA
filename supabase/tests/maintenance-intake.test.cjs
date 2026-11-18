@@ -84,6 +84,12 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
     await db.query('insert into auth.users(id) values ($1)', [user]);
     await db.query("insert into organizations(id,name,slug) values ($1,'Loja Teste','loja-teste'),($2,'Outra Loja','outra-loja')", [org, otherOrg]);
     await db.query("insert into organization_members(organization_id,user_id,role) values ($1,$2,'owner')", [org, user]);
+    await t.test('0016 sem dependência 0014 aborta sem substituir a RPC existente', async () => {
+      const before = (await db.query('select pg_get_functiondef(to_regprocedure($1)) as definition', [signature])).rows[0].definition;
+      await assert.rejects(db.exec(sql('0016_quick_maintenance_customer_address.sql')), /0014/);
+      await db.exec('rollback;');
+      assert.equal((await db.query('select pg_get_functiondef(to_regprocedure($1)) as definition', [signature])).rows[0].definition, before);
+    });
     await t.test('0014 é reaplicável, mantém clientes antigos e adiciona colunas nulas', async () => {
       assert.equal(toCivilDate('2000-02-29'), '2000-02-29');
       assert.equal(toCivilDate(new Date('2000-02-29T00:00:00.000Z')), '2000-02-29');
@@ -103,6 +109,7 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         { column_name: 'birth_date', data_type: 'date', is_nullable: 'YES', column_default: null }
       ]);
     });
+    await db.exec(sql('0016_quick_maintenance_customer_address.sql'));
     await db.exec('grant select, insert, update on all tables in schema public to authenticated;');
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [user]);
     await db.exec('set role authenticated;');
@@ -352,6 +359,120 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
       assert.deepEqual(await customerRow(id), archived);
       assert.deepEqual(await counts(), before);
       await db.exec('reset role; drop trigger fail_intake_test on maintenance_events; drop function fail_intake_test_event(); set role authenticated;');
+    });
+    const addressInput = extra => ({ device: { model: 'A14' }, reported_issue: 'Troca de tela', ...extra });
+    await t.test('0016 mantém assinatura, RLS e grants, é reaplicável e não cria endereço na OS', async () => {
+      await db.exec('reset role;');
+      const metadata = async () => (await db.query(`select oid,prosecdef,proconfig,proargnames,pg_get_function_result(oid) as result,
+        has_function_privilege('authenticated',oid,'EXECUTE') as allowed,
+        has_function_privilege('anon',oid,'EXECUTE') as anonymous from pg_proc where oid=to_regprocedure($1)`, [signature])).rows;
+      const before = await metadata();
+      await db.exec(sql('0016_quick_maintenance_customer_address.sql'));
+      await db.exec(sql('0016_quick_maintenance_customer_address.sql'));
+      assert.deepEqual(await metadata(), before);
+      assert.equal(before[0].prosecdef, false); assert.equal(before[0].allowed, true); assert.equal(before[0].anonymous, false);
+      assert.equal((await db.query("select relrowsecurity from pg_class where oid='customers'::regclass")).rows[0].relrowsecurity, true);
+      assert.equal((await db.query("select count(*)::int as n from information_schema.columns where table_schema='public' and table_name='maintenance_orders' and column_name in ('address','customer_address')")).rows[0].n, 0);
+      await db.exec('set role authenticated;');
+    });
+    await t.test('endereço é salvo no novo cliente, inclusive placeholder, mantendo previsão e estimado', async () => {
+      for (const name of [null, 'Maria endereço']) {
+        const row = await details((await intake({ name, input: addressInput({ customer_address: '  Rua Principal, 50  ', estimated_price: 150, expected_delivery_date: '2026-11-20' }) })).order_id);
+        assert.equal((await customerRow(row.customer_id)).address, 'Rua Principal, 50');
+        const order = (await db.query('select estimated_price,final_price,expected_delivery_date from maintenance_orders where device_id=$1', [row.device_id])).rows[0];
+        assert.equal(Number(order.estimated_price), 150); assert.equal(order.final_price, null);
+        assert.equal(toCivilDate(order.expected_delivery_date), '2026-11-20');
+      }
+    });
+    await t.test('cliente ativo recebe endereço informado; omissão, null e vazio ambíguos preservam dados', async () => {
+      const phone = '11987770001';
+      const id = (await details((await intake({ phone, name: 'Original' })).order_id)).customer_id;
+      await db.query("update customers set birth_date='2000-02-29',notes='Preservar' where id=$1", [id]);
+      await intake({ phone, name: 'Não sobrescrever', input: addressInput({ customer_address: ' Rua A, 20 ' }) });
+      const saved = await customerRow(id); assert.equal(saved.address, 'Rua A, 20'); assert.equal(saved.name, 'Original');
+      for (const extra of [{}, { customer_address: null }, { customer_address: '' }, { customer_address: '   ' }, { customer_address: 'Prefill antigo', customer_address_action: 'preserve' }]) {
+        assert.equal((await details((await intake({ phone, input: addressInput(extra) })).order_id)).customer_id, id);
+        assert.deepEqual(await customerRow(id), saved);
+      }
+      await intake({ phone, input: addressInput({ customer_address: 'Rua A, 30', customer_address_action: 'set', customer_address_customer_id: id }) });
+      const edited = await customerRow(id); assert.equal(edited.address, 'Rua A, 30'); assert.equal(edited.birth_date, '2000-02-29'); assert.equal(edited.notes, 'Preservar');
+      await intake({ phone, quick: false, name: 'Normal', input: addressInput({ customer_address: 'Não alterar no fluxo normal' }) });
+      assert.deepEqual(await customerRow(id), edited);
+    });
+    await t.test('limpeza exige intenção e cliente confirmado; ID diferente aborta sem dados parciais', async () => {
+      const phone = '11987770002';
+      const id = (await details((await intake({ phone, input: addressInput({ customer_address: 'Rua B' }) })).order_id)).customer_id;
+      const saved = await customerRow(id), before = await counts();
+      for (const extra of [
+        { customer_address: null, customer_address_action: 'clear' },
+        { customer_address: 'Rua C', customer_address_action: 'clear', customer_address_customer_id: id },
+        { customer_address: null, customer_address_action: 'clear', customer_address_customer_id: randomUUID() },
+        { customer_address: 'Rua C', customer_address_customer_id: randomUUID() }
+      ]) await assert.rejects(intake({ phone, input: addressInput(extra) }), error => ['22023', '40001'].includes(error.code));
+      assert.deepEqual(await customerRow(id), saved); assert.deepEqual(await counts(), before);
+      await intake({ phone, input: addressInput({ customer_address: null, customer_address_action: 'clear', customer_address_customer_id: id }) });
+      assert.equal((await customerRow(id)).address, null);
+    });
+    await t.test('reativação mantém ID, aniversário, notas e histórico e permite atualizar só endereço', async () => {
+      const phone = '11987770003';
+      const first = await intake({ phone, name: 'Arquivado', input: addressInput({ customer_address: 'Rua Antiga' }) });
+      const id = (await details(first.order_id)).customer_id;
+      await db.query("update customers set deleted_at=now(),birth_date='2000-02-29',notes='Histórico preservado' where id=$1", [id]);
+      assert.equal((await details((await intake({ phone })).order_id)).customer_id, id);
+      assert.equal((await customerRow(id)).address, 'Rua Antiga');
+      await db.query('update customers set deleted_at=now() where id=$1', [id]);
+      assert.equal((await details((await intake({ phone, input: addressInput({ customer_address: 'Rua Nova' }) })).order_id)).customer_id, id);
+      const customer = await customerRow(id);
+      assert.equal(customer.address, 'Rua Nova'); assert.equal(customer.birth_date, '2000-02-29'); assert.equal(customer.notes, 'Histórico preservado');
+      assert.equal((await details(first.order_id)).customer_id, id);
+      assert.equal((await db.query('select count(*)::int as n from customers where phone_normalized=$1 and organization_id=$2', [phone, org])).rows[0].n, 1);
+    });
+    await t.test('endereço inválido ou longo é rejeitado no SQL antes de gravar cliente ou OS', async () => {
+      const before = await counts();
+      for (const value of ['x'.repeat(301), 123, [], {}]) {
+        await assert.rejects(intake({ input: addressInput({ customer_address: value }) }), error => error.code === '22023');
+      }
+      await assert.rejects(intake({ input: addressInput({ customer_address: 'Rua', customer_address_action: 'invalid' }) }), error => error.code === '22023');
+      assert.deepEqual(await counts(), before);
+    });
+    await t.test('outra organização não tem endereço alterado, nem com ID forjado', async () => {
+      const foreign = randomUUID();
+      await db.exec('reset role;');
+      await db.query("insert into customers(id,organization_id,name,address) values($1,$2,'Outro cliente','Rua externa')", [foreign, otherOrg]);
+      await db.exec('set role authenticated;');
+      const before = await counts();
+      await assert.rejects(intake({ customer: foreign, input: addressInput({ customer_address: 'Tentativa' }) }), error => error.code === '42501');
+      await assert.rejects(intake({ organization: otherOrg, customer: foreign, input: addressInput({ customer_address: 'Tentativa' }) }), error => error.code === '42501');
+      assert.deepEqual(await counts(), before);
+      await db.exec('reset role;');
+      assert.equal((await customerRow(foreign)).address, 'Rua externa');
+      await db.exec('set role authenticated;');
+    });
+    await t.test('reenvio idempotente não reaplica outro endereço', async () => {
+      const request = randomUUID(), phone = '11987770004';
+      const first = await intake({ request, phone, input: addressInput({ customer_address: 'Rua inicial' }) });
+      const id = (await details(first.order_id)).customer_id, before = await counts();
+      assert.deepEqual(await intake({ request, phone, input: addressInput({ customer_address: 'Não reaplicar' }) }), first);
+      assert.equal((await customerRow(id)).address, 'Rua inicial'); assert.deepEqual(await counts(), before);
+    });
+    await t.test('falha após alteração do endereço desfaz cliente novo, atualização e reativação', async () => {
+      const phone = '11987770005';
+      const id = (await details((await intake({ phone, input: addressInput({ customer_address: 'Antes' }) })).order_id)).customer_id;
+      await db.exec(`reset role;
+        create function public.fail_address_test() returns trigger language plpgsql as $$
+        begin raise exception 'ADDRESS_ROLLBACK_TEST'; end; $$;
+        create trigger fail_address_test before insert on maintenance_events for each row execute function fail_address_test();
+        set role authenticated;`);
+      try {
+        const active = await customerRow(id), before = await counts();
+        await assert.rejects(intake({ input: addressInput({ customer_address: 'Novo cliente' }) }), /ADDRESS_ROLLBACK_TEST/);
+        await assert.rejects(intake({ phone, input: addressInput({ customer_address: 'Depois' }) }), /ADDRESS_ROLLBACK_TEST/);
+        assert.deepEqual(await customerRow(id), active); assert.deepEqual(await counts(), before);
+        await db.query('update customers set deleted_at=now() where id=$1', [id]);
+        const archived = await customerRow(id);
+        await assert.rejects(intake({ phone, input: addressInput({ customer_address: 'Depois' }) }), /ADDRESS_ROLLBACK_TEST/);
+        assert.deepEqual(await customerRow(id), archived); assert.deepEqual(await counts(), before);
+      } finally { await db.exec('reset role; drop trigger fail_address_test on maintenance_events; drop function fail_address_test(); set role authenticated;'); }
     });
     await t.test('sem permissao para registrar UUID reverte toda a abertura', async () => {
       await db.exec('reset role; revoke update on maintenance_orders from authenticated; set role authenticated;');

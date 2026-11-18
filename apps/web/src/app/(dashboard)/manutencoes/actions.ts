@@ -207,10 +207,14 @@ function createInput(values: Record<string, string>) {
 }
 
 function quickFormValues(formData: FormData) {
+  const address = String(formData.get("customer_address") ?? "");
   return {
     request_id: String(formData.get("request_id") ?? ""),
     customer_name: String(formData.get("customer_name") ?? ""),
     phone: String(formData.get("phone") ?? ""),
+    customer_address: address,
+    customer_address_action: String(formData.get("customer_address_action") ?? (address.trim() ? "set" : "preserve")),
+    customer_address_customer_id: String(formData.get("customer_address_customer_id") ?? ""),
     device_model: String(formData.get("device_model") ?? ""),
     estimated_price: String(formData.get("estimated_price") ?? ""),
     reported_issue: String(formData.get("reported_issue") ?? ""),
@@ -432,6 +436,30 @@ export async function getCustomersForMaintenance() {
   return data ?? [];
 }
 
+export type QuickCustomerAddressResult = {
+  customer: { id: string; address: string | null } | null;
+  error?: string;
+};
+
+export async function getQuickCustomerAddress(phone: string): Promise<QuickCustomerAddressResult> {
+  const context = await getMaintenanceActionContext();
+  if (!context.ok) return { customer: null, error: context.error };
+  const parsed = createQuickMaintenanceOrderSchema.shape.phone.safeParse(phone);
+  if (!parsed.success || !parsed.data) return { customer: null };
+  const supabase = await createClient();
+  // Mesma prioridade da RPC: ativo primeiro; depois arquivado mais recente.
+  const { data, error } = await supabase.from("customers")
+    .select("id, address")
+    .eq("organization_id", context.organization.id)
+    .eq("phone_normalized", normalizePhoneBR(parsed.data))
+    .order("deleted_at", { ascending: false, nullsFirst: true })
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ id: string; address: string | null }>();
+  if (error) return { customer: null, error: "Não foi possível consultar o endereço. Sem uma alteração explícita, o cadastro será preservado." };
+  return { customer: data ?? null };
+}
+
 export async function getMaintenanceOrders(input?: {
   q?: string;
   status?: string;
@@ -539,7 +567,11 @@ export async function getMaintenanceOrderById(orderId: string) {
 async function createOrderTransaction(
   context: { organization: CurrentOrganization },
   values: Record<string, string>,
-  input: CreateMaintenanceOrderInput,
+  input: CreateMaintenanceOrderInput & {
+    customer_address?: string | null;
+    customer_address_action?: "set" | "clear";
+    customer_address_customer_id?: string;
+  },
   quick = false
 ): Promise<MaintenanceActionState> {
   if (!z.string().uuid().safeParse(values.request_id).success) {
@@ -563,7 +595,9 @@ async function createOrderTransaction(
   if (error || !order) {
     console.error("Erro na transacao de abertura da OS:", error);
     return {
-      error: isMissingRpcError(error?.code) || error?.code === "23502"
+      error: quick && error?.code === "40001"
+        ? "O cliente vinculado ao telefone mudou. Confira o telefone e o endereço antes de tentar novamente."
+        : isMissingRpcError(error?.code) || error?.code === "23502"
         ? "O banco precisa da atualização da Fase 14A. Solicite ao responsável a aplicação das migrations 0009 e 0010."
         : isCustomerPhoneConflict(error)
         ? "Este telefone já pertence a outro cadastro. Não foi possível vincular automaticamente o cliente."
@@ -600,6 +634,11 @@ export async function createQuickMaintenanceOrderAction(
     customer_mode: "new",
     customer_name: parsed.data.customer_name,
     customer_phone: parsed.data.phone,
+    ...(parsed.data.customer_address_action === "preserve" ? {} : {
+      customer_address: parsed.data.customer_address,
+      customer_address_action: parsed.data.customer_address_action,
+      ...(parsed.data.customer_address_customer_id ? { customer_address_customer_id: parsed.data.customer_address_customer_id } : {})
+    }),
     device: { model: parsed.data.device_model, brand: undefined, color: undefined, storage: undefined, imei: undefined, notes: undefined },
     reported_issue: parsed.data.reported_issue,
     expected_delivery_date: parsed.data.expected_delivery_date,

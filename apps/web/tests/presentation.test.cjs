@@ -57,6 +57,7 @@ test('header identifica saída mesmo com o texto visual oculto e conserva contro
   const load = loader({
     'next/link': Link, 'next/navigation': { usePathname: () => '/dashboard' },
     '@/lib/auth/queries': { requireAuth: async () => ({ email: 'operador@example.test' }) },
+    '@/lib/auth/platform-admin': { isPlatformAdmin: async () => false },
     '@/lib/auth/actions': { logoutAction() {} }
   });
   const Layout = load('src/app/(dashboard)/layout.tsx').default;

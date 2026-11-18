@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizePhoneBR } from "@/lib/phone";
+import { customerAddressSchema } from "./customer.schema";
 import {
   maintenanceStatuses,
   type MaintenanceStatusFilter
@@ -204,6 +205,9 @@ export const createMaintenanceOrderSchema = z.object({
 export const createQuickMaintenanceOrderSchema = z.object({
   customer_name: optionalQuickCustomerName,
   phone: optionalQuickPhone,
+  customer_address: customerAddressSchema,
+  customer_address_action: z.enum(["preserve", "set", "clear"]).default("preserve"),
+  customer_address_customer_id: z.string().uuid("Confira o cliente pelo telefone antes de alterar o endereço.").optional().or(z.literal("")),
   device_model: z
     .string()
     .trim()
@@ -220,6 +224,13 @@ export const createQuickMaintenanceOrderSchema = z.object({
     2000,
     "Use no máximo 2000 caracteres na observação rápida."
   )
+}).superRefine((value, ctx) => {
+  if (value.customer_address_action === "set" && !value.customer_address) {
+    ctx.addIssue({ code: "custom", path: ["customer_address"], message: "Informe o endereço ou mantenha o cadastro atual." });
+  }
+  if (value.customer_address_action === "clear" && (!value.customer_address_customer_id || value.customer_address)) {
+    ctx.addIssue({ code: "custom", path: ["customer_address"], message: "Para remover o endereço, confirme o cliente pelo telefone e use a opção de remoção." });
+  }
 });
 
 export const updateMaintenanceOrderSchema = z.object({

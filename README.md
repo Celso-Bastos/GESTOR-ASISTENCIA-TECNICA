@@ -349,3 +349,13 @@ Documentacao da fase:
 
 - `docs/planejamento/fase-12-dashboard-profissional.md`
 - `docs/planejamento/fase-12-checklist.md`
+
+## Administração e Site da loja
+
+Platform admins encontram **Administração → Solicitações de conta** na sidebar e no menu mobile, com destino `/admin/solicitacoes-conta`. A autorização continua usando `public.platform_admins` e o helper existente no servidor. Ser admin de uma organização não concede acesso de plataforma.
+
+O campo técnico `organizations.slug` aparece como **Site da loja** no onboarding e em **Configurações → Dados da organização**. O onboarding sugere um nome sem acentos; a edição manual é preservada. Owners e admins da organização podem alterar o campo, com validação no servidor e unicidade já garantida pelo banco.
+
+Ainda não existe site público da loja. A rota pública `/kiosk/[slug]?token=...` é exclusiva do quiosque de cadastro e exige token ativo. Alterar o Site da loja exige atualizar links e QR codes do quiosque. Nenhuma migration é necessária para esta melhoria.
+
+Auditoria, arquivos, testes e checklist manual: [acesso administrativo e Site da loja](docs/planejamento/acesso-admin-site-loja.md).

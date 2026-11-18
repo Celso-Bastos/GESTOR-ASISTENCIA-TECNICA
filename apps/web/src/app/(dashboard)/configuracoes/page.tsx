@@ -1,6 +1,7 @@
 import { requireOrganization } from "@/lib/organization/queries";
 import Link from "next/link";
 import { ServiceCityForm } from "./service-city-form";
+import { OrganizationSiteForm } from "./site-form";
 
 export default async function ConfiguracoesPage() {
   const organization = await requireOrganization();
@@ -22,10 +23,6 @@ export default async function ConfiguracoesPage() {
           <dd className="mt-1 text-sm text-foreground">{organization.name}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium uppercase text-subtle">Slug</dt>
-          <dd className="mt-1 text-sm text-foreground">{organization.slug}</dd>
-        </div>
-        <div>
           <dt className="text-xs font-medium uppercase text-subtle">
             Telefone
           </dt>
@@ -40,6 +37,15 @@ export default async function ConfiguracoesPage() {
           <dd className="mt-1 text-sm text-foreground">{organization.role}</dd>
         </div>
       </dl>
+
+      {organization.role === "owner" || organization.role === "admin" ? (
+        <OrganizationSiteForm slug={organization.slug} />
+      ) : (
+        <div className="grid min-w-0 max-w-2xl gap-2 rounded-md border border-line bg-surface p-4 text-sm text-body">
+          <p className="break-all">Site da loja: {organization.slug}</p>
+          <p className="text-muted">Identificador do site da loja. O site público da loja ainda não está disponível. Solicite ao owner ou admin qualquer alteração.</p>
+        </div>
+      )}
 
       {organization.role === "owner" || organization.role === "admin" ? (
         <ServiceCityForm serviceCity={organization.service_city} />

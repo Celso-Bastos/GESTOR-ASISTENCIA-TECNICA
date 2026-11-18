@@ -16,6 +16,13 @@ const phoneSchema = z
     return normalized.length === 10 || normalized.length === 11;
   }, "Informe um telefone com DDD valido.");
 
+export const customerAddressSchema = z
+  .string()
+  .trim()
+  .max(300, "Use no máximo 300 caracteres no endereço.")
+  .nullish()
+  .transform((value) => value || null);
+
 const customerBaseSchema = z.object({
   name: z
     .string()
@@ -23,12 +30,7 @@ const customerBaseSchema = z.object({
     .min(2, "Informe o nome do cliente.")
     .max(120, "Use no maximo 120 caracteres."),
   phone: phoneSchema,
-  address: z
-    .string()
-    .trim()
-    .max(300, "Use no máximo 300 caracteres no endereço.")
-    .nullish()
-    .transform((value) => value || null),
+  address: customerAddressSchema,
   birth_date: z
     .string()
     .trim()

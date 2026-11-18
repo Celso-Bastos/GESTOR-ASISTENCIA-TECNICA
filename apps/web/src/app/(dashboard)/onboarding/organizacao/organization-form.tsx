@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { suggestOrganizationSlug } from "@/lib/organization/slug";
 import {
   createInitialOrganization,
   type OrganizationActionState
@@ -13,28 +14,46 @@ export function OrganizationForm({ serviceCity }: { serviceCity: string | null }
     createInitialOrganization,
     initialState
   );
+  const [site, setSite] = useState({ value: "", manuallyEdited: false });
 
   return (
-    <form action={formAction} aria-busy={isPending} className="grid max-w-xl gap-4">
+    <form action={formAction} aria-busy={isPending} className="grid min-w-0 max-w-xl gap-4">
       <label className="grid gap-2 text-sm font-medium text-body">
         Nome da loja
         <input
           className="h-11 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
           defaultValue={state.values?.name}
           name="name"
+          onChange={(event) => {
+            const name = event.target.value;
+            setSite((current) => current.manuallyEdited
+              ? current
+              : { value: suggestOrganizationSlug(name), manuallyEdited: false });
+          }}
           required
         />
       </label>
 
       <label className="grid gap-2 text-sm font-medium text-body">
-        Slug da loja
+        Site da loja
         <input
-          className="h-11 rounded-md border border-line-strong bg-surface px-3 text-base lowercase text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
-          defaultValue={state.values?.slug}
+          className="h-11 min-w-0 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
+          value={site.value}
+          onChange={(event) => setSite({ value: event.target.value, manuallyEdited: true })}
           name="slug"
           pattern="[a-z0-9]+(-[a-z0-9]+)*"
+          minLength={3}
+          maxLength={60}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="minha-loja"
+          aria-describedby="organization-site-help"
           required
         />
+        <span id="organization-site-help" className="text-sm font-normal text-muted">
+          Identificador do site da loja. Sugerimos um nome automaticamente; você pode ajustá-lo usando letras minúsculas sem acentos, números e hífens. O site público da loja ainda não está disponível.
+        </span>
       </label>
 
       <label className="grid gap-2 text-sm font-medium text-body">

@@ -110,7 +110,7 @@ export default async function QuiosquePage() {
 
       <p className="flex max-w-3xl gap-3 rounded-md border border-accent-line bg-accent-soft px-4 py-3 text-sm leading-6 text-accent-emphasis">
         <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        A tela publica valida slug e token ativo antes de aceitar cadastro. Ela
+        A tela publica valida o Site da loja e um token ativo antes de aceitar cadastro. Ela
         envia somente nome, telefone e consentimento.
       </p>
     </section>

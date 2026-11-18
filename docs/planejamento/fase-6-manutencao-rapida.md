@@ -1,5 +1,7 @@
 # Fase 6 - Manutencao Rapida
 
+Atualização de endereço opcional, consulta pelo telefone e layout de previsão ao lado do estimado: [Manutenção rápida — endereço e layout](manutencao-rapida-endereco.md). Requer a nova migration `0016`, mantendo a assinatura da RPC e a abertura atômica.
+
 ## Objetivo
 
 Implementar um fluxo curto para abrir uma ordem de servico no balcao com poucos campos, sem passar pela selecao manual de cliente e pelo formulario completo da Fase 5.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, LayoutDashboard, MessageSquareText, PackageSearch, Settings,
-  Smartphone, TabletSmartphone, Users, Zap
+  ShieldCheck, Smartphone, TabletSmartphone, Users, Zap
 } from "lucide-react";
 
 const navItems = [
@@ -19,7 +19,10 @@ const navItems = [
   { href: "/configuracoes/quiosque", label: "Quiosque", icon: TabletSmartphone }
 ];
 
-export function DashboardNavigation({ mobile = false }: { mobile?: boolean }) {
+export function DashboardNavigation({ mobile = false, platformAdmin = false }: {
+  mobile?: boolean;
+  platformAdmin?: boolean;
+}) {
   const pathname = usePathname();
   // A rota mais específica evita destacar dois itens nos submenus.
   const activeHref = navItems
@@ -37,5 +40,13 @@ export function DashboardNavigation({ mobile = false }: { mobile?: boolean }) {
         {label}
       </Link>;
     })}
+    {platformAdmin ? <>
+      <p className="mt-4 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-subtle">Administração</p>
+      <Link href="/admin/solicitacoes-conta"
+        className="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium text-body transition hover:bg-canvas hover:text-foreground focus:outline-none focus:ring-2 focus:ring-focus">
+        <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
+        Solicitações de conta
+      </Link>
+    </> : null}
   </nav>;
 }

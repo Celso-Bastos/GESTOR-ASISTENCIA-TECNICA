@@ -7,6 +7,7 @@ import { logoutAction } from "@/lib/auth/actions";
 import { requireAuth } from "@/lib/auth/queries";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNavigation } from "@/components/dashboard-navigation";
+import { isPlatformAdmin } from "@/lib/auth/platform-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const user = await requireAuth();
+  const platformAdmin = await isPlatformAdmin();
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-canvas text-foreground">
@@ -30,7 +32,7 @@ export default async function DashboardLayout({
           </div>
         </div>
 
-        <DashboardNavigation />
+        <DashboardNavigation platformAdmin={platformAdmin} />
       </aside>
 
       <div className="lg:pl-64">
@@ -52,7 +54,7 @@ export default async function DashboardLayout({
                 </summary>
 
                 <div className="absolute right-0 top-14 z-30 max-h-[calc(100vh-6rem)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-line bg-surface p-3 shadow-lg">
-                  <DashboardNavigation mobile />
+                  <DashboardNavigation mobile platformAdmin={platformAdmin} />
                 </div>
               </details>
 
