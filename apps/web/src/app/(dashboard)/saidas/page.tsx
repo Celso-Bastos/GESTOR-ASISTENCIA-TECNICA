@@ -33,11 +33,11 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
     <section className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase text-teal-700">Fase 11</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+          <p className="text-sm font-medium uppercase text-accent">Fase 11</p>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">
             Saidas/Vendas
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Registre vendas de acessorios e acompanhe o que saiu no mes sem
             transformar isso em estoque fixo.
           </p>
@@ -45,14 +45,14 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
 
         <div className="grid gap-2 sm:flex sm:flex-wrap">
           <Link
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus sm:w-auto"
             href="/saidas/nova"
           >
             <PackagePlus className="size-4" aria-hidden="true" />
             Nova saida
           </Link>
           <Link
-            className="inline-flex h-11 w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center rounded-md border border-line-strong bg-surface px-4 text-sm font-semibold text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus sm:w-auto"
             href="/saidas/modelos"
           >
             Produtos cadastrados
@@ -63,13 +63,13 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
       <ProductOutflowFilters filters={filters} />
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
       {!error && outflows.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
+        <div className="rounded-md border border-dashed border-line-strong bg-surface p-5 text-sm text-muted">
           Nenhuma saida encontrada para os filtros atuais.
         </div>
       ) : null}

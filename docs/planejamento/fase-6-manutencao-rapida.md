@@ -23,6 +23,7 @@ Campos opcionais:
 
 - nome do cliente;
 - telefone/WhatsApp;
+- valor estimado;
 - previsao de entrega;
 - observacao rapida.
 
@@ -31,7 +32,7 @@ A OS criada pelo fluxo rapido pode ser completada depois em `/manutencoes/[id]/e
 ## Fluxo de Criacao
 
 1. A equipe acessa `/manutencoes/rapida`.
-2. Preenche modelo e defeito; nome, telefone, previsao e observacao sao opcionais.
+2. Preenche modelo e defeito; nome, telefone, valor estimado, previsao e observacao sao opcionais.
 3. A action valida os dados com Zod.
 4. Se telefone for informado, o sistema normaliza com `normalizePhoneBR`.
 5. Se telefone for informado, o sistema procura cliente ativo por `organization_id + phone_normalized`.
@@ -70,6 +71,22 @@ Quando nome e telefone nao sao informados, o sistema cria um cliente placeholder
 - `notes = Cliente criado automaticamente pelo fluxo de manutencao rapida sem dados informados.`
 
 Nao usar telefone falso como `00000000000`. Clientes sem telefone podem existir mais de uma vez; clientes com telefone continuam sem duplicidade por organizacao.
+
+## Valor estimado e entrega
+
+O campo `Valor estimado (opcional)` fica após o defeito. Usa o mesmo input
+numérico e a mesma validação monetária da manutenção completa. Valor vazio
+resulta em `estimated_price = null`; zero é válido. A RPC existente recebe
+`p_input.estimated_price`, sem mudança de assinatura, e mantém `final_price = null`
+na criação.
+
+Ao entregar (`entregue`), edição, seletor de status e atalho reutilizam a regra
+server-side de `lib/maintenance/pricing.ts`: final ausente recebe o estimado;
+final explícito, inclusive zero, permanece. Sem estimado, não há valor inventado.
+Alterar o estimado depois da entrega não recalcula um final já preenchido.
+O endereço/cliente opcional, garantia e isolamento por organização permanecem.
+
+Detalhes, limites e homologação em [Preços e entrega](manutencao-precos-entrega.md).
 
 ## WhatsApp
 

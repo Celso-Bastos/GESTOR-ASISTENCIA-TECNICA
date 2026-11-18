@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getTodayCivilDate, isValidCivilDate } from "@/lib/civil-date";
 import { normalizePhoneBR } from "@/lib/phone";
 
 const phoneSchema = z
@@ -22,6 +23,25 @@ const customerBaseSchema = z.object({
     .min(2, "Informe o nome do cliente.")
     .max(120, "Use no maximo 120 caracteres."),
   phone: phoneSchema,
+  address: z
+    .string()
+    .trim()
+    .max(300, "Use no máximo 300 caracteres no endereço.")
+    .nullish()
+    .transform((value) => value || null),
+  birth_date: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || null)
+    .refine(
+      (value) => !value || isValidCivilDate(value),
+      "Informe uma data de aniversário válida."
+    )
+    .refine(
+      (value) => !value || value <= getTodayCivilDate(),
+      "A data de aniversário não pode estar no futuro."
+    ),
   whatsapp_opt_in: z.boolean(),
   notes: z
     .string()

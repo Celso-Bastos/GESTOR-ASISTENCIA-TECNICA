@@ -22,6 +22,8 @@ export type CustomerRow = {
   name: string;
   phone: string | null;
   phone_normalized: string | null;
+  address?: string | null;
+  birth_date?: string | null;
   whatsapp_opt_in: boolean;
   whatsapp_opt_in_at: string | null;
   source: "manual" | "tablet" | "future_import";
@@ -36,6 +38,8 @@ export type CustomerActionState = {
   values?: {
     name?: string;
     phone?: string;
+    address?: string;
+    birth_date?: string;
     whatsapp_opt_in?: boolean;
     notes?: string;
   };
@@ -45,6 +49,8 @@ function getCustomerFormValues(formData: FormData) {
   return {
     name: String(formData.get("name") ?? ""),
     phone: String(formData.get("phone") ?? ""),
+    address: String(formData.get("address") ?? ""),
+    birth_date: String(formData.get("birth_date") ?? ""),
     whatsapp_opt_in: formData.get("whatsapp_opt_in") === "on",
     notes: String(formData.get("notes") ?? "")
   };
@@ -142,7 +148,7 @@ export async function getCustomers(search?: string) {
   let query = supabase
     .from("customers")
     .select(
-      "id, organization_id, name, phone, phone_normalized, whatsapp_opt_in, whatsapp_opt_in_at, source, notes, created_at, updated_at, deleted_at"
+      "id, organization_id, name, phone, phone_normalized, address, birth_date, whatsapp_opt_in, whatsapp_opt_in_at, source, notes, created_at, updated_at, deleted_at"
     )
     .eq("organization_id", organization.id)
     .is("deleted_at", null)
@@ -182,7 +188,7 @@ export async function getCustomerById(customerId: string) {
   const { data, error } = await supabase
     .from("customers")
     .select(
-      "id, organization_id, name, phone, phone_normalized, whatsapp_opt_in, whatsapp_opt_in_at, source, notes, created_at, updated_at, deleted_at"
+      "id, organization_id, name, phone, phone_normalized, address, birth_date, whatsapp_opt_in, whatsapp_opt_in_at, source, notes, created_at, updated_at, deleted_at"
     )
     .eq("id", customerId)
     .eq("organization_id", organization.id)
@@ -243,6 +249,8 @@ export async function createCustomerAction(
     name: parsed.data.name,
     phone: parsed.data.phone ?? null,
     phone_normalized: phoneNormalized ?? null,
+    address: parsed.data.address,
+    birth_date: parsed.data.birth_date,
     whatsapp_opt_in: parsed.data.whatsapp_opt_in,
     whatsapp_opt_in_at: whatsappOptInAt,
     source: "manual",
@@ -313,6 +321,8 @@ export async function updateCustomerAction(
       name: parsed.data.name,
       phone: parsed.data.phone ?? null,
       phone_normalized: phoneNormalized ?? null,
+      address: parsed.data.address,
+      birth_date: parsed.data.birth_date,
       whatsapp_opt_in: parsed.data.whatsapp_opt_in,
       whatsapp_opt_in_at: whatsappOptInAt,
       notes: parsed.data.notes || null

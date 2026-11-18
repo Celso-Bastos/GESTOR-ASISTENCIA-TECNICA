@@ -15,13 +15,13 @@ type ProductOutflowFiltersProps = {
 export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
   return (
     <form
-      className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5"
+      className="grid gap-3 rounded-md border border-line bg-surface p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5"
       role="search"
     >
-      <label className="grid gap-2 text-sm font-medium text-slate-700">
+      <label className="grid gap-2 text-sm font-medium text-body">
         Categoria
         <select
-          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
+          className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:h-11 sm:text-sm"
           defaultValue={filters.category}
           name="category"
         >
@@ -34,10 +34,10 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
         </select>
       </label>
 
-      <label className="grid gap-2 text-sm font-medium text-slate-700">
+      <label className="grid gap-2 text-sm font-medium text-body">
         Modelo
         <input
-          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
+          className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:h-11 sm:text-sm"
           defaultValue={filters.q}
           name="q"
           placeholder="Buscar modelo"
@@ -45,20 +45,20 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
         />
       </label>
 
-      <label className="grid gap-2 text-sm font-medium text-slate-700">
+      <label className="grid gap-2 text-sm font-medium text-body">
         Inicio
         <input
-          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
+          className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:h-11 sm:text-sm"
           defaultValue={filters.start}
           name="start"
           type="date"
         />
       </label>
 
-      <label className="grid gap-2 text-sm font-medium text-slate-700">
+      <label className="grid gap-2 text-sm font-medium text-body">
         Fim
         <input
-          className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:h-11 sm:text-sm"
+          className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:h-11 sm:text-sm"
           defaultValue={filters.end}
           name="end"
           type="date"
@@ -67,7 +67,7 @@ export function ProductOutflowFilters({ filters }: ProductOutflowFiltersProps) {
 
       <div className="flex items-end">
         <button
-          className="inline-flex h-12 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-11"
+          className="inline-flex h-12 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus sm:h-11"
           type="submit"
         >
           Filtrar

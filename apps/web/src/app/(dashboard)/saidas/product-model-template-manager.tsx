@@ -35,10 +35,11 @@ function StateMessage({ state }: { state: ProductActionState }) {
 
   return (
     <p
+      role={state.error ? "alert" : "status"}
       className={
         state.error
-          ? "rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-          : "rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+          ? "rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger"
+          : "rounded-md border border-success-line bg-success-soft px-3 py-2 text-sm text-success"
       }
     >
       {message}
@@ -57,7 +58,7 @@ function CategorySelect({
 }) {
   return (
     <select
-      className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
+      className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
       name={name}
       onChange={(event) => onChange(event.target.value as ProductCategory)}
       value={value}
@@ -75,7 +76,7 @@ function CategoryBasePriceText({ category }: { category: ProductCategory }) {
   const basePrice = getProductCategoryBasePrice(category);
 
   return (
-    <p className="text-xs font-medium text-slate-500">
+    <p className="text-xs font-medium text-subtle">
       Valor base da categoria:{" "}
       {basePrice === null ? (
         "sem valor definido"
@@ -96,27 +97,27 @@ function CreateTemplateForm() {
   );
 
   return (
-    <article className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <article className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
       <div>
-        <p className="text-xs font-medium uppercase text-teal-700">
+        <p className="text-xs font-medium uppercase text-accent">
           Novo produto
         </p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-950">
+        <h2 className="mt-1 text-lg font-semibold text-foreground">
           Produto cadastrado
         </h2>
       </div>
 
       <form action={action} className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Categoria
           <CategorySelect onChange={setCategory} value={category} />
           <CategoryBasePriceText category={category} />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Valor do modelo (opcional)
           <input
-            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
+            className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
             defaultValue={String(state.values?.default_price ?? "")}
             inputMode="decimal"
             name="default_price"
@@ -124,10 +125,10 @@ function CreateTemplateForm() {
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+        <label className="grid gap-2 text-sm font-medium text-body sm:col-span-2">
           Nome/modelo
           <input
-            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
+            className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
             defaultValue={String(state.values?.model_name ?? "")}
             maxLength={120}
             name="model_name"
@@ -135,9 +136,9 @@ function CreateTemplateForm() {
           />
         </label>
 
-        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-slate-700 sm:col-span-2">
+        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-body sm:col-span-2">
           <input
-            className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+            className="size-4 rounded border-line-strong text-accent focus:ring-focus"
             defaultChecked={
               typeof state.values?.is_active === "boolean"
                 ? Boolean(state.values.is_active)
@@ -152,7 +153,7 @@ function CreateTemplateForm() {
         <div className="grid gap-3 sm:col-span-2">
           <StateMessage state={state} />
           <button
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
             disabled={isPending}
             type="submit"
           >
@@ -181,14 +182,14 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
   );
 
   return (
-    <article className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <article className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <ProductCategoryBadge category={template.category} />
-          <h3 className="mt-2 break-words text-lg font-semibold text-slate-950">
+          <h3 className="mt-2 break-words text-lg font-semibold text-foreground">
             {template.model_name}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted">
             Valor do modelo: <MoneyDisplay value={template.default_price} />
           </p>
           <CategoryBasePriceText category={template.category} />
@@ -196,8 +197,8 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
         <span
           className={
             template.is_active
-              ? "inline-flex w-fit rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
-              : "inline-flex w-fit rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-600"
+              ? "inline-flex w-fit rounded-md border border-success-line bg-success-soft px-2 py-1 text-xs font-semibold text-success"
+              : "inline-flex w-fit rounded-md border border-line bg-surface-muted px-2 py-1 text-xs font-semibold text-muted"
           }
         >
           {template.is_active ? "Ativo" : "Inativo"}
@@ -205,26 +206,26 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
       </div>
 
       <form action={saveAction} className="grid gap-3 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Categoria
           <CategorySelect onChange={setCategory} value={category} />
           <CategoryBasePriceText category={category} />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Valor do modelo (opcional)
           <input
-            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
+            className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
             defaultValue={template.default_price ?? ""}
             inputMode="decimal"
             name="default_price"
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+        <label className="grid gap-2 text-sm font-medium text-body sm:col-span-2">
           Nome/modelo
           <input
-            className="h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 sm:text-sm"
+            className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
             defaultValue={template.model_name}
             maxLength={120}
             name="model_name"
@@ -232,9 +233,9 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
           />
         </label>
 
-        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-slate-700 sm:col-span-2">
+        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-body sm:col-span-2">
           <input
-            className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+            className="size-4 rounded border-line-strong text-accent focus:ring-focus"
             defaultChecked={template.is_active}
             name="is_active"
             type="checkbox"
@@ -246,7 +247,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
           <StateMessage state={saveState} />
           <div className="flex flex-wrap gap-2">
             <button
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
               disabled={isSaving}
               type="submit"
             >
@@ -260,7 +261,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
       <div className="flex flex-wrap gap-2">
         <form action={disableAction}>
           <button
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-4 text-sm font-semibold text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:w-auto"
             disabled={isDisabling || !template.is_active}
             type="submit"
           >
@@ -277,7 +278,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
           }}
         >
           <button
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-danger-line bg-danger-soft px-4 text-sm font-semibold text-danger transition hover:bg-danger-muted focus:outline-none focus:ring-2 focus:ring-danger-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:w-auto"
             disabled={isDeleting}
             type="submit"
           >
@@ -312,26 +313,26 @@ export function ProductModelTemplateManager({
 
   return (
     <section className="grid gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-950">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-foreground">
             Produtos cadastrados
           </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-sm leading-6 text-muted">
             Ative, desative e ajuste os produtos usados no formulario de saida.
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[minmax(14rem,1fr)_14rem]">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:w-[29rem] xl:shrink-0">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Buscar por nome
             <span className="relative">
               <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-disabled"
                 aria-hidden="true"
               />
               <input
-                className="h-11 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                className="h-11 w-full rounded-md border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Ex.: iPhone 11"
                 value={search}
@@ -339,10 +340,10 @@ export function ProductModelTemplateManager({
             </span>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Categoria
             <select
-              className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
               onChange={(event) =>
                 setFilter(event.target.value as ProductCategory | "all")
               }
@@ -362,7 +363,7 @@ export function ProductModelTemplateManager({
       <CreateTemplateForm />
 
       {filteredTemplates.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
+        <div className="rounded-md border border-dashed border-line-strong bg-surface p-5 text-sm text-muted">
           Nenhum modelo encontrado.
         </div>
       ) : (

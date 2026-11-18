@@ -26,13 +26,13 @@ export default async function QuiosquePage() {
     <section className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase text-teal-700">
+          <p className="text-sm font-medium uppercase text-accent">
             Configuracoes
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">
             Quiosque / Tablet
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Gere links publicos controlados para o tablet de balcao cadastrar
             clientes sem login e sem expor dados internos.
           </p>
@@ -42,14 +42,14 @@ export default async function QuiosquePage() {
       <CreateTokenForm action={createKioskTokenAction} />
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
       <div className="grid gap-4">
         {tokens.length === 0 ? (
-          <div className="rounded-md border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-600 shadow-sm">
+          <div className="rounded-md border border-line bg-surface p-5 text-sm leading-6 text-muted shadow-sm">
             Nenhum token criado ainda. Crie um token para liberar o link do
             tablet.
           </div>
@@ -60,26 +60,26 @@ export default async function QuiosquePage() {
 
           return (
             <article
-              className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+              className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm"
               key={token.id}
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold text-slate-950">
+                    <h2 className="text-base font-semibold text-foreground">
                       {token.name}
                     </h2>
                     <span
                       className={
                         token.is_active
-                          ? "rounded-md bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-700"
-                          : "rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600"
+                          ? "rounded-md bg-accent-soft px-2 py-1 text-xs font-semibold text-accent"
+                          : "rounded-md bg-canvas px-2 py-1 text-xs font-semibold text-muted"
                       }
                     >
                       {token.is_active ? "Ativo" : "Desativado"}
                     </span>
                   </div>
-                  <p className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                  <p className="mt-2 flex items-center gap-2 text-sm text-muted">
                     <CalendarClock className="size-4" aria-hidden="true" />
                     Ultimo uso: {formatDate(token.last_used_at)}
                   </p>
@@ -94,12 +94,12 @@ export default async function QuiosquePage() {
                 </div>
               </div>
 
-              <div className="grid gap-2 rounded-md bg-slate-50 p-3">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase text-slate-500">
+              <div className="grid gap-2 rounded-md bg-surface-muted p-3">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase text-subtle">
                   <Link2 className="size-4" aria-hidden="true" />
                   Link do tablet
                 </p>
-                <p className="break-all text-sm font-medium text-slate-800">
+                <p className="break-all text-sm font-medium text-content">
                   {link}
                 </p>
               </div>
@@ -108,7 +108,7 @@ export default async function QuiosquePage() {
         })}
       </div>
 
-      <p className="flex max-w-3xl gap-3 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-900">
+      <p className="flex max-w-3xl gap-3 rounded-md border border-accent-line bg-accent-soft px-4 py-3 text-sm leading-6 text-accent-emphasis">
         <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         A tela publica valida slug e token ativo antes de aceitar cadastro. Ela
         envia somente nome, telefone e consentimento.

@@ -29,8 +29,8 @@ export function WhatsAppButton({
 
   const className =
     variant === "primary"
-      ? "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
-      : "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-10 sm:w-auto";
+      ? "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-success-line disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
+      : "inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-success-line bg-success-soft px-3 text-sm font-semibold text-success transition hover:bg-success-muted focus:outline-none focus:ring-2 focus:ring-success-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:h-10 sm:w-auto";
 
   return (
     <form action={formAction} onSubmit={prepare} className="grid w-full gap-2 sm:w-auto">
@@ -41,7 +41,7 @@ export function WhatsAppButton({
 
       <WhatsAppAlternatives state={state} feedback={feedback} />
       {state.error ? (
-        <p className="max-w-xs rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
+        <p role="alert" className="max-w-xs rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-xs leading-5 text-danger">
           {state.error}
         </p>
       ) : null}

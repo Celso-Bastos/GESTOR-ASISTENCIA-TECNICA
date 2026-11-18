@@ -38,15 +38,15 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
       <div className="grid gap-3 md:hidden">
         {outflows.map((outflow) => (
           <article
-            className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+            className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm"
             key={outflow.id}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="break-words text-base font-semibold text-slate-950">
+                <h2 className="break-words text-base font-semibold text-foreground">
                   {getOutflowModel(outflow)}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted">
                   {formatDateBR(outflow.sold_at)}
                 </p>
               </div>
@@ -55,36 +55,36 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
 
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Quantidade
                 </dt>
-                <dd className="mt-1 text-slate-800">{outflow.quantity}</dd>
+                <dd className="mt-1 text-content">{outflow.quantity}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Total
                 </dt>
-                <dd className="mt-1 font-semibold text-slate-950">
+                <dd className="mt-1 font-semibold text-foreground">
                   <MoneyDisplay value={outflow.total_price} />
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Unitario
                 </dt>
-                <dd className="mt-1 text-slate-800">
+                <dd className="mt-1 text-content">
                   <MoneyDisplay value={outflow.unit_price} />
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Cliente
                 </dt>
-                <dd className="mt-1 text-slate-800">{getCustomerName(outflow)}</dd>
+                <dd className="mt-1 text-content">{getCustomerName(outflow)}</dd>
               </div>
             </dl>
 
-            <Link className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
+            <Link className="inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
             <ProductActionButton
               action={deleteProductOutflowAction.bind(null, outflow.id)}
               confirmMessage="Excluir esta saida? Essa acao sera um soft delete."
@@ -95,10 +95,10 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm md:block">
+      <div className="hidden overflow-hidden rounded-md border border-line bg-surface shadow-sm md:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="bg-surface-muted text-xs uppercase text-subtle">
               <tr>
                 <th className="px-4 py-3 font-semibold">Data</th>
                 <th className="px-4 py-3 font-semibold">Produto</th>
@@ -110,32 +110,32 @@ export function ProductOutflowTable({ outflows }: ProductOutflowTableProps) {
                 <th className="px-4 py-3 font-semibold">Acoes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-line">
               {outflows.map((outflow) => (
                 <tr key={outflow.id}>
-                  <td className="px-4 py-3 text-slate-700">
+                  <td className="px-4 py-3 text-body">
                     {formatDateBR(outflow.sold_at)}
                   </td>
                   <td className="px-4 py-3">
                     <ProductCategoryBadge category={outflow.category} />
                   </td>
-                  <td className="px-4 py-3 font-medium text-slate-950">
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {getOutflowModel(outflow)}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">
+                  <td className="px-4 py-3 text-body">
                     {outflow.quantity}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">
+                  <td className="px-4 py-3 text-body">
                     <MoneyDisplay value={outflow.unit_price} />
                   </td>
-                  <td className="px-4 py-3 font-semibold text-slate-950">
+                  <td className="px-4 py-3 font-semibold text-foreground">
                     <MoneyDisplay value={outflow.total_price} />
                   </td>
-                  <td className="px-4 py-3 text-slate-700">
+                  <td className="px-4 py-3 text-body">
                     {getCustomerName(outflow)}
                   </td>
                   <td className="px-4 py-3">
-                    <Link className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
+                    <Link className="inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-sm" href={`/saidas/${outflow.id}/editar`}>Editar</Link>
             <ProductActionButton
                       action={deleteProductOutflowAction.bind(null, outflow.id)}
                       confirmMessage="Excluir esta saida? Essa acao sera um soft delete."

@@ -8,13 +8,13 @@ type MaintenanceStatusBadgeProps = {
 };
 
 const statusClasses: Record<MaintenanceStatus, string> = {
-  recebido: "bg-sky-50 text-sky-700",
-  em_analise: "bg-indigo-50 text-indigo-700",
-  aguardando_peca: "bg-amber-50 text-amber-800",
-  em_manutencao: "bg-orange-50 text-orange-700",
-  pronto_para_entrega: "bg-emerald-50 text-emerald-700",
-  entregue: "bg-slate-100 text-slate-700",
-  cancelado: "bg-red-50 text-red-700"
+  recebido: "bg-info-soft text-info",
+  em_analise: "bg-indigo-soft text-indigo",
+  aguardando_peca: "bg-warning-soft text-warning-strong",
+  em_manutencao: "bg-orange-soft text-orange",
+  pronto_para_entrega: "bg-success-soft text-success",
+  entregue: "bg-canvas text-body",
+  cancelado: "bg-danger-soft text-danger"
 };
 
 export function MaintenanceStatusBadge({ status }: MaintenanceStatusBadgeProps) {

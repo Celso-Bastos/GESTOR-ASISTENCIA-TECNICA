@@ -29,7 +29,7 @@ export function CopyButton({ link }: CopyButtonProps) {
 
   return (
     <button
-      className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-3 text-sm font-semibold text-body transition hover:bg-surface-muted sm:h-9"
       onClick={handleCopy}
       title="Copiar link do tablet"
       type="button"
@@ -53,7 +53,7 @@ export function DisableTokenForm({
   return (
     <form action={formAction} className="grid gap-2">
       <button
-        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-danger-line bg-surface px-3 text-sm font-semibold text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:border-line disabled:text-disabled sm:h-9"
         disabled={disabled || isPending}
         title="Desativar token"
         type="submit"
@@ -61,7 +61,7 @@ export function DisableTokenForm({
         <PowerOff className="size-4" aria-hidden="true" />
         {isPending ? "Desativando..." : "Desativar"}
       </button>
-      {state.error ? <p className="text-xs text-red-700">{state.error}</p> : null}
+      {state.error ? <p role="alert" className="text-xs text-danger">{state.error}</p> : null}
     </form>
   );
 }

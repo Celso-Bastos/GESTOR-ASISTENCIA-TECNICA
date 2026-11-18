@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { serviceCitySchema } from "./service-city";
 
 export const organizationSchema = z.object({
   name: z
@@ -16,7 +17,8 @@ export const organizationSchema = z.object({
     )
     .min(3, "Use ao menos 3 caracteres.")
     .max(60, "Use no maximo 60 caracteres."),
-  phone: z.string().trim().max(30, "Use no maximo 30 caracteres.").optional()
+  phone: z.string().trim().max(30, "Use no maximo 30 caracteres.").optional(),
+  service_city: serviceCitySchema
 });
 
 export type OrganizationInput = z.infer<typeof organizationSchema>;

@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:theme": "node --test tests/theme.test.cjs",
+    "test:customers": "node --test tests/customer-details.test.cjs",
+    "test:service-city": "node --test tests/service-city.test.cjs",
+    "test:maintenance-pricing": "node --test tests/maintenance-pricing.test.cjs",
     "test:14a": "node --test tests/fase-14a.test.cjs",
     "test:14a2": "node --test tests/fase-14a2.test.cjs"
   },

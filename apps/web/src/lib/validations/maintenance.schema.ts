@@ -77,12 +77,18 @@ const optionalMoney = z.preprocess(
       return value;
     }
 
-    const normalized = value.trim().replace(",", ".");
-
-    if (!normalized) {
+    const trimmed = value.trim();
+    if (!trimmed) {
       return undefined;
     }
-
+    // Decimal simples ou moeda BR com milhares e vírgula. Não aceitar texto,
+    // notação científica/hexadecimal ou mais casas que numeric(10,2).
+    const valid = /^-?\d+(?:[.,]\d{1,2})?$/.test(trimmed)
+      || /^-?\d{1,3}(?:\.\d{3})+,\d{1,2}$/.test(trimmed);
+    if (!valid) return Number.NaN;
+    const normalized = trimmed.includes(",")
+      ? trimmed.replace(/\./g, "").replace(",", ".")
+      : trimmed;
     return Number(normalized);
   },
   z
@@ -209,6 +215,7 @@ export const createQuickMaintenanceOrderSchema = z.object({
     .min(3, "Informe o defeito relatado.")
     .max(2000, "Use no máximo 2000 caracteres no defeito relatado."),
   expected_delivery_date: optionalDate,
+  estimated_price: optionalMoney,
   quick_notes: optionalText(
     2000,
     "Use no máximo 2000 caracteres na observação rápida."

@@ -35,16 +35,16 @@ export function ProductActionButton({
       }}
     >
       <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-3 text-sm font-medium text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-9 sm:w-auto"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-danger-line bg-surface px-3 text-sm font-medium text-danger transition hover:bg-danger-soft focus:outline-none focus:ring-2 focus:ring-danger-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:h-9 sm:w-auto"
         disabled={isPending}
         type="submit"
       >
         <Trash2 className="size-4" aria-hidden="true" />
         {isPending ? pendingLabel : idleLabel}
       </button>
-      {state.error ? <p className="text-xs text-red-700">{state.error}</p> : null}
+      {state.error ? <p role="alert" className="text-xs text-danger">{state.error}</p> : null}
       {state.success ? (
-        <p className="text-xs text-emerald-700">{state.success}</p>
+        <p role="status" className="text-xs text-success">{state.success}</p>
       ) : null}
     </form>
   );

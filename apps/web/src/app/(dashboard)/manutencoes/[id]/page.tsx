@@ -88,27 +88,27 @@ function getWarrantyStatus(order: {
   if (!order.warranty_enabled) {
     return {
       label: "Sem garantia",
-      className: "border-slate-200 bg-slate-50 text-slate-600"
+      className: "border-line bg-surface-muted text-muted"
     };
   }
 
   if (!order.warranty_signed) {
     return {
       label: "Garantia nao assinada",
-      className: "border-amber-200 bg-amber-50 text-amber-800"
+      className: "border-warning-line bg-warning-soft text-warning-strong"
     };
   }
 
   if (isWarrantyExpired(order.warranty_expires_at)) {
     return {
       label: "Garantia vencida",
-      className: "border-red-200 bg-red-50 text-red-700"
+      className: "border-danger-line bg-danger-soft text-danger"
     };
   }
 
   return {
     label: "Garantia valida",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700"
+    className: "border-success-line bg-success-soft text-success"
   };
 }
 
@@ -142,9 +142,9 @@ function Field({
   value: ReactNode;
 }) {
   return (
-    <div>
-      <dt className="text-xs font-medium uppercase text-slate-500">{label}</dt>
-      <dd className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-950">
+    <div className="min-w-0">
+      <dt className="text-xs font-medium uppercase text-subtle">{label}</dt>
+      <dd className="mt-1 min-w-0 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
         {value || "Não informado"}
       </dd>
     </div>
@@ -182,16 +182,16 @@ export default async function ManutencaoDetalhePage({
     <section className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase text-teal-700">
+          <p className="text-sm font-medium uppercase text-accent">
             Ordem de serviço
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-950">
+            <h1 className="text-2xl font-semibold text-foreground">
               {order.order_number}
             </h1>
             <MaintenanceStatusBadge status={order.status} />
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Detalhes da manutenção, dados do cliente, aparelho e histórico de
             eventos.
           </p>
@@ -199,13 +199,13 @@ export default async function ManutencaoDetalhePage({
 
         <div className="grid gap-2 sm:flex sm:flex-wrap">
           <Link
-            className="inline-flex h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-9"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus sm:h-9"
             href="/manutencoes"
           >
             Voltar para listagem
           </Link>
           <Link
-            className="inline-flex h-11 items-center justify-center rounded-md bg-teal-700 px-3 text-sm font-medium text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-9"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-teal-700 px-3 text-sm font-medium text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus sm:h-9"
             href={`/manutencoes/${order.id}/editar`}
           >
             Editar dados básicos
@@ -221,12 +221,12 @@ export default async function ManutencaoDetalhePage({
         orderId={order.id}
       />
 
-      <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="grid gap-3 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-foreground">
             WhatsApp manual
           </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-sm leading-6 text-muted">
             Gere a mensagem pelo modelo da organizacao, registre o clique e abra
             o WhatsApp em nova aba para envio manual.
           </p>
@@ -266,11 +266,11 @@ export default async function ManutencaoDetalhePage({
           />
         </div>
         {!customer?.phone ? (
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-subtle">
             Informe um telefone do cliente para abrir o WhatsApp.
           </p>
         ) : warrantyBlockReason ? (
-          <p className="text-xs leading-5 text-amber-700">
+          <p className="text-xs leading-5 text-warning">
             {warrantyBlockReason}
           </p>
         ) : null}
@@ -282,8 +282,8 @@ export default async function ManutencaoDetalhePage({
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <dl className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <dl className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:grid-cols-2 sm:p-5">
           <Field label="Cliente" value={customer?.name ?? "Cliente não informado"} />
           <Field
             label="Telefone"
@@ -363,7 +363,7 @@ export default async function ManutencaoDetalhePage({
         </dl>
 
         <div className="grid content-start gap-3">
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-foreground">
             Histórico de eventos
           </h2>
           <MaintenanceTimeline events={order.events} />

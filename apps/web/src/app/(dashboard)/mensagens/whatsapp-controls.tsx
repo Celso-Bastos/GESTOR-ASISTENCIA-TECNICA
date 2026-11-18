@@ -61,9 +61,9 @@ export function WhatsAppAlternatives({ state, feedback }: { state: WhatsAppMessa
   }
   return <div className="grid gap-2 text-sm">
     <p role="status">{feedback}</p>
-    <a className="inline-flex min-h-11 items-center rounded-md border border-emerald-300 px-3 text-emerald-800" href={state.whatsappUrl} target="_blank" rel="noopener noreferrer">Abrir WhatsApp novamente</a>
-    <button className="min-h-11 rounded-md border border-slate-300 px-3" type="button" onClick={copy}>Copiar mensagem</button>
+    <a className="inline-flex min-h-11 items-center rounded-md border border-success-line-strong bg-surface px-3 font-medium text-success-strong transition hover:bg-success-soft" href={state.whatsappUrl} target="_blank" rel="noopener noreferrer">Abrir WhatsApp novamente</a>
+    <button className="min-h-11 rounded-md border border-line-strong bg-surface px-3 font-medium text-body transition hover:bg-surface-muted" type="button" onClick={copy}>Copiar mensagem</button>
     {copyFeedback ? <p role="status">{copyFeedback}</p> : null}
-    {manualCopy ? <textarea aria-label="Mensagem para copiar" className="min-h-32 w-full rounded border p-3" readOnly value={state.messageBody ?? ""} onFocus={(event) => event.target.select()} /> : null}
+    {manualCopy ? <textarea aria-label="Mensagem para copiar" className="min-h-32 w-full rounded-md border border-line-strong bg-surface p-3 text-base text-foreground outline-none focus:border-accent-border focus:ring-2 focus:ring-focus-soft" readOnly value={state.messageBody ?? ""} onFocus={(event) => event.target.select()} /> : null}
   </div>;
 }

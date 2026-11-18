@@ -16,6 +16,7 @@ import {
   type MaintenanceStatusFilter
 } from "@/lib/maintenance/status";
 import { calculateWarrantyExpiration } from "@/lib/maintenance/warranty";
+import { resolveMaintenanceFinalPrice } from "@/lib/maintenance/pricing";
 import { createClient } from "@/lib/supabase/server";
 import {
   createMaintenanceOrderSchema,
@@ -211,6 +212,7 @@ function quickFormValues(formData: FormData) {
     customer_name: String(formData.get("customer_name") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     device_model: String(formData.get("device_model") ?? ""),
+    estimated_price: String(formData.get("estimated_price") ?? ""),
     reported_issue: String(formData.get("reported_issue") ?? ""),
     expected_delivery_date: String(formData.get("expected_delivery_date") ?? ""),
     quick_notes: String(formData.get("quick_notes") ?? "")
@@ -603,7 +605,7 @@ export async function createQuickMaintenanceOrderAction(
     expected_delivery_date: parsed.data.expected_delivery_date,
     internal_notes: [parsed.data.quick_notes, !parsed.data.customer_name && !parsed.data.phone
       ? "Criada sem dados de cliente. Completar cadastro posteriormente." : ""].filter(Boolean).join("\n\n"),
-    estimated_price: undefined,
+    estimated_price: parsed.data.estimated_price,
     warranty_enabled: false,
     warranty_signed: false,
     warranty_amount: undefined, warranty_unit: undefined, warranty_started_at: undefined, warranty_notes: undefined
@@ -733,6 +735,13 @@ export async function updateMaintenanceOrderAction(
     parsed.data.status === "entregue"
       ? parsed.data.delivered_at ?? new Date().toISOString()
       : null;
+  const estimatedPrice = formData.has("estimated_price")
+    ? parsed.data.estimated_price ?? null : order.estimated_price;
+  const submittedFinalPrice = formData.has("final_price")
+    ? parsed.data.final_price ?? null : order.final_price;
+  const finalPrice = resolveMaintenanceFinalPrice(parsed.data.status, estimatedPrice, submittedFinalPrice);
+  const fillsFinalPrice = parsed.data.status === "entregue"
+    && submittedFinalPrice == null && finalPrice != null;
 
   const { error: deviceError } = await supabase
     .from("devices")
@@ -757,7 +766,7 @@ export async function updateMaintenanceOrderAction(
     };
   }
 
-  const { data: updated, error } = await supabase
+  let orderUpdate = supabase
     .from("maintenance_orders")
     .update({
       reported_issue: parsed.data.reported_issue,
@@ -765,16 +774,21 @@ export async function updateMaintenanceOrderAction(
       status: parsed.data.status,
       expected_delivery_date: parsed.data.expected_delivery_date ?? null,
       delivered_at: deliveredAt,
-      estimated_price: parsed.data.estimated_price ?? null,
-      final_price: parsed.data.final_price ?? null,
+      estimated_price: estimatedPrice,
+      final_price: finalPrice,
       internal_notes: parsed.data.internal_notes ?? null,
       ...warrantyPayload
     })
     .eq("id", orderId)
     .eq("organization_id", organization.id)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle<{ id: string }>();
+    .is("deleted_at", null);
+  if (fillsFinalPrice || !formData.has("final_price")) {
+    // Não substituir um valor final informado por outra sessão após a leitura.
+    orderUpdate = order.final_price == null
+      ? orderUpdate.is("final_price", null)
+      : orderUpdate.eq("final_price", order.final_price);
+  }
+  const { data: updated, error } = await orderUpdate.select("id").maybeSingle<{ id: string }>();
 
   if (error || !updated) {
     console.error("Erro ao atualizar maintenance_order:", error);
@@ -792,8 +806,8 @@ export async function updateMaintenanceOrderAction(
     !sameValue(order.diagnosis, parsed.data.diagnosis),
     !sameValue(order.expected_delivery_date, parsed.data.expected_delivery_date),
     !sameValue(order.delivered_at, deliveredAt),
-    !sameValue(order.estimated_price, parsed.data.estimated_price),
-    !sameValue(order.final_price, parsed.data.final_price),
+    !sameValue(order.estimated_price, estimatedPrice),
+    !sameValue(order.final_price, finalPrice),
     !sameValue(order.internal_notes, parsed.data.internal_notes)
   ].some(Boolean);
   const eventRows: Array<{
@@ -878,7 +892,7 @@ async function changeMaintenanceStatus(
   const supabase = await createClient();
   const { data: order, error: orderError } = await supabase
     .from("maintenance_orders")
-    .select("id, order_number, status, delivered_at")
+    .select("id, order_number, status, delivered_at, estimated_price, final_price")
     .eq("id", orderId)
     .eq("organization_id", organization.id)
     .is("deleted_at", null)
@@ -887,37 +901,48 @@ async function changeMaintenanceStatus(
       order_number: string;
       status: MaintenanceStatus;
       delivered_at: string | null;
+      estimated_price: number | string | null;
+      final_price: number | string | null;
     }>();
 
   if (orderError || !order) {
     return { error: "Manutenção não encontrada para esta organização." };
   }
 
-  if (order.status === newStatus) {
+  const finalPrice = resolveMaintenanceFinalPrice(newStatus, order.estimated_price, order.final_price);
+  const fillsFinalPrice = newStatus === "entregue" && order.final_price == null && finalPrice != null;
+  if (order.status === newStatus && !fillsFinalPrice) {
     return { success: "A manutenção já está neste status." };
   }
 
   const updatePayload: {
     status: MaintenanceStatus;
     delivered_at?: string | null;
+    final_price?: number | string | null;
   } = {
     status: newStatus
   };
 
   if (newStatus === "entregue") {
-    updatePayload.delivered_at = new Date().toISOString();
+    updatePayload.delivered_at = order.status === "entregue"
+      ? order.delivered_at ?? new Date().toISOString() : new Date().toISOString();
+    if (fillsFinalPrice) updatePayload.final_price = finalPrice;
   } else if (order.status === "entregue") {
     updatePayload.delivered_at = null;
   }
 
-  const { data: updated, error } = await supabase
+  let statusUpdate = supabase
     .from("maintenance_orders")
     .update(updatePayload)
     .eq("id", orderId)
     .eq("organization_id", organization.id)
     .is("deleted_at", null)
-    .select("id")
-    .maybeSingle<{ id: string }>();
+    .eq("status", order.status);
+  if (fillsFinalPrice) {
+    statusUpdate = statusUpdate.is("final_price", null)
+      .eq("estimated_price", order.estimated_price!);
+  }
+  const { data: updated, error } = await statusUpdate.select("id").maybeSingle<{ id: string }>();
 
   if (error || !updated) {
     return { error: "Não foi possível alterar o status da manutenção." };
@@ -929,11 +954,12 @@ async function changeMaintenanceStatus(
   const { error: eventError } = await supabase.from("maintenance_events").insert({
     organization_id: organization.id,
     maintenance_order_id: order.id,
-    event_type: "status_changed",
+    event_type: order.status === newStatus ? "maintenance_updated" : "status_changed",
     old_status: order.status,
     new_status: newStatus,
-    description:
-      description ||
+    description: order.status === newStatus
+      ? `Valor final da ordem ${order.order_number} preenchido com o valor estimado.`
+      : description ||
       `Status da ordem ${order.order_number} alterado de ${oldLabel} para ${newLabel}.`,
     created_by: userId
   });

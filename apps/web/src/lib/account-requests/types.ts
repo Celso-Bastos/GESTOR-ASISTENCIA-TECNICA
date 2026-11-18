@@ -6,6 +6,7 @@ export type AccountRequest = {
   phone: string | null;
   phone_normalized: string | null;
   business_name: string | null;
+  service_city: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
@@ -20,5 +21,5 @@ export type AccountRequest = {
 export type AccountRequestActionState = {
   error?: string;
   success?: string;
-  values?: { full_name: string; email: string; phone: string; business_name: string };
+  values?: { full_name: string; email: string; phone: string; business_name: string; service_city: string };
 };

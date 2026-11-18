@@ -29,23 +29,23 @@ export function CustomerTable({ customers }: CustomerTableProps) {
       <div className="grid gap-3 md:hidden">
         {customers.map((customer) => (
           <article
-            className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+            className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm"
             key={customer.id}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="break-words text-base font-semibold text-slate-950">
+                <h2 className="break-words text-base font-semibold text-foreground">
                   {customer.name}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted">
                   {customer.phone ? formatPhoneBR(customer.phone) : "Nao informado"}
                 </p>
               </div>
               <span
                 className={
                   customer.whatsapp_opt_in
-                    ? "shrink-0 rounded-md bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-700"
-                    : "shrink-0 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600"
+                    ? "shrink-0 rounded-md bg-accent-soft px-2 py-1 text-xs font-semibold text-accent"
+                    : "shrink-0 rounded-md bg-canvas px-2 py-1 text-xs font-semibold text-muted"
                 }
               >
                 {customer.whatsapp_opt_in ? "Autorizado" : "Nao autorizado"}
@@ -54,18 +54,18 @@ export function CustomerTable({ customers }: CustomerTableProps) {
 
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Origem
                 </dt>
-                <dd className="mt-1 text-slate-800">
+                <dd className="mt-1 text-content">
                   {sourceLabels[customer.source]}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase text-slate-500">
+                <dt className="text-xs font-medium uppercase text-subtle">
                   Criado em
                 </dt>
-                <dd className="mt-1 text-slate-800">
+                <dd className="mt-1 text-content">
                   {formatDate(customer.created_at)}
                 </dd>
               </div>
@@ -73,13 +73,13 @@ export function CustomerTable({ customers }: CustomerTableProps) {
 
             <div className="grid gap-2">
               <Link
-                className="inline-flex h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-line-strong bg-surface px-3 text-sm font-semibold text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus"
                 href={`/clientes/${customer.id}`}
               >
                 Ver detalhes
               </Link>
               <Link
-                className="inline-flex h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-line-strong bg-surface px-3 text-sm font-semibold text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus"
                 href={`/clientes/${customer.id}/editar`}
               >
                 Editar
@@ -92,10 +92,10 @@ export function CustomerTable({ customers }: CustomerTableProps) {
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm md:block">
+      <div className="hidden overflow-hidden rounded-md border border-line bg-surface shadow-sm md:block">
         <div className="overflow-x-auto">
         <table className="min-w-[860px] w-full border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-surface-muted text-xs uppercase text-subtle">
             <tr>
               <th className="px-4 py-3 font-semibold">Nome</th>
               <th className="px-4 py-3 font-semibold">Telefone</th>
@@ -105,42 +105,42 @@ export function CustomerTable({ customers }: CustomerTableProps) {
               <th className="px-4 py-3 font-semibold">Acoes</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="divide-y divide-line">
             {customers.map((customer) => (
               <tr key={customer.id}>
-                <td className="px-4 py-3 font-medium text-slate-950">
+                <td className="px-4 py-3 font-medium text-foreground">
                   {customer.name}
                 </td>
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-body">
                   {customer.phone ? formatPhoneBR(customer.phone) : "Nao informado"}
                 </td>
                 <td className="px-4 py-3">
                   <span
                     className={
                       customer.whatsapp_opt_in
-                        ? "rounded-md bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-700"
-                        : "rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600"
+                        ? "rounded-md bg-accent-soft px-2 py-1 text-xs font-semibold text-accent"
+                        : "rounded-md bg-canvas px-2 py-1 text-xs font-semibold text-muted"
                     }
                   >
                     {customer.whatsapp_opt_in ? "Autorizado" : "Nao autorizado"}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-body">
                   {sourceLabels[customer.source]}
                 </td>
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-body">
                   {formatDate(customer.created_at)}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
-                      className="inline-flex h-9 items-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      className="inline-flex h-9 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-body transition hover:bg-surface-muted"
                       href={`/clientes/${customer.id}`}
                     >
                       Ver
                     </Link>
                     <Link
-                      className="inline-flex h-9 items-center rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      className="inline-flex h-9 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-body transition hover:bg-surface-muted"
                       href={`/clientes/${customer.id}/editar`}
                     >
                       Editar

@@ -7,13 +7,13 @@ export default async function ModelosSaidaPage() {
   return (
     <section className="grid gap-6">
       <div>
-        <p className="text-sm font-medium uppercase text-teal-700">
+        <p className="text-sm font-medium uppercase text-accent">
           Saidas/Vendas
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+        <h1 className="mt-2 text-2xl font-semibold text-foreground">
           Produtos cadastrados
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
           Cadastre modelos recorrentes para preencher categoria e valor base
           nas proximas vendas.
         </p>

@@ -46,11 +46,16 @@ A Fase 2 implementa autenticacao com Supabase Auth, sessao SSR no Next.js App Ro
 
 ## Fluxo de onboarding
 
+O pedido aprovado fornece a cidade de serviço inicial, editável antes da criação.
+A organização mantém sua própria cidade e owner/admin pode alterá-la em
+`/configuracoes`, inclusive para organizações antigas. Detalhes e migration em
+[Cidade de serviço e Google Maps](cidade-de-servico-maps.md).
+
 1. Usuario autenticado acessa `/dashboard`.
 2. A aplicacao consulta `organization_members`.
 3. Se houver organizacao vinculada, o dashboard abre normalmente.
 4. Se nao houver organizacao, o usuario vai para `/onboarding/organizacao`.
-5. O formulario valida nome, slug e telefone com Zod.
+5. O formulario valida nome, slug, telefone e cidade de serviço com Zod.
 6. A server action cria `profiles`, `organizations` e `organization_members`.
 7. O usuario e vinculado como `owner` e volta para `/dashboard`.
 

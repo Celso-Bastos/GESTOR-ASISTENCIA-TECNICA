@@ -24,9 +24,9 @@ type MaintenanceFormProps = {
 
 const initialState: MaintenanceActionState = {};
 const inputClass =
-  "h-12 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft";
 const textareaClass =
-  "min-h-32 rounded-md border border-slate-300 bg-white px-3 py-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "min-h-32 rounded-md border border-line-strong bg-surface px-3 py-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft";
 
 function valueFrom(
   state: MaintenanceActionState,
@@ -79,14 +79,14 @@ export function MaintenanceForm({
   };
 
   return (
-    <form action={formAction} className="grid w-full max-w-4xl gap-5">
+    <form action={formAction} aria-busy={isPending} className="grid w-full max-w-4xl gap-5">
       {mode === "create" ? <input type="hidden" name="request_id" value={state.values?.request_id ?? requestId} /> : null}
       {mode === "create" ? (
-        <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <legend className="px-1 text-sm font-semibold text-slate-950">
+        <fieldset className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
+          <legend className="px-1 text-sm font-semibold text-foreground">
             Cliente
           </legend>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Como identificar o cliente
             <select name="customer_mode" className={inputClass} value={customerMode} onChange={(event) => setCustomerMode(event.target.value)}>
               <option value="existing">Cliente existente</option>
@@ -97,25 +97,26 @@ export function MaintenanceForm({
             <CustomerSelect customers={customers} defaultCustomerId={values.customer_id} disabled={customerMode !== "existing"} />
           </div>
           <fieldset disabled={customerMode !== "new"} className={customerMode === "new" ? "grid gap-3" : "hidden"}>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">Nome do novo cliente
+            <label className="grid gap-2 text-sm font-medium text-body">Nome do novo cliente
               <input className={inputClass} name="customer_name" defaultValue={values.customer_name} required minLength={2} maxLength={120} />
             </label>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">Telefone/WhatsApp (opcional)
+            <label className="grid gap-2 text-sm font-medium text-body">Telefone/WhatsApp (opcional)
               <input className={inputClass} name="customer_phone" defaultValue={values.customer_phone} type="tel" inputMode="tel" />
             </label>
-            <p className="text-sm text-slate-600">O cliente será cadastrado ao salvar a OS. Se o telefone já existir, o cadastro existente será utilizado.</p>
+            <p className="text-sm text-muted">O cliente será cadastrado ao salvar a OS. Se o telefone já existir, o cadastro existente será utilizado.</p>
+            <p className="text-sm text-muted">Endereço e aniversário podem ser preenchidos depois na tela de clientes.</p>
           </fieldset>
         </fieldset>
       ) : null}
 
       {mode === "edit" ? (
-        <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <legend className="px-1 text-sm font-semibold text-slate-950">
+        <fieldset className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
+          <legend className="px-1 text-sm font-semibold text-foreground">
             Cliente
           </legend>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="grid gap-2 text-sm font-medium text-body">
               Nome do cliente
               <input
                 className={inputClass}
@@ -124,7 +125,7 @@ export function MaintenanceForm({
               />
             </label>
 
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="grid gap-2 text-sm font-medium text-body">
               Telefone/WhatsApp
               <input
                 className={inputClass}
@@ -140,12 +141,12 @@ export function MaintenanceForm({
 
       <DeviceFormFields values={values} />
 
-      <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <legend className="px-1 text-sm font-semibold text-slate-950">
+      <fieldset className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
+        <legend className="px-1 text-sm font-semibold text-foreground">
           Ordem de serviço
         </legend>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Defeito relatado
           <textarea
             className={textareaClass}
@@ -156,7 +157,7 @@ export function MaintenanceForm({
         </label>
 
         {mode === "edit" ? (
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Diagnóstico
             <textarea
               className={textareaClass}
@@ -168,7 +169,7 @@ export function MaintenanceForm({
 
         {mode === "edit" ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="grid gap-2 text-sm font-medium text-body">
               Status
               <select
                 className={inputClass}
@@ -184,7 +185,7 @@ export function MaintenanceForm({
               </select>
             </label>
 
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="grid gap-2 text-sm font-medium text-body">
               Entregue em
               <input
                 className={inputClass}
@@ -197,7 +198,7 @@ export function MaintenanceForm({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Previsão de entrega
             <input
               className={inputClass}
@@ -207,7 +208,7 @@ export function MaintenanceForm({
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Valor estimado
             <input
               className={inputClass}
@@ -221,7 +222,7 @@ export function MaintenanceForm({
           </label>
 
           {mode === "edit" ? (
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="grid gap-2 text-sm font-medium text-body">
               Valor final
               <input
                 className={inputClass}
@@ -229,14 +230,16 @@ export function MaintenanceForm({
                 inputMode="decimal"
                 min="0"
                 name="final_price"
+                aria-describedby="final-price-help"
                 step="0.01"
                 type="number"
               />
+              <span id="final-price-help" className="text-xs font-normal text-muted">Se o valor final não for informado, será utilizado o valor estimado ao marcar como entregue.</span>
             </label>
           ) : null}
         </div>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Observações internas
           <textarea
             className={textareaClass}
@@ -246,15 +249,15 @@ export function MaintenanceForm({
         </label>
       </fieldset>
 
-      <fieldset className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <legend className="px-1 text-sm font-semibold text-slate-950">
+      <fieldset className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
+        <legend className="px-1 text-sm font-semibold text-foreground">
           Garantia
         </legend>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+          <label className="flex min-h-12 items-center gap-3 rounded-md border border-line bg-surface-muted px-3 text-sm font-medium text-body">
             <input
-              className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+              className="size-4 rounded border-line-strong text-accent focus:ring-focus"
               defaultChecked={values.warranty_enabled === "on"}
               name="warranty_enabled"
               type="checkbox"
@@ -262,9 +265,9 @@ export function MaintenanceForm({
             Ativar garantia
           </label>
 
-          <label className="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+          <label className="flex min-h-12 items-center gap-3 rounded-md border border-line bg-surface-muted px-3 text-sm font-medium text-body">
             <input
-              className="size-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+              className="size-4 rounded border-line-strong text-accent focus:ring-focus"
               defaultChecked={values.warranty_signed === "on"}
               name="warranty_signed"
               type="checkbox"
@@ -274,7 +277,7 @@ export function MaintenanceForm({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Quantidade
             <input
               className={inputClass}
@@ -287,7 +290,7 @@ export function MaintenanceForm({
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Unidade
             <select
               className={inputClass}
@@ -300,7 +303,7 @@ export function MaintenanceForm({
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-body">
             Data de inicio
             <input
               className={inputClass}
@@ -311,7 +314,7 @@ export function MaintenanceForm({
           </label>
         </div>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Observacao da garantia
           <textarea
             className={textareaClass}
@@ -322,21 +325,21 @@ export function MaintenanceForm({
       </fieldset>
 
       {state.error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {state.error}
         </p>
       ) : null}
 
       <div className="grid gap-3 sm:flex sm:flex-wrap">
         <button
-          className="h-12 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="h-12 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg"
           disabled={isPending}
           type="submit"
         >
           {isPending ? "Salvando..." : submitLabel}
         </button>
         <Link
-          className="inline-flex h-12 items-center justify-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="inline-flex h-12 items-center justify-center rounded-md border border-line-strong bg-surface px-5 text-sm font-semibold text-body transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-focus"
           href={mode === "create" ? "/manutencoes" : "../"}
         >
           Cancelar

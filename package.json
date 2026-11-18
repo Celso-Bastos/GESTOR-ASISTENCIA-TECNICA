@@ -7,6 +7,8 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
-    "typecheck": "pnpm --filter web typecheck"
+    "typecheck": "pnpm --filter web typecheck",
+    "test:sql:maintenance": "node --test supabase/tests/maintenance-intake.test.cjs",
+    "test:sql:service-city": "node --test supabase/tests/service-city.test.cjs"
   }
 }

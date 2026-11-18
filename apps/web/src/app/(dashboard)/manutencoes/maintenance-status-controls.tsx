@@ -47,12 +47,12 @@ export function MaintenanceStatusControls({
     !!statusState.error || !!deliveredState.error || !!cancelState.error;
 
   return (
-    <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="grid gap-3 rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
       <form action={statusAction} className="grid gap-3 md:grid-cols-[220px_1fr_auto] md:items-end">
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Alterar status
           <select
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 md:text-sm"
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft md:text-sm"
             defaultValue={currentStatus}
             name="new_status"
           >
@@ -64,17 +64,17 @@ export function MaintenanceStatusControls({
           </select>
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Descrição
           <input
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100 md:text-sm"
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft md:text-sm"
             name="description"
             placeholder="Opcional"
           />
         </label>
 
         <button
-          className="h-11 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="h-11 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg"
           disabled={isStatusPending}
           type="submit"
         >
@@ -85,7 +85,7 @@ export function MaintenanceStatusControls({
       <div className="grid gap-2 sm:flex sm:flex-wrap">
         <form action={deliveredAction} className="grid">
           <button
-            className="h-11 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-9"
+            className="h-11 rounded-md border border-success-line bg-success-soft px-3 text-sm font-semibold text-success transition hover:bg-success-muted focus:outline-none focus:ring-2 focus:ring-success-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:h-9"
             disabled={isDelivering || currentStatus === "entregue"}
             type="submit"
           >
@@ -95,7 +95,7 @@ export function MaintenanceStatusControls({
 
         <form action={cancelAction} className="grid">
           <button
-            className="h-11 rounded-md border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:h-9"
+            className="h-11 rounded-md border border-danger-line bg-danger-soft px-3 text-sm font-semibold text-danger transition hover:bg-danger-muted focus:outline-none focus:ring-2 focus:ring-danger-focus disabled:cursor-not-allowed disabled:bg-canvas disabled:text-disabled sm:h-9"
             disabled={isCanceling || currentStatus === "cancelado"}
             type="submit"
           >
@@ -106,10 +106,11 @@ export function MaintenanceStatusControls({
 
       {message ? (
         <p
+          role={isError ? "alert" : "status"}
           className={
             isError
-              ? "rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-              : "rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+              ? "rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger"
+              : "rounded-md border border-success-line bg-success-soft px-3 py-2 text-sm text-success"
           }
         >
           {message}

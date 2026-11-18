@@ -69,11 +69,11 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         value={website}
       />
 
-      <label className="grid gap-3 text-lg font-semibold text-slate-800 sm:text-xl">
+      <label className="grid gap-3 text-lg font-semibold text-content sm:text-xl">
         Nome
         <input
           autoComplete="name"
-          className="h-14 rounded-md border border-slate-300 bg-white px-4 text-xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100 sm:h-16 sm:px-5 sm:text-2xl"
+          className="h-14 rounded-md border border-line-strong bg-surface px-4 text-xl font-medium text-foreground outline-none transition placeholder:text-disabled focus:border-accent-border-strong focus:ring-4 focus:ring-focus-soft sm:h-16 sm:px-5 sm:text-2xl"
           maxLength={120}
           minLength={2}
           onChange={(event) => setName(event.target.value)}
@@ -83,11 +83,11 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         />
       </label>
 
-      <label className="grid gap-3 text-lg font-semibold text-slate-800 sm:text-xl">
+      <label className="grid gap-3 text-lg font-semibold text-content sm:text-xl">
         WhatsApp
         <input
           autoComplete="tel"
-          className="h-14 rounded-md border border-slate-300 bg-white px-4 text-xl font-medium text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-4 focus:ring-teal-100 sm:h-16 sm:px-5 sm:text-2xl"
+          className="h-14 rounded-md border border-line-strong bg-surface px-4 text-xl font-medium text-foreground outline-none transition placeholder:text-disabled focus:border-accent-border-strong focus:ring-4 focus:ring-focus-soft sm:h-16 sm:px-5 sm:text-2xl"
           inputMode="tel"
           maxLength={30}
           onChange={(event) => setPhone(event.target.value)}
@@ -98,10 +98,10 @@ export function KioskForm({ slug, token }: KioskFormProps) {
         />
       </label>
 
-      <label className="flex gap-4 rounded-md border border-slate-200 bg-white p-4 text-base font-medium leading-7 text-slate-700 shadow-sm sm:p-5 sm:text-lg">
+      <label className="flex gap-4 rounded-md border border-line bg-surface p-4 text-base font-medium leading-7 text-body shadow-sm sm:p-5 sm:text-lg">
         <input
           checked={consent}
-          className="mt-1 size-6 shrink-0 rounded border-slate-300 text-teal-700"
+          className="mt-1 size-6 shrink-0 rounded border-line-strong text-accent"
           onChange={(event) => setConsent(event.target.checked)}
           required
           type="checkbox"
@@ -113,19 +113,19 @@ export function KioskForm({ slug, token }: KioskFormProps) {
       </label>
 
       {status === "success" ? (
-        <p className="rounded-md border border-teal-200 bg-teal-50 px-5 py-4 text-lg font-semibold text-teal-800">
+        <p className="rounded-md border border-accent-line bg-accent-soft px-5 py-4 text-lg font-semibold text-accent-strong">
           {successMessage}
         </p>
       ) : null}
 
       {status === "error" ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-5 py-4 text-lg font-semibold text-red-700">
+        <p className="rounded-md border border-danger-line bg-danger-soft px-5 py-4 text-lg font-semibold text-danger">
           {errorMessage}
         </p>
       ) : null}
 
       <button
-        className="h-14 rounded-md bg-teal-700 px-8 text-lg font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-400 sm:h-16 sm:text-xl"
+        className="h-14 rounded-md bg-teal-700 px-8 text-lg font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-focus-soft disabled:cursor-not-allowed disabled:bg-disabled-bg sm:h-16 sm:text-xl"
         disabled={isPending}
         type="submit"
       >

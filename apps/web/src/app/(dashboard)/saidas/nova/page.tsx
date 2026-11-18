@@ -19,13 +19,13 @@ export default async function NovaSaidaPage() {
   return (
     <section className="grid gap-6">
       <div>
-        <p className="text-sm font-medium uppercase text-teal-700">
+        <p className="text-sm font-medium uppercase text-accent">
           Saidas/Vendas
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+        <h1 className="mt-2 text-2xl font-semibold text-foreground">
           Nova saida
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
           Registre uma venda de película, case, carregador, fone, cabo ou
           outro acessorio.
         </p>

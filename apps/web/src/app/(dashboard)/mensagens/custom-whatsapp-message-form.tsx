@@ -38,18 +38,18 @@ export function CustomWhatsAppMessageForm({
 
   if (templates.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-slate-300 p-3 text-sm text-slate-600">
+      <div className="rounded-md border border-dashed border-line-strong p-3 text-sm text-muted">
         Nenhuma mensagem personalizada ativa para manutencao.
       </div>
     );
   }
 
   return (
-    <form action={formAction} onSubmit={prepare} className="grid gap-3 rounded-md border border-slate-200 p-3">
-      <label className="grid gap-2 text-sm font-medium text-slate-700">
+    <form action={formAction} onSubmit={prepare} className="grid gap-3 rounded-md border border-line p-3">
+      <label className="grid gap-2 text-sm font-medium text-body">
         Enviar mensagem personalizada
         <select
-          className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+          className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
           disabled={disabled || isPending}
           name="template_id"
           onChange={(event) => setSelectedId(event.target.value)}
@@ -67,18 +67,18 @@ export function CustomWhatsAppMessageForm({
       </label>
 
       {selectedTemplate ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-          <p className="text-xs font-semibold uppercase text-slate-500">
+        <div className="rounded-md border border-line bg-surface-muted p-3">
+          <p className="text-xs font-semibold uppercase text-subtle">
             Previa
           </p>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-body">
             {interpolateMessageTemplate(selectedTemplate.body, previewVariables)}
           </p>
         </div>
       ) : null}
 
       <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-success-line disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
         disabled={disabled || isPending || !selectedTemplate}
         type="submit"
       >
@@ -88,7 +88,7 @@ export function CustomWhatsAppMessageForm({
 
       <WhatsAppAlternatives state={state} feedback={feedback} />
       {state.error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
+        <p role="alert" className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-xs leading-5 text-danger">
           {state.error}
         </p>
       ) : null}

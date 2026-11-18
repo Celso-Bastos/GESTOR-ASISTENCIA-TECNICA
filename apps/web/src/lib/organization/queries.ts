@@ -7,6 +7,7 @@ export type CurrentOrganization = {
   name: string;
   slug: string;
   phone: string | null;
+  service_city: string | null;
   role: "owner" | "admin" | "employee";
 };
 
@@ -18,12 +19,14 @@ type OrganizationMemberRow = {
         name: string;
         slug: string;
         phone: string | null;
+        service_city: string | null;
       }
     | {
         id: string;
         name: string;
         slug: string;
         phone: string | null;
+        service_city: string | null;
       }[]
     | null;
 };
@@ -34,7 +37,7 @@ export async function getCurrentOrganization() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("organization_members")
-    .select("role, organizations(id, name, slug, phone)")
+    .select("role, organizations(id, name, slug, phone, service_city)")
     .eq("user_id", user.id)
     .limit(1)
     .maybeSingle<OrganizationMemberRow>();
@@ -56,6 +59,7 @@ export async function getCurrentOrganization() {
     name: organization.name,
     slug: organization.slug,
     phone: organization.phone,
+    service_city: organization.service_city,
     role: data.role
   } satisfies CurrentOrganization;
 }

@@ -54,7 +54,8 @@ export async function createAccountRequestAction(
     full_name: String(formData.get("full_name") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
-    business_name: String(formData.get("business_name") ?? "")
+    business_name: String(formData.get("business_name") ?? ""),
+    service_city: String(formData.get("service_city") ?? "")
   };
   const parsed = accountRequestSchema.safeParse({
     ...values, website: String(formData.get("website") ?? ""),
@@ -88,7 +89,8 @@ export async function createAccountRequestAction(
       const { data, error } = await client.from("account_requests").insert({
         full_name: input.full_name, email: input.email, email_normalized: input.email,
         phone: input.phone || null, phone_normalized: input.phone ? normalizePhoneBR(input.phone) : null,
-        business_name: input.business_name || null, status: "pending", auth_user_id: created.user.id
+        business_name: input.business_name || null, service_city: input.service_city,
+        status: "pending", auth_user_id: created.user.id
       }).select("*").single<AccountRequest>();
       insertWasDuplicate = error?.code === "23505";
       if (error || !data) throw new Error("REQUEST_INSERT_FAILED");

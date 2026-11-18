@@ -32,11 +32,11 @@ export function AlertMaintenanceList({
   whatsappType
 }: AlertMaintenanceListProps) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="rounded-md border border-line bg-surface p-4 shadow-sm sm:p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         <Link
-          className="inline-flex min-h-10 items-center text-sm font-semibold text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          className="inline-flex min-h-10 items-center text-sm font-semibold text-accent transition hover:text-accent-strong focus:outline-none focus:ring-2 focus:ring-focus"
           href="/manutencoes"
         >
           Ver todas
@@ -44,7 +44,7 @@ export function AlertMaintenanceList({
       </div>
 
       {orders.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">{emptyMessage}</p>
+        <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
       ) : (
         <div className="mt-4 grid gap-3">
           {orders.map((order) => {
@@ -53,24 +53,24 @@ export function AlertMaintenanceList({
 
             return (
               <div
-                className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-[1fr_auto] md:items-center"
+                className="grid gap-3 rounded-md border border-line p-3 md:grid-cols-[1fr_auto] md:items-center"
                 key={order.id}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
-                      className="font-semibold text-slate-950 transition hover:text-teal-700"
+                      className="font-semibold text-foreground transition hover:text-accent"
                       href={`/manutencoes/${order.id}`}
                     >
                       {order.order_number}
                     </Link>
                     <MaintenanceStatusBadge status={order.status} />
                   </div>
-                  <p className="mt-1 text-sm text-slate-700">
+                  <p className="mt-1 text-sm text-body">
                     {customer?.name ?? "Cliente nao informado"} -{" "}
                     {device?.model ?? "Aparelho nao encontrado"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-subtle">
                     Previsao: {formatDate(order.expected_delivery_date)}
                   </p>
                 </div>

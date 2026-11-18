@@ -51,12 +51,12 @@ const periodLabels: Record<(typeof dashboardPeriods)[number], string> = {
 };
 
 const toneClasses = {
-  teal: "bg-teal-50 text-teal-700",
-  emerald: "bg-emerald-50 text-emerald-700",
-  amber: "bg-amber-50 text-amber-700",
-  rose: "bg-rose-50 text-rose-700",
-  indigo: "bg-indigo-50 text-indigo-700",
-  slate: "bg-slate-100 text-slate-700"
+  teal: "bg-accent-soft text-accent",
+  emerald: "bg-success-soft text-success",
+  amber: "bg-warning-soft text-warning",
+  rose: "bg-rose-soft text-rose",
+  indigo: "bg-indigo-soft text-indigo",
+  slate: "bg-canvas text-body"
 };
 
 function formatNumber(value: number) {
@@ -70,7 +70,7 @@ function Trend({ value }: { value?: number | null }) {
 
   if (value === null) {
     return (
-      <span className="mt-3 inline-flex text-xs font-medium text-slate-500">
+      <span className="mt-3 inline-flex text-xs font-medium text-subtle">
         Sem base no periodo anterior
       </span>
     );
@@ -82,7 +82,7 @@ function Trend({ value }: { value?: number | null }) {
   return (
     <span
       className={`mt-3 inline-flex items-center gap-1 text-xs font-semibold ${
-        positive ? "text-emerald-700" : "text-rose-700"
+        positive ? "text-success" : "text-rose"
       }`}
     >
       <Icon className="size-3.5" aria-hidden="true" />
@@ -100,11 +100,11 @@ function MetricCard({
   trend
 }: MetricCardProps) {
   return (
-    <article className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="rounded-md border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-600">{label}</p>
-          <p className="mt-3 break-words text-2xl font-semibold text-slate-950 sm:text-3xl">
+          <p className="text-sm font-medium text-muted">{label}</p>
+          <p className="mt-3 break-words text-2xl font-semibold text-foreground sm:text-3xl">
             {value}
           </p>
         </div>
@@ -112,7 +112,7 @@ function MetricCard({
           <Icon className="size-5" aria-hidden="true" />
         </div>
       </div>
-      {detail ? <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p> : null}
+      {detail ? <p className="mt-2 text-xs leading-5 text-subtle">{detail}</p> : null}
       <Trend value={trend} />
     </article>
   );
@@ -127,8 +127,8 @@ function SectionTitle({
 }) {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-1 text-sm leading-6 text-muted">{description}</p>
     </div>
   );
 }
@@ -148,10 +148,10 @@ function ProductRanking({
   );
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-semibold text-slate-950">{title}</h3>
+    <section className="rounded-md border border-line bg-surface p-4 shadow-sm">
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">Nenhuma venda no periodo.</p>
+        <p className="mt-4 text-sm text-muted">Nenhuma venda no periodo.</p>
       ) : (
         <div className="mt-4 grid gap-3">
           {rows.map((row) => {
@@ -162,16 +162,16 @@ function ProductRanking({
               <div className="grid gap-2" key={`${row.category}-${row.model}`}>
                 <div className="flex items-start justify-between gap-3 text-sm">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-950">{row.model}</p>
-                    <p className="text-xs text-slate-500">{row.categoryLabel}</p>
+                    <p className="truncate font-semibold text-foreground">{row.model}</p>
+                    <p className="text-xs text-subtle">{row.categoryLabel}</p>
                   </div>
-                  <p className="shrink-0 font-semibold text-slate-700">
+                  <p className="shrink-0 font-semibold text-body">
                     {mode === "quantity"
                       ? `${formatNumber(row.quantity)} un.`
                       : formatCurrencyBRL(row.total)}
                   </p>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 overflow-hidden rounded-full bg-canvas">
                   <div className="h-full rounded-full bg-teal-600" style={{ width }} />
                 </div>
               </div>
@@ -185,11 +185,11 @@ function ProductRanking({
 
 function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-md border border-line bg-surface p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-base font-semibold text-slate-950">Itens para repor</h3>
+        <h3 className="text-base font-semibold text-foreground">Itens para repor</h3>
         <Link
-          className="inline-flex h-11 items-center justify-center rounded-md border border-teal-200 px-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:h-auto sm:border-0 sm:p-0"
+          className="inline-flex h-11 items-center justify-center rounded-md border border-accent-line px-3 text-sm font-semibold text-accent transition hover:bg-accent-soft hover:text-accent-strong focus:outline-none focus:ring-2 focus:ring-focus sm:h-auto sm:border-0 sm:p-0"
           href="/relatorios/reposicao"
         >
           Ver relatorio
@@ -197,37 +197,37 @@ function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">Nenhum item vendido no periodo.</p>
+        <p className="mt-4 text-sm text-muted">Nenhum item vendido no periodo.</p>
       ) : (
         <>
           <div className="mt-4 grid gap-3 md:hidden">
             {rows.map((row) => (
               <article
-                className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
+                className="grid gap-3 rounded-md border border-line bg-surface-muted p-3"
                 key={`${row.category}-${row.model}`}
               >
                 <div>
-                  <p className="text-xs font-medium uppercase text-slate-500">
+                  <p className="text-xs font-medium uppercase text-subtle">
                     {row.categoryLabel}
                   </p>
-                  <h4 className="mt-1 break-words text-sm font-semibold text-slate-950">
+                  <h4 className="mt-1 break-words text-sm font-semibold text-foreground">
                     {row.model}
                   </h4>
                 </div>
                 <dl className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-500">
+                    <dt className="text-xs font-medium uppercase text-subtle">
                       Quantidade
                     </dt>
-                    <dd className="mt-1 text-slate-800">
+                    <dd className="mt-1 text-content">
                       {formatNumber(row.quantity)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-500">
+                    <dt className="text-xs font-medium uppercase text-subtle">
                       Total vendido
                     </dt>
-                    <dd className="mt-1 font-semibold text-slate-950">
+                    <dd className="mt-1 font-semibold text-foreground">
                       {formatCurrencyBRL(row.total)}
                     </dd>
                   </div>
@@ -238,7 +238,7 @@ function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
 
           <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+            <thead className="border-b border-line text-xs uppercase text-subtle">
               <tr>
                 <th className="py-3 pr-4 font-semibold">Produto</th>
                 <th className="py-3 pr-4 font-semibold">Modelo</th>
@@ -246,13 +246,13 @@ function RestockTable({ rows }: { rows: DashboardProductRow[] }) {
                 <th className="py-3 font-semibold">Total vendido</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line-soft">
               {rows.map((row) => (
                 <tr key={`${row.category}-${row.model}`}>
-                  <td className="py-3 pr-4 text-slate-700">{row.categoryLabel}</td>
-                  <td className="py-3 pr-4 font-medium text-slate-950">{row.model}</td>
-                  <td className="py-3 pr-4 text-slate-700">{formatNumber(row.quantity)}</td>
-                  <td className="py-3 font-semibold text-slate-950">
+                  <td className="py-3 pr-4 text-body">{row.categoryLabel}</td>
+                  <td className="py-3 pr-4 font-medium text-foreground">{row.model}</td>
+                  <td className="py-3 pr-4 text-body">{formatNumber(row.quantity)}</td>
+                  <td className="py-3 font-semibold text-foreground">
                     {formatCurrencyBRL(row.total)}
                   </td>
                 </tr>
@@ -278,28 +278,28 @@ function AlertList({
   dateKind: "delivery" | "warranty";
 }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-semibold text-slate-950">{title}</h3>
+    <section className="rounded-md border border-line bg-surface p-4 shadow-sm">
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
       {orders.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">{emptyMessage}</p>
+        <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
       ) : (
         <div className="mt-4 grid gap-3">
           {orders.map((order) => (
             <Link
-              className="grid gap-2 rounded-md border border-slate-200 p-3 transition hover:border-teal-200 hover:bg-teal-50/40 focus:outline-none focus:ring-2 focus:ring-teal-200"
+              className="grid gap-2 rounded-md border border-line p-3 transition hover:border-accent-line hover:bg-accent-soft/40 focus:outline-none focus:ring-2 focus:ring-focus"
               href={`/manutencoes/${order.id}`}
               key={order.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-slate-950">{order.orderNumber}</p>
-                <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                <p className="font-semibold text-foreground">{order.orderNumber}</p>
+                <span className="rounded-md bg-canvas px-2 py-1 text-xs font-medium text-body">
                   {maintenanceStatusLabels[order.status]}
                 </span>
               </div>
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-body">
                 {order.customerName} - {order.deviceModel}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-subtle">
                 {dateKind === "delivery"
                   ? `Previsao: ${formatDateBR(order.expectedDeliveryDate)}`
                   : `Garantia: ${formatDateBR(order.warrantyExpiresAt)}`}
@@ -320,18 +320,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <section className="grid gap-6">
       <div className="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
         <div>
-          <p className="text-sm font-medium uppercase text-teal-700">
+          <p className="text-sm font-medium uppercase text-accent">
             {metrics.organization.name}
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950">Dashboard</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
             Visao geral do desempenho da assistencia com faturamento,
             manutencoes, vendas e clientes da organizacao atual.
           </p>
         </div>
 
         <Link
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-auto"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus sm:w-auto"
           href="/manutencoes/rapida"
         >
           <Zap className="size-4" aria-hidden="true" />
@@ -339,11 +339,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </Link>
       </div>
 
-      <form className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[minmax(12rem,1fr)_minmax(10rem,12rem)_minmax(10rem,12rem)_auto] md:items-end">
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+      <form className="grid gap-3 rounded-md border border-line bg-surface p-4 shadow-sm md:grid-cols-[minmax(12rem,1fr)_minmax(10rem,12rem)_minmax(10rem,12rem)_auto] md:items-end">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Periodo
           <select
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
             defaultValue={metrics.range.period}
             name="period"
           >
@@ -355,20 +355,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </select>
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Inicio custom
           <input
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
             defaultValue={metrics.range.start}
             name="start"
             type="date"
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-body">
           Fim custom
           <input
-            className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft"
             defaultValue={metrics.range.end}
             name="end"
             type="date"
@@ -376,7 +376,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </label>
 
         <button
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 md:w-auto"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-neutral-action-strong px-4 text-sm font-semibold text-white transition hover:bg-neutral-action-hover focus:outline-none focus:ring-2 focus:ring-line-strong md:w-auto"
           type="submit"
         >
           <CalendarDays className="size-4" aria-hidden="true" />
@@ -384,7 +384,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </button>
       </form>
 
-      <div className="rounded-md border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+      <div className="rounded-md border border-indigo-line bg-indigo-soft px-4 py-3 text-sm text-indigo-strong">
         Periodo analisado: <strong>{metrics.range.label}</strong> (
         {formatDateBR(metrics.range.start)} a {formatDateBR(metrics.range.end)}).
         Os valores abaixo representam receita/faturamento, nao lucro real.
@@ -614,7 +614,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
 function DashboardBlock({ title, error, children }: { title: string; error: boolean; children: React.ReactNode }) {
   return <section className="grid gap-4">
-    {error ? <div role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900">
+    {error ? <div role="alert" className="rounded-md border border-warning-line bg-warning-soft p-4 text-warning-emphasis">
       <h2 className="text-lg font-semibold">{title}</h2>
       <p>Não foi possível carregar este bloco. Os valores estão indisponíveis; atualize a página para tentar novamente.</p>
     </div> : children}

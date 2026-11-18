@@ -9,6 +9,21 @@ const root = path.resolve(__dirname, '../..');
 const sql = name => readFileSync(path.join(root, 'supabase/migrations', name), 'utf8');
 const signature = 'public.create_maintenance_intake(uuid,uuid,uuid,text,text,jsonb,boolean)';
 
+function toCivilDate(value) {
+  if (value === null) return null;
+  if (typeof value === 'string') {
+    assert.match(value, /^\d{4}-\d{2}-\d{2}$/, 'DATE deve ser uma data civil YYYY-MM-DD');
+    return value;
+  }
+  assert.ok(value instanceof Date && !Number.isNaN(value.getTime()), 'DATE deve ser string civil, Date válido ou null');
+  // O driver representa SQL DATE à meia-noite UTC. Não usar componentes locais,
+  // que poderiam transformar 2000-02-29 em 2000-02-28 conforme o fuso da máquina.
+  const year = String(value.getUTCFullYear()).padStart(4, '0');
+  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(value.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t => {
   const db = new PGlite();
   const user = randomUUID(), org = randomUUID(), otherOrg = randomUUID();
@@ -69,6 +84,25 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
     await db.query('insert into auth.users(id) values ($1)', [user]);
     await db.query("insert into organizations(id,name,slug) values ($1,'Loja Teste','loja-teste'),($2,'Outra Loja','outra-loja')", [org, otherOrg]);
     await db.query("insert into organization_members(organization_id,user_id,role) values ($1,$2,'owner')", [org, user]);
+    await t.test('0014 é reaplicável, mantém clientes antigos e adiciona colunas nulas', async () => {
+      assert.equal(toCivilDate('2000-02-29'), '2000-02-29');
+      assert.equal(toCivilDate(new Date('2000-02-29T00:00:00.000Z')), '2000-02-29');
+      assert.equal(toCivilDate(null), null);
+      assert.throws(() => toCivilDate(new Date('invalid')), /Date válido/);
+      assert.throws(() => toCivilDate('2000-02-29T00:00:00Z'), /YYYY-MM-DD/);
+      const legacyId = randomUUID();
+      await db.query("insert into customers(id,organization_id,name) values ($1,$2,'Cliente antigo')", [legacyId, org]);
+      const before = (await db.query('select * from customers where id=$1', [legacyId])).rows[0];
+      for (let i = 0; i < 2; i++) await db.exec(sql('0014_customer_address_birth_date.sql'));
+      const after = (await db.query('select * from customers where id=$1', [legacyId])).rows[0];
+      assert.deepEqual(after, { ...before, address: null, birth_date: null });
+      const columns = (await db.query(`select column_name,data_type,is_nullable,column_default from information_schema.columns
+        where table_schema='public' and table_name='customers' and column_name in ('address','birth_date') order by column_name`)).rows;
+      assert.deepEqual(columns, [
+        { column_name: 'address', data_type: 'text', is_nullable: 'YES', column_default: null },
+        { column_name: 'birth_date', data_type: 'date', is_nullable: 'YES', column_default: null }
+      ]);
+    });
     await db.exec('grant select, insert, update on all tables in schema public to authenticated;');
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [user]);
     await db.exec('set role authenticated;');
@@ -94,13 +128,29 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         (select count(*) from maintenance_events) as events`)).rows[0];
     }
     async function customerRow(id) {
-      return (await db.query('select * from customers where id=$1', [id])).rows[0];
+      const row = (await db.query('select * from customers where id=$1', [id])).rows[0];
+      // Normaliza na fronteira do teste: todas as comparações de birth_date,
+      // inclusive snapshots completos e comparações futuras, usam valor civil.
+      return row ? { ...row, birth_date: toCivilDate(row.birth_date) } : undefined;
     }
     await t.test('A: sem dados cria cliente exclusivo, aparelho, OS e evento', async () => {
       const a = await details((await intake()).order_id), b = await details((await intake()).order_id);
       assert.equal(a.name, 'Cliente não informado'); assert.equal(a.phone, null); assert.equal(a.phone_normalized, null);
       assert.equal(a.source, 'manual'); assert.equal(a.status, 'recebido'); assert.equal(a.events, 1);
+      const customer = await customerRow(a.customer_id);
+      assert.equal(customer.address, null); assert.equal(customer.birth_date, null);
       assert.notEqual(a.customer_id, b.customer_id); assert.notEqual(a.device_id, b.device_id);
+      for (const quick of [true, false]) {
+        for (const estimated of [null, 0, 150.25]) {
+          const order = await intake({ quick, name: quick ? null : 'Cliente completo', input: {
+            device: { model: 'Galaxy A14' }, reported_issue: 'Troca de tela', estimated_price: estimated
+          } });
+          const saved = (await db.query('select estimated_price,final_price from maintenance_orders where id=$1', [order.order_id])).rows[0];
+          assert.equal(saved.estimated_price === null, estimated === null);
+          if (estimated !== null) assert.equal(Number(saved.estimated_price), estimated);
+          assert.equal(saved.final_price, null);
+        }
+      }
     });
     await t.test('B: nome informado sem telefone', async () => {
       const row = await details((await intake({ name: 'Joao Teste' })).order_id);
@@ -116,6 +166,30 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
     await t.test('completa com cliente existente usa o mesmo contrato de retorno', async () => {
       const row = await intake({ customer: existingCustomer, quick: false });
       assert.match(row.order_number, /^OS-\d+$/); assert.equal((await details(row.order_id)).customer_id, existingCustomer);
+    });
+    await t.test('cadastro inline completo continua mínimo, sem endereço nem aniversário', async () => {
+      const row = await details((await intake({ name: 'Cliente inline', quick: false })).order_id);
+      const customer = await customerRow(row.customer_id);
+      assert.equal(customer.address, null); assert.equal(customer.birth_date, null);
+    });
+    await t.test('novos campos são graváveis sob RLS e invisíveis a outra organização e anon', async () => {
+      const own = (await details((await intake()).order_id)).customer_id;
+      await db.query("update customers set address='Rua A',birth_date='2000-02-29' where id=$1", [own]);
+      const saved = await customerRow(own);
+      assert.equal(saved.address, 'Rua A'); assert.equal(saved.birth_date, '2000-02-29');
+      const foreign = randomUUID();
+      await db.exec('reset role;');
+      await db.query("insert into customers(id,organization_id,name,address,birth_date) values ($1,$2,'Outra loja','Privado','1990-01-01')", [foreign, otherOrg]);
+      await db.exec('set role authenticated;');
+      assert.equal(await customerRow(foreign), undefined);
+      assert.equal((await db.query("update customers set address='Tentativa',birth_date=null where id=$1 returning id", [foreign])).rows.length, 0);
+      await assert.rejects(db.query("insert into customers(organization_id,name,address,birth_date) values ($1,'Tentativa','Privado','1990-01-01')", [otherOrg]), /row-level security/);
+      await db.exec('reset role; grant select on customers to anon; set role anon;');
+      assert.equal((await db.query('select address,birth_date from customers')).rows.length, 0);
+      await db.exec('reset role; set role authenticated;');
+      await db.query('update customers set address=null,birth_date=null where id=$1', [own]);
+      assert.equal((await customerRow(own)).address, null);
+      assert.equal((await customerRow(own)).birth_date, null);
     });
     await t.test('reativa tambem com a constraint global antiga sem remove-la', async () => {
       await db.exec('reset role; alter table customers add constraint customers_organization_id_phone_normalized_key unique (organization_id,phone_normalized); set role authenticated;');
@@ -139,6 +213,7 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         assert.equal(active.customer_id, first.customer_id);
         assert.equal(active.name, 'Nome original');
         await db.query(`update customers set deleted_at=now(),notes='Notas e historico preservados',
+          address='Rua preservada',birth_date='2000-02-29',
           whatsapp_opt_in=$2,whatsapp_opt_in_at='2026-01-01T12:00:00Z',source='tablet' where id=$1`, [first.customer_id, quick]);
         const archived = await customerRow(first.customer_id);
         const request = randomUUID();
@@ -150,7 +225,7 @@ test('migrations e RPC de abertura no PostgreSQL, com RLS e rollback', async t =
         assert.equal(restored.name, 'Nome atualizado');
         assert.equal(restored.phone, `+55 (${phone.slice(0, 2)}) ${phone.slice(2)}`);
         assert.equal(restored.phone_normalized, phone);
-        for (const field of ['id', 'organization_id', 'notes', 'whatsapp_opt_in', 'source']) assert.equal(restored[field], archived[field]);
+        for (const field of ['id', 'organization_id', 'notes', 'whatsapp_opt_in', 'source', 'address', 'birth_date']) assert.equal(restored[field], archived[field]);
         assert.deepEqual(restored.whatsapp_opt_in_at, archived.whatsapp_opt_in_at);
         assert.deepEqual(restored.created_at, archived.created_at);
         assert.equal((await db.query('select count(*)::int as n from customers where organization_id=$1 and phone_normalized=$2', [org, phone])).rows[0].n, 1);

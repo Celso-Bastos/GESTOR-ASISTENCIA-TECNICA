@@ -23,6 +23,7 @@ function loader(overrides = {}) {
     }).outputText;
     function localRequire(name) {
       if (Object.hasOwn(overrides, name)) return overrides[name];
+      if (name === '@/components/theme-toggle') return { ThemeToggle: () => null };
       if (name === 'server-only') return {};
       if (name.startsWith('@/')) return load('src/' + name.slice(2));
       if (name.startsWith('.')) return load(path.resolve(path.dirname(file), name));
@@ -35,7 +36,7 @@ function loader(overrides = {}) {
 }
 const form = values => { const data = new FormData(); for (const [key, value] of Object.entries(values)) data.set(key, value); return data; };
 const secret = 't' + 'est-only-credential';
-const base = { full_name: 'Maria da Silva', email: ' Maria@Example.com ', password: secret, confirm_password: secret };
+const base = { full_name: 'Maria da Silva', email: ' Maria@Example.com ', service_city: ' Anajatuba - MA ', password: secret, confirm_password: secret };
 const row = () => ({ id: requestId, full_name: base.full_name, email: 'maria@example.com', email_normalized: 'maria@example.com', phone: null, business_name: null, status: 'pending', created_at: new Date().toISOString(), review_started_at: null, auth_user_id: userId, approval_email_sent_at: null, invite_sent_at: null });
 
 // Substitui somente fronteiras externas. Schemas, decisões e compensações são reais.
@@ -119,6 +120,7 @@ test('cadastro entrega senha somente ao Auth, cria pending associado sem persist
   const saved = f.state.rows[0];
   assert.equal(saved.status, 'pending'); assert.equal(saved.auth_user_id, userId); assert.equal(saved.email_normalized, 'maria@example.com');
   assert.equal(saved.phone, null); assert.equal(saved.phone_normalized, null); assert.equal(saved.reviewed_by, undefined);
+  assert.equal(saved.service_city, 'Anajatuba - MA');
   assert.equal(f.state.creates, 1);
   for (const key of ['password', 'password_hash', 'confirm_password']) assert.equal(Object.hasOwn(saved, key), false);
   assert.equal(JSON.stringify(saved).includes(secret), false);
@@ -130,12 +132,13 @@ test('opcionais e telefone internacional usam helper BR', async () => {
 });
 test('Zod rejeita divergência, senha curta, ausente e longa antes de qualquer efeito externo', async () => {
   const cases = [{ full_name: 'A' }, { email: 'invalido' }, { phone: 'abc' }, { website: 'spam' },
+    { service_city: '' }, { service_city: '   ' }, { service_city: 'A' }, { service_city: 'x'.repeat(121) },
     { password: 'short', confirm_password: 'short' }, { confirm_password: 'different' }, { password: '' },
     { password: 'x'.repeat(129), confirm_password: 'x'.repeat(129) }, { confirm_password: '' }];
   for (const extra of cases) {
     const f = fixture(); const result = await f.actions.createAccountRequestAction({}, form({ ...base, ...extra }));
     assert.ok(result.error); assert.equal(f.state.calls.length, 0);
-    assert.deepEqual(Object.keys(result.values).sort(), ['business_name', 'email', 'full_name', 'phone']);
+    assert.deepEqual(Object.keys(result.values).sort(), ['business_name', 'email', 'full_name', 'phone', 'service_city']);
     assert.equal(JSON.stringify(result).includes(secret), false);
   }
   const f = fixture();

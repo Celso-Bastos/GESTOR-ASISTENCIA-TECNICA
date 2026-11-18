@@ -1,14 +1,243 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tokens de apresentação: as cores claras reutilizam a paleta atual. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-canvas: var(--canvas);
+  --color-surface-strong: var(--surface-strong);
+  --color-disabled-bg: var(--disabled-bg);
+  --color-neutral-action: var(--neutral-action);
+  --color-neutral-action-strong: var(--neutral-action-strong);
+  --color-neutral-action-hover: var(--neutral-action-hover);
+  --color-foreground: var(--foreground);
+  --color-foreground-strong: var(--foreground-strong);
+  --color-content: var(--content);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-disabled: var(--disabled);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-soft: var(--line-soft);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-emphasis: var(--accent-emphasis);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-accent-border: var(--accent-border);
+  --color-accent-border-strong: var(--accent-border-strong);
+  --color-focus-soft: var(--focus-soft);
+  --color-focus: var(--focus);
+  --color-success-soft: var(--success-soft);
+  --color-success-muted: var(--success-muted);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-success-line: var(--success-line);
+  --color-success-line-strong: var(--success-line-strong);
+  --color-success-focus: var(--success-focus);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-muted: var(--danger-muted);
+  --color-danger: var(--danger);
+  --color-danger-line: var(--danger-line);
+  --color-danger-line-strong: var(--danger-line-strong);
+  --color-danger-focus: var(--danger-focus);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-warning-emphasis: var(--warning-emphasis);
+  --color-warning-line: var(--warning-line);
+  --color-info-soft: var(--info-soft);
+  --color-info: var(--info);
+  --color-indigo-soft: var(--indigo-soft);
+  --color-indigo: var(--indigo);
+  --color-indigo-strong: var(--indigo-strong);
+  --color-indigo-line: var(--indigo-line);
+  --color-orange-soft: var(--orange-soft);
+  --color-orange: var(--orange);
+  --color-rose-soft: var(--rose-soft);
+  --color-rose: var(--rose);
+}
+
 :root {
+  color-scheme: light;
   --background: #f8fafc;
-  --foreground: #0f172a;
+  --input: #ffffff;
+  --surface: var(--color-white);
+  --surface-muted: var(--color-slate-50);
+  --canvas: var(--color-slate-100);
+  --surface-strong: var(--color-slate-200);
+  --disabled-bg: var(--color-slate-400);
+  --neutral-action: var(--color-slate-900);
+  --neutral-action-strong: var(--color-slate-950);
+  --neutral-action-hover: var(--color-slate-800);
+  --foreground: var(--color-slate-950);
+  --foreground-strong: var(--color-slate-900);
+  --content: var(--color-slate-800);
+  --body: var(--color-slate-700);
+  --muted: var(--color-slate-600);
+  --subtle: var(--color-slate-500);
+  --disabled: var(--color-slate-400);
+  --line: var(--color-slate-200);
+  --line-strong: var(--color-slate-300);
+  --line-soft: var(--color-slate-100);
+  --accent: var(--color-teal-700);
+  --accent-strong: var(--color-teal-800);
+  --accent-emphasis: var(--color-teal-900);
+  --accent-soft: var(--color-teal-50);
+  --accent-line: var(--color-teal-200);
+  --accent-border: var(--color-teal-600);
+  --accent-border-strong: var(--color-teal-700);
+  --focus-soft: var(--color-teal-100);
+  --focus: var(--color-teal-200);
+  --success-soft: var(--color-emerald-50);
+  --success-muted: var(--color-emerald-100);
+  --success: var(--color-emerald-700);
+  --success-strong: var(--color-emerald-800);
+  --success-line: var(--color-emerald-200);
+  --success-line-strong: var(--color-emerald-300);
+  --success-focus: var(--color-emerald-100);
+  --danger-soft: var(--color-red-50);
+  --danger-muted: var(--color-red-100);
+  --danger: var(--color-red-700);
+  --danger-line: var(--color-red-200);
+  --danger-line-strong: var(--color-red-300);
+  --danger-focus: var(--color-red-100);
+  --warning-soft: var(--color-amber-50);
+  --warning: var(--color-amber-700);
+  --warning-strong: var(--color-amber-800);
+  --warning-emphasis: var(--color-amber-900);
+  --warning-line: var(--color-amber-200);
+  --info-soft: var(--color-sky-50);
+  --info: var(--color-sky-700);
+  --indigo-soft: var(--color-indigo-50);
+  --indigo: var(--color-indigo-700);
+  --indigo-strong: var(--color-indigo-900);
+  --indigo-line: var(--color-indigo-100);
+  --orange-soft: var(--color-orange-50);
+  --orange: var(--color-orange-700);
+  --rose-soft: var(--color-rose-50);
+  --rose: var(--color-rose-700);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0c1422;
+  --input: #0d1828;
+  --surface: #131f30;
+  --surface-muted: #1b2a3f;
+  --canvas: #0c1422;
+  --surface-strong: #2b3b52;
+  --disabled-bg: #475569;
+  --neutral-action: #33465f;
+  --neutral-action-strong: #33465f;
+  --neutral-action-hover: #475569;
+  --foreground: #e2e8f0;
+  --foreground-strong: #f1f5f9;
+  --content: #dbe4f0;
+  --body: #cbd5e1;
+  --muted: #b6c3d5;
+  --subtle: #9aaac0;
+  --disabled: #8292a8;
+  --line: #33465f;
+  --line-strong: #61738e;
+  --line-soft: #29384d;
+  --accent: #5eead4;
+  --accent-strong: #99f6e4;
+  --accent-emphasis: #ccfbf1;
+  --accent-soft: #133c38;
+  --accent-line: #245f58;
+  --accent-border: #2dd4bf;
+  --accent-border-strong: #5eead4;
+  --focus-soft: #1b5950;
+  --focus: #2dd4bf;
+  --success-soft: #12382f;
+  --success-muted: #194b3b;
+  --success: #6ee7b7;
+  --success-strong: #a7f3d0;
+  --success-line: #2b715b;
+  --success-line-strong: #3b8f73;
+  --success-focus: #3b8f73;
+  --danger-soft: #431f29;
+  --danger-muted: #542735;
+  --danger: #fda4af;
+  --danger-line: #8b4352;
+  --danger-line-strong: #b35b6c;
+  --danger-focus: #b35b6c;
+  --warning-soft: #3b301b;
+  --warning: #fcd34d;
+  --warning-strong: #fde68a;
+  --warning-emphasis: #fef3c7;
+  --warning-line: #896c2b;
+  --info-soft: #15334b;
+  --info: #7dd3fc;
+  --indigo-soft: #2d294f;
+  --indigo: #a5b4fc;
+  --indigo-strong: #c7d2fe;
+  --indigo-line: #5c528a;
+  --orange-soft: #3f2e1d;
+  --orange: #fdba74;
+  --rose-soft: #402238;
+  --rose: #f9a8d4;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  /* Controles e fieldsets nativos podem impor uma largura maior que o card. */
+  :where(form, label, fieldset) {
+    min-inline-size: 0;
+  }
+
+  :where(label) {
+    align-content: start;
+  }
+
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :where(tbody tr):hover {
+    background-color: var(--surface-muted);
+  }
+}
+
+/* Preserva os rings existentes e garante foco de teclado também onde faltavam. */
+:where(a[href], button, summary, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.public-theme-shell > main {
+  min-height: calc(100dvh - 4rem);
+}
+
+/* O color-scheme também adapta date picker, select e checkbox nativos. */
+.dark :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+  background-color: var(--input);
+  color: var(--foreground);
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--subtle);
+  opacity: 1;
+}
+
+:where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--accent);
+}
+
+.dark :is(input, select, textarea):disabled {
+  color: var(--disabled);
+  background-color: var(--surface-muted);
 }
 
 summary::-webkit-details-marker {

@@ -35,7 +35,7 @@ export function CopyRestockListButton({ text }: CopyRestockListButtonProps) {
   return (
     <div className="grid gap-3">
       <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
         disabled={!text.trim()}
         onClick={handleCopy}
         type="button"
@@ -49,12 +49,12 @@ export function CopyRestockListButton({ text }: CopyRestockListButtonProps) {
       </button>
 
       {manualCopy ? (
-        <div className="grid gap-2 rounded-md border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-800">
+        <div className="grid gap-2 rounded-md border border-warning-line bg-warning-soft p-3">
+          <p className="text-sm font-medium text-warning-strong">
             Nao foi possivel copiar. Selecione e copie manualmente.
           </p>
           <textarea
-            className="min-h-48 rounded-md border border-amber-200 bg-white p-3 font-mono text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-200"
+            className="min-h-48 rounded-md border border-warning-line bg-surface p-3 font-mono text-xs text-foreground-strong outline-none focus:ring-2 focus:ring-warning-line"
             readOnly
             ref={textareaRef}
             value={text}

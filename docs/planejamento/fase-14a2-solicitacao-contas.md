@@ -8,7 +8,13 @@ O painel `/admin/solicitacoes-conta` é o mecanismo principal para acompanhar no
 
 ## Arquitetura entregue
 
-O usuário define sua senha em `/criar-conta`, junto com nome completo, e-mail, telefone opcional e nome da assistência opcional. A confirmação da senha é obrigatória; Zod valida de 8 a 128 caracteres e igualdade entre os dois campos. Não há exigência de combinações adicionais no MVP. Os campos não são aparados: espaços fazem parte da senha.
+A migration `0015` acrescenta `account_requests.service_city` nullable para
+compatibilidade com pedidos antigos. Novas solicitações exigem a cidade e o
+painel administrativo a exibe. No onboarding, o pedido aprovado do próprio
+usuário preenche a cidade, que será copiada para a organização. Implantação e
+testes em [Cidade de serviço e Google Maps](cidade-de-servico-maps.md).
+
+O usuário define sua senha em `/criar-conta`, junto com nome completo, e-mail, telefone opcional, nome da assistência opcional e cidade de serviço obrigatória. A cidade recebe trim e aceita de 2 a 120 caracteres, sem lista rígida ou valor padrão. A confirmação da senha é obrigatória; Zod valida de 8 a 128 caracteres e igualdade entre os dois campos. Não há exigência de combinações adicionais no MVP. As senhas não são aparadas: espaços fazem parte da senha.
 
 A Server Action normaliza e-mail/telefone, consulta um pedido pending e um usuário Auth existentes, e chama `supabase.auth.admin.createUser` somente no servidor. Envia a senha exclusivamente no atributo de credencial do Auth, além de `email_confirm: false`, `app_metadata.account_status: pending` e nome não sensível em `user_metadata`. Não existe cadastro público via `signUp` neste fluxo.
 
@@ -20,7 +26,7 @@ A aprovação atualiza o usuário Auth existente com `email_confirm: true` e `ap
 
 A senha pertence somente ao Supabase Auth, que mantém seu armazenamento seguro. Nenhuma coluna de senha, hash ou confirmação foi criada em public, account_requests ou profiles. Ela não é colocada em metadata, cookies próprios, URLs, e-mails, logs, documentação ou estado retornado pelas actions. A confirmação só participa da validação no servidor e nunca é enviada como atributo do Auth.
 
-A lista explícita de valores de retorno contém apenas full_name, email, phone e business_name. O formulário não guarda as senhas em estado React. Limpa os inputs imediatamente ao iniciar o envio, volta a ocultá-los e remove os atributos de senha do FormData em memória ao terminar a chamada, inclusive em caso de erro. O botão de mostrar/ocultar tem aria-controls e aria-pressed.
+A lista explícita de valores de retorno contém apenas full_name, email, phone, business_name e service_city. O formulário não guarda as senhas em estado React. Limpa os inputs imediatamente ao iniciar o envio, volta a ocultá-los e remove os atributos de senha do FormData em memória ao terminar a chamada, inclusive em caso de erro. O botão de mostrar/ocultar tem aria-controls e aria-pressed.
 
 Limite da inspeção em DevTools: o payload da requisição original precisa transportar a senha ao servidor, por HTTPS em produção, e pode ser inspecionado pelo proprietário do navegador no painel Network. Não é possível apagar retroativamente essa requisição do DevTools. A garantia implementada é ausência da credencial na resposta, estado da action, DOM após o envio, storage da aplicação, logs e e-mails. Não registrar o FormData, dados do Zod ou respostas brutas do provedor.
 
