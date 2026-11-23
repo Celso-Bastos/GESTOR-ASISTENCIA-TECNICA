@@ -9,6 +9,11 @@
     "lint": "pnpm --filter web lint",
     "typecheck": "pnpm --filter web typecheck",
     "test:sql:maintenance": "node --test supabase/tests/maintenance-intake.test.cjs",
-    "test:sql:service-city": "node --test supabase/tests/service-city.test.cjs"
+    "test:sql:service-city": "node --test supabase/tests/service-city.test.cjs",
+    "test:sql:inventory": "node --test supabase/tests/inventory.test.cjs",
+    "test:inventory": "pnpm --filter web test:inventory"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14"
   }
 }

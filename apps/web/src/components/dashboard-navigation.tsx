@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3, LayoutDashboard, MessageSquareText, PackageSearch, Settings,
+  LayoutDashboard, MessageSquareText, PackageSearch, Settings,
   ShieldCheck, Smartphone, TabletSmartphone, Users, Zap
 } from "lucide-react";
 
@@ -12,8 +12,7 @@ const navItems = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/manutencoes", label: "Manutencoes", icon: Smartphone },
   { href: "/manutencoes/rapida", label: "Manutencao rapida", icon: Zap },
-  { href: "/saidas", label: "Saidas/Vendas", icon: PackageSearch },
-  { href: "/relatorios/reposicao", label: "Reposicao", icon: BarChart3 },
+  { href: "/estoque", label: "Estoque", icon: PackageSearch },
   { href: "/mensagens", label: "Mensagens", icon: MessageSquareText },
   { href: "/configuracoes", label: "Configuracoes", icon: Settings },
   { href: "/configuracoes/quiosque", label: "Quiosque", icon: TabletSmartphone }
@@ -23,7 +22,8 @@ export function DashboardNavigation({ mobile = false, platformAdmin = false }: {
   mobile?: boolean;
   platformAdmin?: boolean;
 }) {
-  const pathname = usePathname();
+  const currentPath = usePathname();
+  const pathname = ["/saidas", "/relatorios/reposicao"].some(prefix => currentPath === prefix || currentPath?.startsWith(`${prefix}/`)) ? "/estoque" : currentPath;
   // A rota mais específica evita destacar dois itens nos submenus.
   const activeHref = navItems
     .filter(({ href }) => pathname === href || pathname?.startsWith(`${href}/`))

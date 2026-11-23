@@ -26,6 +26,7 @@ type ProductOutflowFormProps = {
   customers: CustomerOption[];
   today: string;
   outflow?: ProductOutflow;
+  initialTemplateId?: string;
 };
 
 const initialState: ProductActionState = {};
@@ -34,26 +35,31 @@ export function ProductOutflowForm({
   templates,
   customers,
   today,
-  outflow
+  outflow,
+  initialTemplateId
 }: ProductOutflowFormProps) {
+  const initialTemplate = templates.find(template => template.id === initialTemplateId && template.is_active);
   const [state, action, isPending] = useActionState(
     outflow ? updateProductOutflowAction.bind(null, outflow.id) : createProductOutflowAction,
     initialState
   );
   const [category, setCategory] = useState<ProductCategory>(
-    (state.values?.category as ProductCategory) || outflow?.category || "screen_protector"
+    (state.values?.category as ProductCategory) || outflow?.category || initialTemplate?.category || "screen_protector"
   );
   const [templateId, setTemplateId] = useState(
-    String(state.values?.model_template_id ?? outflow?.model_template_id ?? "")
+    String(state.values?.model_template_id ?? outflow?.model_template_id ?? initialTemplate?.id ?? "")
   );
   const [unitPrice, setUnitPrice] = useState(
-    String(state.values?.unit_price ?? outflow?.unit_price ?? getSuggestedUnitPrice(category)).replace(".", ",")
+    String(state.values?.unit_price ?? outflow?.unit_price ?? getSuggestedUnitPrice(category, initialTemplate)).replace(".", ",")
   );
   const [customModelName, setCustomModelName] = useState(
     String(state.values?.custom_model_name ?? outflow?.custom_model_name ?? "")
   );
   const [quantity, setQuantity] = useState(String(outflow?.quantity ?? 1));
   const total = Number(quantity) * (parseCurrencyInput(unitPrice) ?? 0);
+  const selectedTemplate = templates.find(template => template.id === templateId);
+  const previewQuantity = selectedTemplate && (!outflow || outflow.inventory_tracked) ? selectedTemplate.stock_quantity
+    + (outflow?.model_template_id === templateId ? outflow.quantity : 0) - Number(quantity) : null;
   const activeTemplates = useMemo(
     () => templates.filter((template) => template.is_active || template.id === outflow?.model_template_id),
     [templates, outflow?.model_template_id]
@@ -141,6 +147,7 @@ export function ProductOutflowForm({
             name="quantity"
             required
             type="number"
+            step={1}
           />
         </label>
 
@@ -194,17 +201,12 @@ export function ProductOutflowForm({
           />
         </label>
 
-        <label className={outflow ? "hidden" : "flex gap-3 rounded-md border border-line bg-surface-muted p-4 text-sm leading-6 text-body sm:col-span-2"}>
-          <input
-            className="mt-1 size-5 shrink-0 rounded border-line-strong text-accent"
-            disabled={Boolean(templateId) || Boolean(outflow)}
-            name="save_as_template"
-            type="checkbox"
-          />
-          <span>Salvar este modelo para usar depois</span>
-        </label>
+        {!templateId && <p className="rounded-md border border-warning-line bg-warning-soft p-4 text-sm text-warning-strong sm:col-span-2">Modelos digitados serão vinculados ao catálogo de produtos para controlar o estoque. Um novo produto começa com saldo zero; esta saída poderá deixá-lo negativo.</p>}
       </div>
 
+      {selectedTemplate && previewQuantity !== null && <p aria-live="polite" className="text-sm text-body">Estoque atual: {selectedTemplate.stock_quantity} un. · Saldo previsto: {previewQuantity} un. O saldo final será calculado pelo banco.</p>}
+      {outflow && !outflow.inventory_tracked && <p className="rounded-md bg-warning-soft p-4 text-sm text-warning-strong">Saída histórica anterior ao controle de estoque. Editar ou cancelar este registro não altera o saldo atual.</p>}
+      {previewQuantity !== null && previewQuantity < 0 && <p role="alert" className="rounded-md border border-danger-line bg-danger-soft p-4 text-sm text-danger">ESTOQUE NEGATIVO: a saída será permitida, mas deixará uma divergência. Confira o estoque inicial ou faça um ajuste de contagem.</p>}
       <p className="rounded-md bg-accent-soft p-4 text-lg font-semibold" aria-live="polite">Total: {Number.isFinite(total) ? formatCurrencyBRL(total) : "Revise quantidade e valor"}</p>
       {state.success ? <p role="status" className="rounded-md bg-accent-soft p-3">{state.success}</p> : null}
       {state.error ? (

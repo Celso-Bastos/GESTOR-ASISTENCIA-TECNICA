@@ -60,7 +60,9 @@ pnpm --filter web dev
 12. Fase 11: saidas/vendas modulares de produtos e relatorio de reposicao mensal.
 13. Fase 12: dashboard profissional com faturamento, desempenho, vendas, reposicao, clientes e alertas.
 
-Fora do MVP inicial: estoque fixo tradicional, entradas de estoque, promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
+Atualização 1: [Estoque Completo](docs/planejamento/estoque-completo.md), com saldo, entradas, saídas integradas, contagens, custo, mínimo, histórico e reposição. Aplicar a migration `0017_complete_inventory.sql` antes de usar esta versão.
+
+Fora do escopo atual: promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 
 ## Regras de seguranca
 

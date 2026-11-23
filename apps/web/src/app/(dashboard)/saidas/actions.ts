@@ -36,6 +36,9 @@ export type ProductModelTemplate = {
   category: ProductCategory;
   model_name: string;
   default_price: number | string | null;
+  stock_quantity: number;
+  minimum_stock: number;
+  unit_cost: number | string | null;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -44,6 +47,7 @@ export type ProductModelTemplate = {
 };
 
 export type ProductOutflow = {
+  inventory_tracked: boolean;
   id: string;
   organization_id: string;
   category: ProductCategory;
@@ -98,10 +102,10 @@ export type RestockReport = {
 };
 
 const MODEL_TEMPLATE_SELECT =
-  "id, organization_id, category, model_name, default_price, is_active, created_by, created_at, updated_at, deleted_at";
+  "id, organization_id, category, model_name, default_price, stock_quantity, minimum_stock, unit_cost, is_active, created_by, created_at, updated_at, deleted_at";
 
 const OUTFLOW_SELECT =
-  "id, organization_id, category, model_template_id, custom_model_name, quantity, unit_price, total_price, sold_at, customer_id, notes, created_by, created_at, updated_at, deleted_at, product_model_templates(id, model_name), customers(id, name)";
+  "id, organization_id, category, model_template_id, custom_model_name, quantity, unit_price, total_price, sold_at, customer_id, notes, created_by, created_at, updated_at, deleted_at, inventory_tracked, product_model_templates(id, model_name), customers(id, name)";
 
 function singleRelation<T>(value: T | T[] | null | undefined) {
   if (Array.isArray(value)) {
@@ -116,6 +120,9 @@ function modelTemplateFormValues(formData: FormData) {
     category: String(formData.get("category") ?? ""),
     model_name: String(formData.get("model_name") ?? ""),
     default_price: String(formData.get("default_price") ?? ""),
+    minimum_stock: String(formData.get("minimum_stock") ?? "0"),
+    unit_cost: String(formData.get("unit_cost") ?? ""),
+    initial_stock: String(formData.get("initial_stock") ?? "0"),
     is_active: formData.get("is_active") === "on"
   };
 }
@@ -279,53 +286,9 @@ async function ensureCustomerFromOrganization(
   return Boolean(data);
 }
 
-async function createTemplateFromOutflow({
-  organizationId,
-  userId,
-  category,
-  modelName,
-  unitPrice
-}: {
-  organizationId: string;
-  userId: string;
-  category: ProductCategory;
-  modelName: string;
-  unitPrice: number;
-}) {
-  const duplicate = await findActiveTemplateDuplicate({
-    organizationId,
-    category,
-    modelName
-  });
-
-  if (duplicate.error) {
-    return { templateId: null, error: duplicate.error };
-  }
-
-  if (duplicate.template) {
-    return { templateId: duplicate.template.id, error: null };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("product_model_templates")
-    .insert({
-      organization_id: organizationId,
-      category,
-      model_name: modelName,
-      default_price: unitPrice,
-      is_active: true,
-      created_by: userId
-    })
-    .select("id")
-    .maybeSingle<{ id: string }>();
-
-  if (error || !data) {
-    console.error("Erro ao criar modelo a partir da saida:", error);
-    return { templateId: null, error: friendlyModelError(error?.code) };
-  }
-
-  return { templateId: data.id, error: null };
+function revalidateInventory() {
+  for (const path of ["/estoque", "/estoque/movimentacoes", "/estoque/reposicao"]) revalidatePath(path);
+  revalidatePath("/estoque/[id]", "page");
 }
 
 function filterText(value: string) {
@@ -430,6 +393,9 @@ export async function createProductModelTemplateAction(
     category: parsed.data.category,
     model_name: parsed.data.model_name,
     default_price: parsed.data.default_price ?? null,
+    stock_quantity: parsed.data.initial_stock,
+    minimum_stock: parsed.data.minimum_stock,
+    unit_cost: parsed.data.unit_cost ?? null,
     is_active: parsed.data.is_active,
     created_by: context.userId
   });
@@ -439,6 +405,7 @@ export async function createProductModelTemplateAction(
     return { error: friendlyModelError(error.code), values };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas");
   revalidatePath("/saidas/nova");
   revalidatePath("/saidas/modelos");
@@ -497,6 +464,8 @@ export async function updateProductModelTemplateAction(
       category: parsed.data.category,
       model_name: parsed.data.model_name,
       default_price: parsed.data.default_price ?? null,
+      minimum_stock: parsed.data.minimum_stock,
+      unit_cost: parsed.data.unit_cost ?? null,
       is_active: parsed.data.is_active
     })
     .eq("id", parsed.data.id)
@@ -510,6 +479,7 @@ export async function updateProductModelTemplateAction(
     return { error: friendlyModelError(error?.code), values };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas");
   revalidatePath("/saidas/nova");
   revalidatePath("/saidas/modelos");
@@ -553,6 +523,7 @@ export async function disableProductModelTemplateAction(
     return { error: "Nao foi possivel desativar o modelo." };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas/nova");
   revalidatePath("/saidas/modelos");
 
@@ -595,6 +566,7 @@ export async function deleteProductModelTemplateAction(
     return { error: "Nao foi possivel excluir o modelo." };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas/nova");
   revalidatePath("/saidas/modelos");
 
@@ -715,7 +687,7 @@ export async function createProductOutflowAction(
   }
 
   let category = parsed.data.category;
-  let modelTemplateId = parsed.data.model_template_id ?? null;
+  const modelTemplateId = parsed.data.model_template_id ?? null;
   let customModelName = parsed.data.custom_model_name ?? null;
 
   if (modelTemplateId) {
@@ -732,21 +704,6 @@ export async function createProductOutflowAction(
     }
 
     category = template.category;
-    customModelName = null;
-  } else if (parsed.data.save_as_template && customModelName) {
-    const created = await createTemplateFromOutflow({
-      organizationId: context.organization.id,
-      userId: context.userId,
-      category,
-      modelName: customModelName,
-      unitPrice: parsed.data.unit_price
-    });
-
-    if (created.error) {
-      return { error: created.error, values };
-    }
-
-    modelTemplateId = created.templateId;
     customModelName = null;
   }
 
@@ -774,6 +731,7 @@ export async function createProductOutflowAction(
     };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas");
   revalidatePath("/saidas/nova");
   revalidatePath("/saidas/modelos");
@@ -859,6 +817,7 @@ export async function updateProductOutflowAction(
     return { error: "Nao foi possivel atualizar a saida.", values };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas");
   revalidatePath("/relatorios/reposicao");
   revalidatePath("/dashboard");
@@ -902,6 +861,7 @@ export async function deleteProductOutflowAction(
     return { error: "Nao foi possivel excluir a saida." };
   }
 
+  revalidateInventory();
   revalidatePath("/saidas");
   revalidatePath("/relatorios/reposicao");
   revalidatePath("/dashboard");

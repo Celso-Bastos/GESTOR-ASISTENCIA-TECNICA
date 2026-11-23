@@ -36,7 +36,8 @@ test('navegação desktop/mobile identifica um único item ativo, incluindo subr
     ['/dashboard', '/dashboard'], ['/clientes/cliente/editar', '/clientes'],
     ['/manutencoes/nova', '/manutencoes'], ['/manutencoes/rapida', '/manutencoes/rapida'],
     ['/configuracoes/quiosque', '/configuracoes/quiosque'],
-    ['/configuracoes', '/configuracoes'], ['/saidas/modelos', '/saidas'],
+    ['/configuracoes', '/configuracoes'], ['/saidas/modelos', '/estoque'],
+    ['/estoque', '/estoque'], ['/estoque/movimentacoes', '/estoque'], ['/relatorios/reposicao', '/estoque'],
     ['/clientes-inexistente', null], [null, null]
   ]) {
     const { DashboardNavigation } = loader({
@@ -46,7 +47,7 @@ test('navegação desktop/mobile identifica um único item ativo, incluindo subr
       const html = renderToStaticMarkup(React.createElement(DashboardNavigation, { mobile }));
       const links = [...html.matchAll(/<a\b[^>]*>/g)].map(match => match[0]);
       const active = links.filter(link => link.includes('aria-current="page"'));
-      assert.equal(links.length, 9);
+      assert.equal(links.length, 8);
       assert.equal(active.length, expected ? 1 : 0);
       if (expected) assert.ok(active[0].includes(`href="${expected}"`));
     }

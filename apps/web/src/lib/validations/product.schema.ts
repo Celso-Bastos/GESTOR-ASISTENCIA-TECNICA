@@ -21,7 +21,7 @@ const requiredMoney = z.preprocess(
 );
 
 const optionalMoney = z.preprocess(
-  (value) => parseCurrencyInput(value as string | number | null | undefined),
+  (value) => String(value ?? "").trim() === "" ? undefined : parseCurrencyInput(value as string | number | null | undefined) ?? NaN,
   z
     .number({ error: "Informe um valor valido." })
     .min(0, "Informe um valor maior ou igual a zero.")
@@ -76,11 +76,14 @@ export const createProductModelTemplateSchema = z.object({
     .min(1, "Informe o modelo.")
     .max(120, "Use no maximo 120 caracteres no modelo."),
   default_price: optionalMoney,
+  minimum_stock: z.coerce.number().int("O mínimo deve ser inteiro.").min(0).max(2147483647).default(0),
+  unit_cost: optionalMoney,
+  initial_stock: z.coerce.number().int("O estoque inicial deve ser inteiro.").min(0).max(2147483647).default(0),
   is_active: z.boolean().default(true)
 });
 
 export const updateProductModelTemplateSchema =
-  createProductModelTemplateSchema.extend({
+  createProductModelTemplateSchema.omit({ initial_stock: true }).extend({
     id: z.string().uuid("Modelo invalido.")
   });
 

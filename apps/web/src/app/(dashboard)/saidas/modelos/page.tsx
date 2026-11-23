@@ -1,5 +1,6 @@
 import { getProductModelTemplates } from "../actions";
 import { ProductModelTemplateManager } from "../product-model-template-manager";
+import { InventoryNavigation } from "../../estoque/inventory-navigation";
 
 export default async function ModelosSaidaPage() {
   const templates = await getProductModelTemplates({ includeInactive: true });
@@ -19,6 +20,7 @@ export default async function ModelosSaidaPage() {
         </p>
       </div>
 
+      <InventoryNavigation />
       <ProductModelTemplateManager templates={templates} />
     </section>
   );

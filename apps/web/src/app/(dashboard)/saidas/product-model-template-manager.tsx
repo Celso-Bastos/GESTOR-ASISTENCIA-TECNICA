@@ -19,12 +19,26 @@ import {
 } from "./actions";
 import { MoneyDisplay } from "./money-display";
 import { ProductCategoryBadge } from "./product-category-badge";
+import Link from "next/link";
 
 type ProductModelTemplateManagerProps = {
   templates: ProductModelTemplate[];
 };
 
 const initialState: ProductActionState = {};
+
+function StockFields({ template }: { template?: ProductModelTemplate }) {
+  const inputClass = "h-12 min-w-0 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none focus:ring-2 focus:ring-focus";
+  return <details className="rounded-md border border-line p-3 sm:col-span-2">
+    <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-body">Estoque</summary>
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      {!template && <label className="grid gap-2 text-sm text-body">Estoque inicial (opcional)<input name="initial_stock" type="number" step={1} min={0} max={2147483647} defaultValue="0" className={inputClass} /></label>}
+      <label className="grid gap-2 text-sm text-body">Estoque mínimo<input name="minimum_stock" type="number" step={1} min={0} max={2147483647} defaultValue={template?.minimum_stock ?? 0} className={inputClass} /></label>
+      <label className="grid gap-2 text-sm text-body">Custo unitário (opcional)<input name="unit_cost" inputMode="decimal" defaultValue={String(template?.unit_cost ?? "").replace(".", ",")} placeholder="4,00" className={inputClass} /></label>
+      {template && <p className="text-sm text-muted sm:col-span-2">Saldo atual: {template.stock_quantity} un. Para mudar a quantidade, use <Link className="text-accent underline" href={`/estoque/${template.id}?tipo=adjustment`}>Ajustar estoque</Link>.</p>}
+    </div>
+  </details>;
+}
 
 function StateMessage({ state }: { state: ProductActionState }) {
   const message = state.error || state.success;
@@ -150,6 +164,7 @@ function CreateTemplateForm() {
           Ativo
         </label>
 
+        <StockFields />
         <div className="grid gap-3 sm:col-span-2">
           <StateMessage state={state} />
           <button
@@ -216,7 +231,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
           Valor do modelo (opcional)
           <input
             className="h-12 rounded-md border border-line-strong bg-surface px-3 text-base text-foreground outline-none transition focus:border-accent-border focus:ring-2 focus:ring-focus-soft sm:text-sm"
-            defaultValue={template.default_price ?? ""}
+            defaultValue={String(template.default_price ?? "").replace(".", ",")}
             inputMode="decimal"
             name="default_price"
           />
@@ -244,6 +259,7 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
         </label>
 
         <div className="grid gap-3 sm:col-span-2">
+          <StockFields template={template} />
           <StateMessage state={saveState} />
           <div className="flex flex-wrap gap-2">
             <button

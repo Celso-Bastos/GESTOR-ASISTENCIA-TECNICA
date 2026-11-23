@@ -13,6 +13,7 @@ const protectedPrefixes = [
   "/manutencoes",
   "/mensagens",
   "/saidas",
+  "/estoque",
   "/relatorios",
   "/configuracoes",
   "/admin",
@@ -62,7 +63,9 @@ export async function proxy(request: NextRequest) {
     const status = await getAccountAccessStatus(supabase);
     if (status !== "approved") {
       if (isProtectedRoute(pathname) || pathname === "/") {
-        // As actions também validam acesso nos helpers de servidor.
+        // O handler do Next precisa produzir o redirect RSC da action.
+        // requireAuth bloqueia a execução antes de qualquer acesso aos dados.
+        if (isServerAction) return response;
         return redirectWithCookies(request, response, `/login?conta=${status}`);
       }
       return response;

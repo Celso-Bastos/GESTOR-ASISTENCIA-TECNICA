@@ -331,7 +331,7 @@ test('proxy bloqueia todas as áreas internas e preserva cookies sem criar loop 
       '@/lib/supabase/middleware': { updateSession: async () => ({ response: source, supabase: client, user: { id: userId } }), hasOrganizationMembership: async () => false },
       'next/server': { NextResponse: { redirect: url => ({ url: String(url), cookies: { set() {} } }) } }
     })('src/proxy.ts');
-    for (const route of ['/dashboard', '/clientes', '/manutencoes/nova', '/mensagens', '/saidas', '/relatorios/reposicao', '/configuracoes', '/onboarding/organizacao', '/admin/solicitacoes-conta']) {
+    for (const route of ['/dashboard', '/clientes', '/manutencoes/nova', '/mensagens', '/saidas', '/estoque', '/estoque/movimentacoes', '/relatorios/reposicao', '/configuracoes', '/onboarding/organizacao', '/admin/solicitacoes-conta']) {
       const nextUrl = new URL('https://app.example.com' + route); nextUrl.clone = () => new URL(nextUrl);
       const result = await proxy({ nextUrl, method: 'GET', headers: new Headers() });
       if (status === 'approved') assert.equal(result, source);

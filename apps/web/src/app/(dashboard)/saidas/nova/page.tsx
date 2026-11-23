@@ -4,7 +4,8 @@ import {
 } from "../actions";
 import { ProductOutflowForm } from "../product-outflow-form";
 
-export default async function NovaSaidaPage() {
+export default async function NovaSaidaPage({ searchParams }: { searchParams?: Promise<{ modelo?: string }> }) {
+  const params = await searchParams;
   const [templates, customers] = await Promise.all([
     getProductModelTemplates(),
     getCustomersForOutflow()
@@ -32,6 +33,7 @@ export default async function NovaSaidaPage() {
       </div>
 
       <ProductOutflowForm
+        initialTemplateId={params?.modelo}
         customers={customers}
         templates={templates}
         today={today}

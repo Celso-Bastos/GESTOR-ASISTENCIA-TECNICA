@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:theme": "node --test tests/theme.test.cjs",
+    "test:inventory": "node --test tests/inventory.test.cjs",
     "test:customers": "node --test tests/customer-details.test.cjs",
     "test:service-city": "node --test tests/service-city.test.cjs",
     "test:maintenance-pricing": "node --test tests/maintenance-pricing.test.cjs",

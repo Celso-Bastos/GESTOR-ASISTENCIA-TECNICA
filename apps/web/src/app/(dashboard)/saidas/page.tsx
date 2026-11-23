@@ -4,6 +4,8 @@ import { productCategories } from "@/lib/products/format";
 import { getProductOutflows } from "./actions";
 import { ProductOutflowFilters } from "./product-outflow-filters";
 import { ProductOutflowTable } from "./product-outflow-table";
+import { InventoryNavigation } from "../estoque/inventory-navigation";
+import { getInventoryItems } from "../estoque/actions";
 
 type SaidasPageProps = {
   searchParams?: Promise<{
@@ -21,6 +23,8 @@ function safeCategory(value?: string) {
 
 export default async function SaidasPage({ searchParams }: SaidasPageProps) {
   const params = await searchParams;
+  const { items: inventory, error: inventoryError } = await getInventoryItems();
+  const negativeCount = inventory.filter(item => item.stock_quantity < 0).length;
   const { outflows, filters, error } = await getProductOutflows({
     category: safeCategory(params?.category),
     q: params?.q?.trim() || undefined,
@@ -33,13 +37,12 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
     <section className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase text-accent">Fase 11</p>
+          <p className="text-sm font-medium uppercase text-accent">Estoque</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">
             Saidas/Vendas
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Registre vendas de acessorios e acompanhe o que saiu no mes sem
-            transformar isso em estoque fixo.
+            Registre vendas de acessórios e acompanhe as saídas integradas ao estoque.
           </p>
         </div>
 
@@ -60,6 +63,8 @@ export default async function SaidasPage({ searchParams }: SaidasPageProps) {
         </div>
       </div>
 
+      <InventoryNavigation />
+      {inventoryError ? <p role="alert" className="rounded-md bg-danger-soft p-4 text-danger">{inventoryError}</p> : negativeCount > 0 ? <p role="alert" className="rounded-md border border-danger-line bg-danger-soft p-4 text-danger">ESTOQUE NEGATIVO: {negativeCount} produto(s) precisam de conferência. <Link className="underline" href="/estoque">Conferir saldos no estoque</Link></p> : null}
       <ProductOutflowFilters filters={filters} />
 
       {error ? (

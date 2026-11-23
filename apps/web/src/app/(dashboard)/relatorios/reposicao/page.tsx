@@ -8,6 +8,7 @@ import {
   type RestockReport
 } from "../../saidas/actions";
 import { CopyRestockListButton } from "./copy-restock-list-button";
+import { InventoryNavigation } from "../../estoque/inventory-navigation";
 import {
   RestockReportTable,
   RestockSummaryCards
@@ -42,7 +43,7 @@ function formatRestockMonth(month: string) {
 }
 
 function formatRestockList(report: RestockReport) {
-  const lines = [`Lista para reposicao - ${formatRestockMonth(report.month)}`];
+  const lines = [`Histórico de saídas - ${formatRestockMonth(report.month)}`];
   let currentCategory = "";
 
   for (const row of report.rows) {
@@ -86,14 +87,14 @@ export default async function ReposicaoPage({
           Relatorios
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">
-          Reposicao mensal
+          Histórico mensal de saídas
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-          Agrupamento do que saiu por produto e modelo para orientar a compra
-          do fim do mes.
+          Agrupamento do que saiu por produto e modelo. Para comprar com base no saldo atual, consulte Reposição por estoque.
         </p>
       </div>
 
+      <InventoryNavigation />
       <form className="grid gap-3 rounded-md border border-line bg-surface p-4 shadow-sm sm:grid-cols-3">
         <label className="grid gap-2 text-sm font-medium text-body">
           Mes
@@ -144,7 +145,7 @@ export default async function ReposicaoPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Lista para reposicao
+              Lista do histórico de saídas
             </h2>
             <p className="mt-1 text-sm leading-6 text-muted">
               Texto agrupado pelos filtros atuais.
