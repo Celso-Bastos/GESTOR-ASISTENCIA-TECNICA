@@ -2,7 +2,7 @@ import {
   maintenanceStatusLabels,
   type MaintenanceStatus
 } from "@/lib/maintenance/status";
-import type { MaintenanceEvent } from "./actions";
+import type { MaintenanceEvent } from "@/lib/maintenance/types";
 
 type MaintenanceTimelineProps = {
   events: MaintenanceEvent[];

@@ -5,7 +5,7 @@ import { useWhatsAppAction, WhatsAppAlternatives } from "./whatsapp-controls";
 import type { OperationalMessageType } from "@assistencia/shared/constants/message-types";
 import {
   logWhatsAppMessageAction
-} from "./actions";
+} from "@/lib/messages/maintenance-actions";
 
 type WhatsAppButtonProps = {
   orderId: string;

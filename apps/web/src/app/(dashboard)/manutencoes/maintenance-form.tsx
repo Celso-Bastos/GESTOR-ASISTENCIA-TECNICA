@@ -272,7 +272,7 @@ export function MaintenanceForm({
               name="warranty_signed"
               type="checkbox"
             />
-            Cliente assinou/aceitou garantia
+            O cliente assinou o termo físico de garantia
           </label>
         </div>
 

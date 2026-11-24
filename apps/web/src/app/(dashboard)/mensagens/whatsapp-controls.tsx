@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState, type FormEvent } from "react";
-import type { WhatsAppMessageActionState } from "./actions";
+import type { WhatsAppMessageActionState } from "@/lib/messages/whatsapp";
 
 type Action = (state: WhatsAppMessageActionState, data: FormData) => Promise<WhatsAppMessageActionState>;
 

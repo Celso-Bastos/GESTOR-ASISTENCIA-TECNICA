@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { updateMaintenanceStatusSchema, deleteMaintenanceOrderSchema } from "./maintenance-status.schema";
+export { updateMaintenanceStatusSchema, deleteMaintenanceOrderSchema };
 import { normalizePhoneBR } from "@/lib/phone";
 import { customerAddressSchema } from "./customer.schema";
 import {
@@ -253,17 +255,6 @@ export const updateMaintenanceOrderSchema = z.object({
     "Use no máximo 2000 caracteres nas observações internas."
   )
 }).and(warrantySchema);
-
-export const updateMaintenanceStatusSchema = z.object({
-  new_status: z.enum(maintenanceStatuses, {
-    error: "Selecione um status válido."
-  }),
-  description: optionalText(1000, "Use no máximo 1000 caracteres na descrição.")
-});
-
-export const deleteMaintenanceOrderSchema = z.object({
-  maintenance_order_id: z.string().uuid("Manutenção inválida.")
-});
 
 export const maintenanceSearchSchema = z.object({
   q: z

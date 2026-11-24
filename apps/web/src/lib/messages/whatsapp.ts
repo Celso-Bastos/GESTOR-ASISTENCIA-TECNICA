@@ -1,3 +1,10 @@
+export type WhatsAppMessageActionState = {
+  error?: string;
+  success?: string;
+  whatsappUrl?: string;
+  messageBody?: string;
+};
+
 export function normalizePhoneForWhatsApp(phone: string) {
   const digits = phone.replace(/\D/g, "");
 

@@ -44,6 +44,18 @@ Para rodar somente o app web:
 pnpm --filter web dev
 ```
 
+Em máquinas com aproximadamente 4 GB de RAM, use o modo local de pouca memória:
+
+```bash
+pnpm --filter web dev:low-memory
+```
+
+Esse modo usa Webpack, limita o old space do Node a 1536 MiB e reduz a retenção
+de rotas compiladas. A primeira abertura e o retorno a uma rota inativa podem
+demorar mais. `pnpm dev` e a configuração de produção continuam iguais.
+Detalhes, limites e validação: [otimização de memória local](docs/planejamento/otimizacao-memoria-local.md).
+Se o PowerShell bloquear `pnpm.ps1`, use `pnpm.cmd` nos mesmos comandos.
+
 ## Fases do MVP
 
 1. Fase 0: base do monorepo, documentacao, configuracoes e estrutura inicial.
@@ -61,6 +73,8 @@ pnpm --filter web dev
 13. Fase 12: dashboard profissional com faturamento, desempenho, vendas, reposicao, clientes e alertas.
 
 Atualização 1: [Estoque Completo](docs/planejamento/estoque-completo.md), com saldo, entradas, saídas integradas, contagens, custo, mínimo, histórico e reposição. Aplicar a migration `0017_complete_inventory.sql` antes de usar esta versão.
+
+Atualização 2: [Termo de Garantia enviável ao cliente](docs/planejamento/termo-garantia-compartilhavel.md), com PDF padrão privado por organização, upload por owner/admin e acesso/compartilhamento manual pela OS. Aplicar a migration `0018_organization_warranty_document.sql` e adicionar o PDF em Configurações. O termo físico continua sendo assinado presencialmente pelo cliente.
 
 Fora do escopo atual: promocoes em massa, API oficial do WhatsApp, financeiro e multi-loja avancado visual.
 

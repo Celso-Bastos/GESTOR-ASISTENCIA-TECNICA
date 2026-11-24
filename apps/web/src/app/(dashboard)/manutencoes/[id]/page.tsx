@@ -10,10 +10,8 @@ import {
   formatWarrantyPeriod,
   isWarrantyExpired
 } from "@/lib/maintenance/warranty";
-import {
-  deleteMaintenanceOrderAction,
-  getMaintenanceOrderById
-} from "../actions";
+import { deleteMaintenanceOrderAction } from "@/lib/maintenance/detail-actions";
+import { getMaintenanceOrderById, parseMaintenanceEventPage } from "@/lib/maintenance/detail-queries";
 import { DeleteMaintenanceButton } from "../delete-maintenance-button";
 import {
   getMaintenanceCustomer,
@@ -22,14 +20,16 @@ import {
 import { MaintenanceStatusBadge } from "../maintenance-status-badge";
 import { MaintenanceStatusControls } from "../maintenance-status-controls";
 import { MaintenanceTimeline } from "../maintenance-timeline";
-import { getActiveCustomMessageTemplatesForMaintenance } from "../../mensagens/actions";
+import { getActiveCustomMessageTemplatesForMaintenance } from "@/lib/messages/maintenance-queries";
 import { CustomWhatsAppMessageForm } from "../../mensagens/custom-whatsapp-message-form";
 import { WhatsAppButton } from "../../mensagens/whatsapp-button";
+import { MaintenanceWarrantyDocument } from "@/components/maintenance-warranty-document";
 
 type ManutencaoDetalhePageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams?: Promise<{ historico?: string | string[] }>;
 };
 
 function formatDate(value: string | null) {
@@ -94,7 +94,7 @@ function getWarrantyStatus(order: {
 
   if (!order.warranty_signed) {
     return {
-      label: "Garantia nao assinada",
+      label: "Termo físico não assinado",
       className: "border-warning-line bg-warning-soft text-warning-strong"
     };
   }
@@ -124,7 +124,7 @@ function getWarrantyBlockReason(order: {
   }
 
   if (!order.warranty_signed) {
-    return "A garantia so pode ser enviada apos o cliente assinar/aceitar.";
+    return "O aviso de garantia exige o termo físico assinado. O PDF informativo pode ser compartilhado na seção Termo de garantia.";
   }
 
   if (!order.warranty_amount || !order.warranty_unit || !order.warranty_expires_at) {
@@ -152,19 +152,21 @@ function Field({
 }
 
 export default async function ManutencaoDetalhePage({
-  params
+  params,
+  searchParams
 }: ManutencaoDetalhePageProps) {
   const { id } = await params;
-  const [order, customWhatsAppTemplates] = await Promise.all([
-    getMaintenanceOrderById(id),
-    getActiveCustomMessageTemplatesForMaintenance()
+  const historyPage = parseMaintenanceEventPage((await searchParams)?.historico);
+  const [order, customWhatsAppTemplates, organization] = await Promise.all([
+    getMaintenanceOrderById(id, historyPage),
+    getActiveCustomMessageTemplatesForMaintenance(),
+    requireOrganization()
   ]);
 
   if (!order) {
     notFound();
   }
 
-  const organization = await requireOrganization();
   const customer = getMaintenanceCustomer(order);
   const device = getMaintenanceDevice(order);
   const canUseWhatsApp = Boolean(customer?.phone) && isOpenMaintenanceStatus(order.status);
@@ -260,7 +262,7 @@ export default async function ManutencaoDetalhePage({
           ) : null}
           <WhatsAppButton
             disabled={!canUseWarrantyWhatsApp}
-            label="Enviar garantia no WhatsApp"
+            label="Enviar aviso de garantia no WhatsApp"
             messageType={MESSAGE_TYPES.WARRANTY_NOTICE}
             orderId={order.id}
           />
@@ -274,13 +276,17 @@ export default async function ManutencaoDetalhePage({
             {warrantyBlockReason}
           </p>
         ) : null}
-        <CustomWhatsAppMessageForm
+        {customWhatsAppTemplates.length > 0 ? <CustomWhatsAppMessageForm
           previewVariables={buildOrderMessageVariables({ order, organizationName: organization.name })}
           disabled={!customer?.phone}
           orderId={order.id}
           templates={customWhatsAppTemplates}
-        />
+        /> : <div className="rounded-md border border-dashed border-line-strong p-3 text-sm text-muted">
+          Nenhuma mensagem personalizada ativa para manutencao.
+        </div>}
       </div>
+
+      {order.warranty_enabled ? <MaintenanceWarrantyDocument order={order} role={organization.role} customer={customer} deviceModel={device?.model ?? null} /> : null}
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <dl className="grid gap-4 rounded-md border border-line bg-surface p-4 shadow-sm sm:grid-cols-2 sm:p-5">
@@ -326,7 +332,7 @@ export default async function ManutencaoDetalhePage({
             }
           />
           <Field
-            label="Cliente assinou garantia"
+            label="Termo físico assinado pelo cliente"
             value={formatBoolean(order.warranty_signed)}
           />
           <Field
@@ -362,11 +368,20 @@ export default async function ManutencaoDetalhePage({
           </div>
         </dl>
 
-        <div className="grid content-start gap-3">
+        <div id="historico" className="grid scroll-mt-24 content-start gap-3">
           <h2 className="text-lg font-semibold text-foreground">
             Histórico de eventos
           </h2>
           <MaintenanceTimeline events={order.events} />
+          {order.eventPage > 1 || order.hasMoreEvents ? <nav aria-label="Páginas do histórico" className="grid gap-2 text-sm">
+            <p className="text-subtle">Página {order.eventPage} · até 50 eventos por página</p>
+            {order.eventPage > 1 ? <Link className="min-h-11 py-2 text-accent underline" href={`?historico=${order.eventPage - 1}#historico`}>
+              Eventos mais recentes
+            </Link> : null}
+            {order.hasMoreEvents ? <Link className="min-h-11 py-2 text-accent underline" href={`?historico=${order.eventPage + 1}#historico`}>
+              Eventos anteriores
+            </Link> : null}
+          </nav> : null}
         </div>
       </div>
     </section>

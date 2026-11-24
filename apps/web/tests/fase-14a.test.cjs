@@ -24,6 +24,7 @@ function loader(overrides = {}) {
     }).outputText;
     function localRequire(name) {
       if (Object.hasOwn(overrides, name)) return overrides[name];
+      if (name === 'server-only') return {};
       if (name.startsWith('@/')) return load('src/' + name.slice(2));
       if (name.startsWith('@assistencia/shared/')) return load(path.resolve(root, '../../packages/shared', name.slice('@assistencia/shared/'.length)));
       if (name.startsWith('.')) return load(path.resolve(path.dirname(file), name));
@@ -181,6 +182,16 @@ test('WhatsApp prepara a mesma mensagem duas vezes e detecta bloqueio', async ()
     hook.prepare({ preventDefault() {} }); await run({}, new FormData());
     assert.match(feedbacks.at(-1), /bloqueada/);
   } finally { global.window = previousWindow; }
+});
+
+test('dashboard mantém autenticação pela organização antes de consultar métricas', async () => {
+  for (const destination of ['/login', '/login?conta=pending']) {
+    const mocks = boundaries({});
+    delete mocks['@/lib/organization/queries'];
+    mocks['@/lib/auth/queries'] = { requireAuth: async () => { throw new Error(destination); } };
+    mocks['@/lib/supabase/server'] = { createClient: () => assert.fail('Sessão inválida não pode consultar métricas') };
+    await assert.rejects(loader(mocks)('src/lib/dashboard/metrics.ts').getDashboardMetrics(), { message: destination });
+  }
 });
 
 test('dashboard diferencia consulta vazia de erro e oculta valores com falha', async () => {

@@ -22,6 +22,7 @@ function loader(overrides = {}) {
     }).outputText;
     function localRequire(name) {
       if (Object.hasOwn(overrides, name)) return overrides[name];
+      if (name === 'server-only') return {};
       if (name.startsWith('@/')) return load('src/' + name.slice(2));
       if (name.startsWith('.')) return load(path.resolve(path.dirname(file), name));
       return require(name);

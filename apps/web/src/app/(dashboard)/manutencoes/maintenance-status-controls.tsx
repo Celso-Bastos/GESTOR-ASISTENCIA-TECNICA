@@ -1,5 +1,6 @@
 "use client";
 
+import type { MaintenanceActionState } from "@/lib/maintenance/types";
 import { useActionState } from "react";
 import {
   maintenanceStatusLabels,
@@ -9,9 +10,8 @@ import {
 import {
   cancelMaintenanceOrderAction,
   markMaintenanceAsDeliveredAction,
-  updateMaintenanceStatusAction,
-  type MaintenanceActionState
-} from "./actions";
+  updateMaintenanceStatusAction
+} from "@/lib/maintenance/detail-actions";
 
 type MaintenanceStatusControlsProps = {
   orderId: string;

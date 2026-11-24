@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth/queries";
 import { requireOrganization } from "@/lib/organization/queries";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
@@ -20,7 +19,6 @@ function InventoryProductError({ message }: { message: string }) {
 export default async function InventoryProductPage({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<{ tipo?: string | string[] }>;
 }) {
-  await requireAuth();
   const organization = await requireOrganization();
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) notFound();

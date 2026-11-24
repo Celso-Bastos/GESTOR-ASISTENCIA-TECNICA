@@ -8,15 +8,13 @@ import { interpolateMessageTemplate } from "@/lib/messages/interpolation";
 import {
   customMessageContextLabels,
   type CustomMessageContext
-} from "@/lib/validations/custom-message-template.schema";
-import {
-  useCustomMessageTemplateAction,
-  type CustomMessageTemplate
-} from "./actions";
+} from "@/lib/messages/custom-template";
+import { useCustomMessageTemplateAction } from "@/lib/messages/maintenance-actions";
+import type { MaintenanceMessageTemplate } from "@/lib/messages/custom-template";
 
 type CustomWhatsAppMessageFormProps = {
   orderId: string;
-  templates: CustomMessageTemplate[];
+  templates: MaintenanceMessageTemplate[];
   disabled?: boolean;
   previewVariables: MessageVariables;
 };

@@ -41,6 +41,22 @@ const boundaries = client => ({
   'next/link': ({href,children,...props})=>React.createElement('a',{href,...props},children)
 });
 
+test('leituras de estoque mantêm autenticação pela organização antes do acesso aos dados', async () => {
+  for (const destination of ['/login', '/login?conta=pending']) {
+    const mocks = boundaries({});
+    delete mocks['@/lib/organization/queries'];
+    mocks['@/lib/auth/queries'] = { requireAuth: async () => { throw new Error(destination); } };
+    mocks['@/lib/supabase/server'] = { createClient: () => assert.fail('Sessão inválida não pode consultar estoque') };
+    const load = loader(mocks);
+    const actions = load('src/app/(dashboard)/estoque/actions.ts');
+    await assert.rejects(actions.getInventoryItems(), { message: destination });
+    await assert.rejects(actions.getInventoryMovements(), { message: destination });
+    await assert.rejects(load('src/app/(dashboard)/estoque/[id]/page.tsx').default({
+      params: Promise.resolve({ id: model }), searchParams: Promise.resolve({})
+    }), { message: destination });
+  }
+});
+
 test('status único: negativo, esgotado, baixo inclusive no mínimo, OK',()=>{
   const {getStockStatus}=loader()('src/lib/products/inventory.ts');
   for (const [quantity,minimum,status] of [[-1,5,'NEGATIVO'],[0,0,'ESGOTADO'],[3,5,'BAIXO'],[5,5,'BAIXO'],[6,5,'OK'],[1,0,'OK']]) assert.equal(getStockStatus(quantity,minimum),status);

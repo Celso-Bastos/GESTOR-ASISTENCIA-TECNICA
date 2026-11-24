@@ -1,4 +1,3 @@
-import { requireAuth } from "@/lib/auth/queries";
 import { isOpenMaintenanceStatus, type MaintenanceStatus } from "@/lib/maintenance/status";
 import {
   formatProductCategoryLabel,
@@ -387,7 +386,7 @@ function sortByDate(value: "expected_delivery_date" | "warranty_expires_at") {
 }
 
 export async function getDashboardMetrics(input?: DashboardInput): Promise<DashboardMetrics> {
-  await requireAuth();
+  // requireOrganization already validates the session and account approval.
   const organization = await requireOrganization();
   const range = getDateRangeFromPeriod(input);
   const supabase = await createClient();

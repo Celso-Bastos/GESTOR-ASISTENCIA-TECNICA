@@ -27,7 +27,7 @@ export type InventoryMovement = {
 };
 
 export async function getInventoryItems() {
-  await requireAuth();
+  // requireOrganization already validates the session and account approval.
   const organization = await requireOrganization();
   const supabase = await createClient();
   const items: InventoryItem[] = [];
@@ -49,7 +49,7 @@ export async function getInventoryItems() {
 }
 
 export async function getInventoryMovements(modelId?: string, page = 1) {
-  await requireAuth();
+  // Keep the same organization/auth guard without a duplicate Auth round trip.
   const organization = await requireOrganization();
   const supabase = await createClient();
   const offset = (Math.max(1, Math.trunc(page)) - 1) * 50;

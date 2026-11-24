@@ -3,12 +3,19 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAuth, getCurrentUser } from "@/lib/auth/queries";
+import { requireAuth } from "@/lib/auth/queries";
 import {
-  getCurrentOrganization,
   requireOrganization,
   type CurrentOrganization
 } from "@/lib/organization/queries";
+import { getMaintenanceActionContext } from "@/lib/maintenance/action-context";
+import { getMaintenanceOrderById as queryMaintenanceOrderById } from "@/lib/maintenance/detail-queries";
+import {
+  updateMaintenanceStatusAction as updateDetailStatus,
+  markMaintenanceAsDeliveredAction as deliverDetailOrder,
+  cancelMaintenanceOrderAction as cancelDetailOrder,
+  deleteMaintenanceOrderAction as deleteDetailOrder
+} from "@/lib/maintenance/detail-actions";
 import { normalizePhoneBR } from "@/lib/phone";
 import {
   maintenanceStatusLabels,
@@ -21,87 +28,13 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createMaintenanceOrderSchema,
   createQuickMaintenanceOrderSchema,
-  deleteMaintenanceOrderSchema,
   type CreateMaintenanceOrderInput,
   maintenanceSearchSchema,
-  updateMaintenanceOrderSchema,
-  updateMaintenanceStatusSchema
+  updateMaintenanceOrderSchema
 } from "@/lib/validations/maintenance.schema";
 
-export type MaintenanceCustomer = {
-  id: string;
-  name: string;
-  phone: string | null;
-  phone_normalized: string | null;
-};
-
-export type MaintenanceDevice = {
-  id: string;
-  brand: string | null;
-  model: string;
-  color: string | null;
-  storage: string | null;
-  imei: string | null;
-  notes: string | null;
-};
-
-export type MaintenanceEvent = {
-  id: string;
-  event_type: string;
-  old_status: MaintenanceStatus | null;
-  new_status: MaintenanceStatus | null;
-  description: string | null;
-  created_by: string | null;
-  created_at: string;
-};
-
-export type MaintenanceOrderListItem = {
-  id: string;
-  order_number: string;
-  status: MaintenanceStatus;
-  expected_delivery_date: string | null;
-  estimated_price: number | string | null;
-  created_at: string;
-  customers: MaintenanceCustomer | MaintenanceCustomer[] | null;
-  devices: MaintenanceDevice | MaintenanceDevice[] | null;
-};
-
-export type MaintenanceOrderDetail = {
-  id: string;
-  organization_id: string;
-  customer_id: string;
-  device_id: string;
-  order_number: string;
-  reported_issue: string;
-  diagnosis: string | null;
-  status: MaintenanceStatus;
-  expected_delivery_date: string | null;
-  delivered_at: string | null;
-  estimated_price: number | string | null;
-  final_price: number | string | null;
-  internal_notes: string | null;
-  warranty_enabled: boolean;
-  warranty_signed: boolean;
-  warranty_amount: number | null;
-  warranty_unit: "days" | "months" | null;
-  warranty_started_at: string | null;
-  warranty_expires_at: string | null;
-  warranty_notes: string | null;
-  warranty_message_sent_at: string | null;
-  created_at: string;
-  updated_at: string | null;
-  customers: MaintenanceCustomer | MaintenanceCustomer[] | null;
-  devices: MaintenanceDevice | MaintenanceDevice[] | null;
-  events: MaintenanceEvent[];
-};
-
-export type CustomerOption = MaintenanceCustomer;
-
-export type MaintenanceActionState = {
-  error?: string;
-  success?: string;
-  values?: Record<string, string>;
-};
+export type { MaintenanceCustomer, MaintenanceDevice, MaintenanceEvent, MaintenanceOrderListItem, MaintenanceOrderDetail, CustomerOption, MaintenanceActionState } from "@/lib/maintenance/types";
+import type { MaintenanceOrderListItem, CustomerOption, MaintenanceActionState } from "@/lib/maintenance/types";
 
 type EditableMaintenanceOrderSnapshot = {
   id: string;
@@ -248,38 +181,6 @@ function updateInput(values: Record<string, string>) {
     warranty_started_at: values.warranty_started_at,
     warranty_notes: values.warranty_notes
   };
-}
-
-async function getMaintenanceActionContext(): Promise<
-  | {
-      ok: true;
-      userId: string;
-      organization: CurrentOrganization;
-    }
-  | {
-      ok: false;
-      error: string;
-    }
-> {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return {
-      ok: false,
-      error: "Sua sessao expirou. Entre novamente para continuar."
-    };
-  }
-
-  const organization = await getCurrentOrganization();
-
-  if (!organization) {
-    return {
-      ok: false,
-      error: "Nenhuma organização ativa foi encontrada para este usuário."
-    };
-  }
-
-  return { ok: true, userId: user.id, organization };
 }
 
 function friendlyMaintenanceError(code?: string) {
@@ -530,38 +431,7 @@ export async function getMaintenanceOrders(input?: {
 }
 
 export async function getMaintenanceOrderById(orderId: string) {
-  await requireAuth();
-  const organization = await requireOrganization();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("maintenance_orders")
-    .select(
-      "id, organization_id, customer_id, device_id, order_number, reported_issue, diagnosis, status, expected_delivery_date, delivered_at, estimated_price, final_price, internal_notes, warranty_enabled, warranty_signed, warranty_amount, warranty_unit, warranty_started_at, warranty_expires_at, warranty_notes, warranty_message_sent_at, created_at, updated_at, customers(id, name, phone, phone_normalized), devices(id, brand, model, color, storage, imei, notes)"
-    )
-    .eq("id", orderId)
-    .eq("organization_id", organization.id)
-    .is("deleted_at", null)
-    .maybeSingle<Omit<MaintenanceOrderDetail, "events">>();
-
-  if (error || !data) {
-    return null;
-  }
-
-  const { data: events } = await supabase
-    .from("maintenance_events")
-    .select(
-      "id, event_type, old_status, new_status, description, created_by, created_at"
-    )
-    .eq("organization_id", organization.id)
-    .eq("maintenance_order_id", orderId)
-    .order("created_at", { ascending: false })
-    .returns<MaintenanceEvent[]>();
-
-  return {
-    ...data,
-    events: events ?? []
-  } satisfies MaintenanceOrderDetail;
+  return queryMaintenanceOrderById(orderId);
 }
 
 async function createOrderTransaction(
@@ -916,248 +786,30 @@ export async function updateMaintenanceOrderAction(
   redirect(`/manutencoes/${orderId}`);
 }
 
-async function changeMaintenanceStatus(
-  orderId: string,
-  newStatus: MaintenanceStatus,
-  description?: string
-): Promise<MaintenanceActionState> {
-  const context = await getMaintenanceActionContext();
-
-  if (!context.ok) {
-    return { error: context.error };
-  }
-
-  const { organization, userId } = context;
-  const supabase = await createClient();
-  const { data: order, error: orderError } = await supabase
-    .from("maintenance_orders")
-    .select("id, order_number, status, delivered_at, estimated_price, final_price")
-    .eq("id", orderId)
-    .eq("organization_id", organization.id)
-    .is("deleted_at", null)
-    .maybeSingle<{
-      id: string;
-      order_number: string;
-      status: MaintenanceStatus;
-      delivered_at: string | null;
-      estimated_price: number | string | null;
-      final_price: number | string | null;
-    }>();
-
-  if (orderError || !order) {
-    return { error: "Manutenção não encontrada para esta organização." };
-  }
-
-  const finalPrice = resolveMaintenanceFinalPrice(newStatus, order.estimated_price, order.final_price);
-  const fillsFinalPrice = newStatus === "entregue" && order.final_price == null && finalPrice != null;
-  if (order.status === newStatus && !fillsFinalPrice) {
-    return { success: "A manutenção já está neste status." };
-  }
-
-  const updatePayload: {
-    status: MaintenanceStatus;
-    delivered_at?: string | null;
-    final_price?: number | string | null;
-  } = {
-    status: newStatus
-  };
-
-  if (newStatus === "entregue") {
-    updatePayload.delivered_at = order.status === "entregue"
-      ? order.delivered_at ?? new Date().toISOString() : new Date().toISOString();
-    if (fillsFinalPrice) updatePayload.final_price = finalPrice;
-  } else if (order.status === "entregue") {
-    updatePayload.delivered_at = null;
-  }
-
-  let statusUpdate = supabase
-    .from("maintenance_orders")
-    .update(updatePayload)
-    .eq("id", orderId)
-    .eq("organization_id", organization.id)
-    .is("deleted_at", null)
-    .eq("status", order.status);
-  if (fillsFinalPrice) {
-    statusUpdate = statusUpdate.is("final_price", null)
-      .eq("estimated_price", order.estimated_price!);
-  }
-  const { data: updated, error } = await statusUpdate.select("id").maybeSingle<{ id: string }>();
-
-  if (error || !updated) {
-    return { error: "Não foi possível alterar o status da manutenção." };
-  }
-
-  const oldLabel = maintenanceStatusLabels[order.status];
-  const newLabel = maintenanceStatusLabels[newStatus];
-
-  const { error: eventError } = await supabase.from("maintenance_events").insert({
-    organization_id: organization.id,
-    maintenance_order_id: order.id,
-    event_type: order.status === newStatus ? "maintenance_updated" : "status_changed",
-    old_status: order.status,
-    new_status: newStatus,
-    description: order.status === newStatus
-      ? `Valor final da ordem ${order.order_number} preenchido com o valor estimado.`
-      : description ||
-      `Status da ordem ${order.order_number} alterado de ${oldLabel} para ${newLabel}.`,
-    created_by: userId
-  });
-
-  if (eventError) {
-    return {
-      error: "Status atualizado, mas não foi possível registrar o histórico."
-    };
-  }
-
-  revalidatePath("/manutencoes");
-  revalidatePath(`/manutencoes/${orderId}`);
-  revalidatePath("/dashboard");
-
-  return { success: "Status atualizado." };
-}
-
+// O compilador de Server Actions exige exports async explícitos neste módulo.
+// As telas antigas preservam seus imports; o detalhe usa os módulos específicos.
 export async function updateMaintenanceStatusAction(
-  orderId: string,
-  _prevState: MaintenanceActionState,
-  formData: FormData
+  orderId: string, prevState: MaintenanceActionState, formData: FormData
 ): Promise<MaintenanceActionState> {
-  const parsed = updateMaintenanceStatusSchema.safeParse({
-    new_status: String(formData.get("new_status") ?? ""),
-    description: String(formData.get("description") ?? "")
-  });
-
-  if (!parsed.success) {
-    return {
-      error: parsed.error.issues[0]?.message ?? "Selecione um status válido."
-    };
-  }
-
-  return changeMaintenanceStatus(
-    orderId,
-    parsed.data.new_status,
-    parsed.data.description
-  );
+  return updateDetailStatus(orderId, prevState, formData);
 }
 
 export async function markMaintenanceAsDeliveredAction(
-  orderId: string,
-  prevState: MaintenanceActionState,
-  formData: FormData
+  orderId: string, prevState: MaintenanceActionState, formData: FormData
 ): Promise<MaintenanceActionState> {
-  void prevState;
-  void formData;
-
-  return changeMaintenanceStatus(
-    orderId,
-    "entregue",
-    "Ordem marcada como entregue."
-  );
+  return deliverDetailOrder(orderId, prevState, formData);
 }
 
 export async function cancelMaintenanceOrderAction(
-  orderId: string,
-  prevState: MaintenanceActionState,
-  formData: FormData
+  orderId: string, prevState: MaintenanceActionState, formData: FormData
 ): Promise<MaintenanceActionState> {
-  void prevState;
-  void formData;
-
-  return changeMaintenanceStatus(
-    orderId,
-    "cancelado",
-    "Ordem cancelada pela equipe."
-  );
+  return cancelDetailOrder(orderId, prevState, formData);
 }
 
 export async function deleteMaintenanceOrderAction(
-  orderId: string,
-  prevState: MaintenanceActionState,
-  formData: FormData
+  orderId: string, prevState: MaintenanceActionState, formData: FormData
 ): Promise<MaintenanceActionState> {
-  void prevState;
-  void formData;
-
-  const parsed = deleteMaintenanceOrderSchema.safeParse({
-    maintenance_order_id: orderId
-  });
-
-  if (!parsed.success) {
-    return {
-      error: parsed.error.issues[0]?.message ?? "Manutenção inválida."
-    };
-  }
-
-  const user = await requireAuth();
-  const organization = await requireOrganization();
-  const supabase = await createClient();
-  const { data: order, error: orderError } = await supabase
-    .from("maintenance_orders")
-    .select("id, order_number, status, deleted_at")
-    .eq("id", parsed.data.maintenance_order_id)
-    .eq("organization_id", organization.id)
-    .maybeSingle<{
-      id: string;
-      order_number: string;
-      status: MaintenanceStatus;
-      deleted_at: string | null;
-    }>();
-
-  if (orderError) {
-    console.error("Erro ao buscar manutenção para exclusão:", orderError);
-    return { error: "Não foi possível localizar a manutenção." };
-  }
-
-  if (!order) {
-    return { error: "Manutenção não encontrada para esta organização." };
-  }
-
-  if (order.deleted_at) {
-    revalidatePath("/manutencoes");
-    revalidatePath("/dashboard");
-    redirect("/manutencoes");
-  }
-
-  const now = new Date().toISOString();
-  const { data: updated, error: updateError } = await supabase
-    .from("maintenance_orders")
-    .update({
-      deleted_at: now,
-      updated_at: now
-    })
-    .eq("id", order.id)
-    .eq("organization_id", organization.id)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle<{ id: string }>();
-
-  if (updateError || !updated) {
-    console.error("Erro ao excluir manutenção por soft delete:", updateError);
-    return { error: "Não foi possível excluir a manutenção." };
-  }
-
-  const { error: eventError } = await supabase.from("maintenance_events").insert({
-    organization_id: organization.id,
-    maintenance_order_id: order.id,
-    event_type: "maintenance_deleted",
-    old_status: order.status,
-    new_status: null,
-    description: "Ordem de serviço excluída por soft delete.",
-    created_by: user.id,
-    created_at: now
-  });
-
-  if (eventError) {
-    console.error("Erro ao registrar evento de exclusão da manutenção:", eventError);
-    return {
-      error:
-        "A manutenção foi removida das listas, mas não foi possível registrar o histórico."
-    };
-  }
-
-  revalidatePath("/manutencoes");
-  revalidatePath(`/manutencoes/${order.id}`);
-  revalidatePath("/dashboard");
-  redirect("/manutencoes");
+  return deleteDetailOrder(orderId, prevState, formData);
 }
 
 export async function getMaintenanceDashboardMetrics(organizationId: string) {

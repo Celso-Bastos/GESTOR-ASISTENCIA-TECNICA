@@ -11,7 +11,9 @@
     "test:sql:maintenance": "node --test supabase/tests/maintenance-intake.test.cjs",
     "test:sql:service-city": "node --test supabase/tests/service-city.test.cjs",
     "test:sql:inventory": "node --test supabase/tests/inventory.test.cjs",
-    "test:inventory": "pnpm --filter web test:inventory"
+    "test:inventory": "pnpm --filter web test:inventory",
+    "test:warranty-document": "pnpm --filter web test:warranty-document",
+    "test:sql:warranty-document": "node --test supabase/tests/warranty-document.test.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14"

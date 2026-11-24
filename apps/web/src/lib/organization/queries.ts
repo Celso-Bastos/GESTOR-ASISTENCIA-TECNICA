@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,8 @@ type OrganizationMemberRow = {
     | null;
 };
 
-export async function getCurrentOrganization() {
+// Compartilha somente o contexto da requisição atual, nunca entre organizações.
+export const getCurrentOrganization = cache(async function getCurrentOrganization() {
   const user = await requireAuth();
 
   const supabase = await createClient();
@@ -62,7 +64,7 @@ export async function getCurrentOrganization() {
     service_city: organization.service_city,
     role: data.role
   } satisfies CurrentOrganization;
-}
+});
 
 export async function requireOrganization() {
   const organization = await getCurrentOrganization();

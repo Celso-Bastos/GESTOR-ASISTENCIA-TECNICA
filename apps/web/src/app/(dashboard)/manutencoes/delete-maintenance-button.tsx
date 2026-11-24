@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import type { MaintenanceActionState } from "./actions";
+import type { MaintenanceActionState } from "@/lib/maintenance/types";
 
 type DeleteMaintenanceButtonProps = {
   action: (

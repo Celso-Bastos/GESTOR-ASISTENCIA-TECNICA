@@ -1,22 +1,7 @@
 import { z } from "zod";
 
-export const customMessageContexts = [
-  "maintenance",
-  "warranty",
-  "customer",
-  "sales",
-  "general"
-] as const;
-
-export type CustomMessageContext = (typeof customMessageContexts)[number];
-
-export const customMessageContextLabels: Record<CustomMessageContext, string> = {
-  maintenance: "Manutencao",
-  warranty: "Garantia",
-  customer: "Cliente",
-  sales: "Venda",
-  general: "Geral"
-};
+import { customMessageContexts } from "@/lib/messages/custom-template";
+export { customMessageContexts, customMessageContextLabels, type CustomMessageContext } from "@/lib/messages/custom-template";
 
 export const createCustomMessageTemplateSchema = z.object({
   title: z

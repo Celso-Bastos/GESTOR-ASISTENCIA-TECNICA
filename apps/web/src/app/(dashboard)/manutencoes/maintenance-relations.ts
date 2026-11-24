@@ -1,4 +1,4 @@
-import type { MaintenanceCustomer, MaintenanceDevice } from "./actions";
+import type { MaintenanceCustomer, MaintenanceDevice } from "@/lib/maintenance/types";
 
 function singleRelation<T>(value: T | T[] | null | undefined) {
   if (Array.isArray(value)) {

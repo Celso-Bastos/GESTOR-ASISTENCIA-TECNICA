@@ -241,7 +241,7 @@ test('helper de platform admin exige usuário validado e associação real, sem 
   for (const scenario of [{ user: null }, { user: { id: userId, email: 'admin@example.com' } }, { user: { id: adminId }, member: true }, { user: { id: adminId }, member: true, error: {} }]) {
     let queried = false;
     const load = loader({
-      '@/lib/auth/queries': { getCurrentUser: async () => scenario.user },
+      '@/lib/auth/queries': { getCurrentUser: async () => scenario.user, getCurrentAccountAccessStatus: async () => 'approved' },
       '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: 'approved', error: null }), from(table) {
         queried = true; assert.equal(table, 'platform_admins');
         return { select() { return this; }, eq(key, value) { assert.equal(key, 'user_id'); assert.equal(value, scenario.user.id); return this; }, maybeSingle: async () => ({ data: scenario.member ? { user_id: adminId } : null, error: scenario.error ?? null }) };
