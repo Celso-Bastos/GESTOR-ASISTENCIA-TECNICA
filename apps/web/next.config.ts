@@ -6,6 +6,19 @@ export default function nextConfig(phase: string): NextConfig {
     phase === PHASE_DEVELOPMENT_SERVER && process.env.LOW_MEMORY_DEV === "1";
 
   return {
+    async headers() {
+      const headers = [
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Referrer-Policy", value: "no-referrer" },
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        { key: "X-Frame-Options", value: "DENY" },
+        { key: "Content-Security-Policy", value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" }
+      ];
+      if (process.env.VERCEL_ENV === "production") {
+        headers.push({ key: "Strict-Transport-Security", value: "max-age=31536000" });
+      }
+      return [{ source: "/:path*", headers }];
+    },
     experimental: {
       serverActions: { bodySizeLimit: "5mb" },
       // Both flags are accepted by 16.2.9. Its memory flag is build-only and

@@ -94,23 +94,7 @@ export async function POST(request: NextRequest) {
     return genericError();
   }
 
-  if (existingCustomer) {
-    const { error: updateError } = await admin
-      .from("customers")
-      .update({
-        name: input.name,
-        phone: input.phone,
-        whatsapp_opt_in: true,
-        whatsapp_opt_in_at: now
-      })
-      .eq("id", existingCustomer.id)
-      .eq("organization_id", organization.id)
-      .is("deleted_at", null);
-
-    if (updateError) {
-      return genericError();
-    }
-  } else {
+  if (!existingCustomer) {
     const { error: insertError } = await admin.from("customers").insert({
       organization_id: organization.id,
       name: input.name,
