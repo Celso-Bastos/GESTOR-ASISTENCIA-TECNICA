@@ -220,6 +220,11 @@ function TemplateCard({ template }: { template: ProductModelTemplate }) {
         </span>
       </div>
 
+      <section className="grid min-w-0 gap-2 rounded-md border border-line p-3">
+        <h4 className="text-sm font-semibold text-foreground">Fornecedores</h4>
+        <Link href={`/saidas/modelos/${template.id}/fornecedores`} className="min-h-11 py-3 text-sm text-accent underline">Fornecedores deste produto</Link>
+      </section>
+
       <form action={saveAction} className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium text-body">
           Categoria

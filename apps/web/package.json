@@ -16,7 +16,9 @@
     "test:service-city": "node --test tests/service-city.test.cjs",
     "test:maintenance-pricing": "node --test tests/maintenance-pricing.test.cjs",
     "test:14a": "node --test tests/fase-14a.test.cjs",
-    "test:14a2": "node --test tests/fase-14a2.test.cjs"
+    "test:14a2": "node --test tests/fase-14a2.test.cjs",
+    "test:replenishment-whatsapp": "node --test tests/replenishment-whatsapp.test.cjs",
+    "test:inventory-suppliers": "node --test tests/replenishment-whatsapp.test.cjs"
   },
   "dependencies": {
     "@assistencia/shared": "workspace:*",

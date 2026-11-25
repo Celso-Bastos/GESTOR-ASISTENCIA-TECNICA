@@ -13,7 +13,10 @@
     "test:sql:inventory": "node --test supabase/tests/inventory.test.cjs",
     "test:inventory": "pnpm --filter web test:inventory",
     "test:warranty-document": "pnpm --filter web test:warranty-document",
-    "test:sql:warranty-document": "node --test supabase/tests/warranty-document.test.cjs"
+    "test:sql:warranty-document": "node --test supabase/tests/warranty-document.test.cjs",
+    "test:replenishment-whatsapp": "pnpm --filter web test:replenishment-whatsapp",
+    "test:sql:replenishment-whatsapp": "node --test supabase/tests/replenishment-whatsapp.test.cjs",
+    "test:inventory-suppliers": "pnpm --filter web test:inventory-suppliers"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14"

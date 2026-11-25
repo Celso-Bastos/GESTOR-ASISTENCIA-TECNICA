@@ -67,7 +67,7 @@ test('valor ignora saldo negativo e custo ausente; reposição usa déficit e ca
   assert.deepEqual(getInventorySummary(items),{units:15,belowMinimum:4,empty:1,negative:1,value:24});
   assert.deepEqual(getStockRestock(items).map(i=>i.suggested),[2,6,5]);
   const text=formatStockRestockList(items);
-  assert.match(text,/REPOSIÇÃO POR ESTOQUE[\s\S]*Case[\s\S]*A05 — 6 un\./);
+  assert.match(text,/Olá![\s\S]*Case[\s\S]*A05 — repor 6/);
   assert.doesNotMatch(text,/WhatsApp/);
 });
 test('schema recusa frações, custo inválido, vazio e entrada zero; contagem zero é aceita',()=>{

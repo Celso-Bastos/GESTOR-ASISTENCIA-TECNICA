@@ -5,9 +5,11 @@ import { useRef, useState } from "react";
 
 type CopyRestockListButtonProps = {
   text: string;
+  label?: string;
+  secondary?: boolean;
 };
 
-export function CopyRestockListButton({ text }: CopyRestockListButtonProps) {
+export function CopyRestockListButton({ text, label = "Copiar lista para reposicao", secondary = false }: CopyRestockListButtonProps) {
   const [copied, setCopied] = useState(false);
   const [manualCopy, setManualCopy] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,7 +37,7 @@ export function CopyRestockListButton({ text }: CopyRestockListButtonProps) {
   return (
     <div className="grid gap-3">
       <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto"
+        className={`inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:bg-disabled-bg sm:w-auto ${secondary ? "border border-line-strong bg-surface text-body hover:bg-surface-muted" : "bg-teal-700 text-white hover:bg-teal-800"}`}
         disabled={!text.trim()}
         onClick={handleCopy}
         type="button"
@@ -45,7 +47,7 @@ export function CopyRestockListButton({ text }: CopyRestockListButtonProps) {
         ) : (
           <Copy className="size-4" aria-hidden="true" />
         )}
-        {copied ? "Lista copiada!" : "Copiar lista para reposicao"}
+        {copied ? "Lista copiada!" : label}
       </button>
 
       {manualCopy ? (

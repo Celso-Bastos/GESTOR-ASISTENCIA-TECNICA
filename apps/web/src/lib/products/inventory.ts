@@ -47,15 +47,13 @@ export function getStockRestock(items: InventoryItem[]) {
 
 export function formatStockRestockList(items: InventoryItem[]) {
   const rows = getStockRestock(items);
-  const lines = ["REPOSIÇÃO POR ESTOQUE"];
+  if (!rows.length) return "Nenhum produto precisa de reposição neste filtro.";
+  const lines = ["Olá! Segue a lista de reposição:"];
   let category = "";
   for (const item of rows) {
-    if (category !== item.category) {
-      category = item.category;
-      lines.push("", productCategoryLabels[item.category]);
-    }
-    lines.push(`${item.model_name} — ${item.suggested} un.`);
+    if (category !== item.category) { category = item.category; lines.push("", productCategoryLabels[item.category]); }
+    lines.push(`• ${item.model_name} — repor ${item.suggested}`);
   }
-  if (!rows.length) lines.push("", "Nenhum produto abaixo do mínimo.");
+  lines.push("", `Total de modelos: ${rows.length}`, `Total de unidades: ${rows.reduce((n,item) => n+item.suggested,0)}`);
   return lines.join("\n");
 }
